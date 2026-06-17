@@ -1,6 +1,6 @@
 # Frontend Metrics — Dashboard de Métricas de Eventos
 
-Aplicação web (SPA) que consome a **API do Metrics Service** e apresenta as métricas de eventos (counters, distribuições demográficas, engajamento e séries históricas) em um painel visual. Construída com **React 19**, **TypeScript**, **Vite** e **Tailwind CSS v4**.
+Aplicação web (Micro Frontend) que consome a **API do Metrics Service** e apresenta as métricas de eventos (counters, distribuições demográficas, engajamento e séries históricas) em um painel visual. Construída com **React 19**, **TypeScript**, **Vite** e **Tailwind CSS v4**.
 
 > Trabalho da disciplina de **Construção de Software** — PUCRS, 2026/1 · Grupo **0x**.
 
