@@ -1,18 +1,14 @@
 # .ai_log — Registro de uso de IA
 
-Evidência de **uso crítico de IA** no desenvolvimento do `eloo-metrics-mfe`
-(critério de 5% da rubrica). Espelha a convenção do repositório raiz.
+Evidência de **uso crítico de IA** no desenvolvimento do `eloo-metrics-mfe` (critério de 5% da rubrica). Espelha a convenção do repositório raiz.
 
 ## Objetivo
 
-Não basta usar IA — é preciso demonstrar **revisão crítica**: o que foi
-aceito, o que foi ajustado, o que foi rejeitado e **por quê**. Este diretório
-guarda esse histórico.
+Não basta usar IA — é preciso demonstrar **revisão crítica**: o que foi aceito, o que foi ajustado, o que foi rejeitado e **por quê**. Este diretório guarda esse histórico.
 
 ## Formato
 
-Um arquivo JSON por data/autor:
-`prompt_log_<aaaa-mm-dd>_<autor-kebab>.json`
+Um arquivo JSON por data/autor: `prompt_log_<aaaa-mm-dd>_<autor-kebab>.json`
 
 Cada entrada registra uma iteração relevante:
 
@@ -32,7 +28,6 @@ Cada entrada registra uma iteração relevante:
 
 ## Boas práticas
 
-- Registrar decisões arquiteturais e trechos de código não triviais gerados
-  com IA — vinculando ao ADR/US correspondente.
+- Registrar decisões arquiteturais e trechos de código não triviais gerados com IA — vinculando ao ADR/US correspondente.
 - Deixar claro quando a IA **errou** ou "alucinou" e como foi corrigido.
 - Este diretório **é versionado** (não vai para o `.gitignore`).
