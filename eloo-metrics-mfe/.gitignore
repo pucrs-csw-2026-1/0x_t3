@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.local
+
+# Vite / TS
+*.tsbuildinfo
+
+# Logs de ferramentas (o .ai_log/ do projeto É versionado)
+npm-debug.log*
