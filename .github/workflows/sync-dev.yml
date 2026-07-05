@@ -2,7 +2,8 @@ name: Sync dev ← main
 
 # Quando a main fica à frente da dev (pós-release/hotfix), traz a main de volta
 # para a dev. Tenta fast-forward direto; se a proteção bloquear, abre um PR de
-# sincronização. Ver a decisão sobre token/bypass no CONTRIBUTING.
+# sincronização e habilita auto-merge. Requer o secret SYNC_TOKEN (PAT com
+# Contents+Pull requests: write) para o CI disparar no PR e o auto-merge concluir.
 on:
   push:
     branches: [main]
@@ -26,7 +27,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Sincroniza (fast-forward ou PR)
+      - name: Sincroniza (fast-forward ou PR + auto-merge)
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
@@ -35,16 +36,22 @@ jobs:
             echo "dev já contém main — nada a sincronizar."
             exit 0
           fi
+
+          # Tenta fast-forward direto (funciona se o token puder bypassar a proteção).
           git checkout dev
           if git merge --ff-only origin/main && git push origin HEAD:dev; then
             echo "Sincronizado via fast-forward."
             exit 0
           fi
-          echo "Fast-forward/push bloqueado pela proteção — abrindo PR de sincronização."
-          if [ -z "$(gh pr list --base dev --head main --state open --json number --jq '.[0].number')" ]; then
-            gh pr create --base dev --head main \
+
+          # Caso contrário, abre um PR de sync e habilita auto-merge.
+          echo "Push direto indisponível — abrindo PR de sincronização."
+          pr=$(gh pr list --base dev --head main --state open --json number --jq '.[0].number')
+          if [ -z "$pr" ]; then
+            pr=$(gh pr create --base dev --head main \
               --title "chore: sync dev ← main" \
-              --body "Sincronização automática: a \`main\` está à frente da \`dev\`. Este PR traz a \`main\` de volta para a \`dev\`."
-          else
-            echo "PR de sync já aberto — nada a fazer."
+              --body "Sincronização automática: a \`main\` está à frente da \`dev\`." \
+              | grep -oE '[0-9]+$')
           fi
+          gh pr merge "$pr" --auto --merge \
+            || echo "auto-merge indisponível — verifique 'Allow auto-merge' e o secret SYNC_TOKEN."
