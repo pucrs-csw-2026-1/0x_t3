@@ -140,7 +140,7 @@ O agente **não** cria novos agentes/skills sem aprovação explícita do usuár
 ## 8. Git e gestão de tarefas
 
 - **GitFlow:** `main` ← `dev` ← `feature/us-XX-<slug>` (ver
-  [CONTRIBUTING.md](CONTRIBUTING.md)). Nunca commitar direto em `main`/`dev`.
+  [CONTRIBUTING.md](../CONTRIBUTING.md)). Nunca commitar direto em `main`/`dev`.
 - **Conventional Commits**, sem `Co-Authored-By: Claude`.
 - Cada trabalho é uma **User Story** (`US 00`, `US 01`, ...) registrada como
   **issue** no **GitHub Projects** (To Do / In Progress / Done), com labels,

@@ -7,7 +7,7 @@ description: Redige o corpo de uma User Story / issue do eloo-metrics-mfe no pad
 
 Gera o corpo padronizado de uma US/issue conforme
 [ADR-0007](../../../adr/0007-processo-vv-e-gestao.md) e o
-[CONTRIBUTING.md](../../../CONTRIBUTING.md). **O agente redige; quem cria a
+[CONTRIBUTING.md](../../../../CONTRIBUTING.md). **O agente redige; quem cria a
 issue no GitHub é o usuário.**
 
 ## Passos

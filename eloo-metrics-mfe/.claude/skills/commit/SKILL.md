@@ -5,7 +5,7 @@ description: Cria um commit no padrão Conventional Commits a partir do que est�
 
 # /commit — commit padronizado (Conventional Commits)
 
-Cria um commit seguindo o [CONTRIBUTING.md](../../../CONTRIBUTING.md) e o
+Cria um commit seguindo o [CONTRIBUTING.md](../../../../CONTRIBUTING.md) e o
 [ADR-0007](../../../adr/0007-processo-vv-e-gestao.md).
 
 ## Passos
