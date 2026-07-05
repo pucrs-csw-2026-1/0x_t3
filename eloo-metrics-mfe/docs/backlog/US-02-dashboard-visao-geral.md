@@ -1,18 +1,30 @@
 # US-02 — Tela Dashboard: visão geral (counters + gráficos)
 
 ## História
+
 Como **gestor (ADMIN/MANAGER)**, quero **um painel com os counters e o
 engajamento dos eventos**, para **acompanhar inscrições, check-ins e
 certificações num relance**.
 
 ## Contexto
-Primeira tela de dados: `DashboardPage` consumindo `/metrics/events` e
-`/metrics/engagement` do T2, com cards de counter e gráficos MUI X. ADRs:
-[0004](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md),
-[0009](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md),
-[0005](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md).
+
+**Primeira tela de dados** — a visão geral do dashboard.
+
+- **Consome do T2:** `/metrics/events` e `/metrics/engagement`.
+- **Mostra:** cards de counter (registered/checked_in/certified) + gráficos
+  MUI X.
+- **Adaptável por papel:** uma única página — **admin** vê a visão **global**
+  (todos os eventos), **manager** vê o **escopo** dele. O backend já escopa via
+  RBAC (ADR-0009); muda o título/indicador de escopo, não o código.
+
+**ADRs relacionados**
+
+- [ADR-0004 — Biblioteca de gráficos](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md)
+- [ADR-0009 — Contrato da API de métricas](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md)
+- [ADR-0005 — Contrato de páginas remote](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md)
 
 ## Critérios de aceite
+
 - [ ] `DashboardPage` (exposta como remote, contrato ADR-0005) com seletor de
       **período** (a UI sempre envia janela — ADR-0009).
 - [ ] Cards de counter (registered/checked_in/certified) a partir de
@@ -26,6 +38,7 @@ Primeira tela de dados: `DashboardPage` consumindo `/metrics/events` e
 - [ ] Textos em pt-BR; números/percentuais/datas com locale pt-BR.
 
 ## Definition of Done
+
 - [ ] `tsc`, `eslint` e `vitest` verdes; lógica de formatação/estado testada
       (equivalência, valor-limite) e caminhos de erro cobertos.
 - [ ] Contrato de remote (ADR-0005) respeitado.
@@ -34,10 +47,12 @@ Primeira tela de dados: `DashboardPage` consumindo `/metrics/events` e
 - [ ] Revisado em PR (GitFlow) e aprovado.
 
 ## Dependências / bloqueadores
+
 - Depende da **US-01** (camada de serviço/auth). Telas do Stitch (ADR-0006)
   como referência visual.
 
 ## Metadados do board
+
 - **ADR:** 0004, 0005, 0009
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07

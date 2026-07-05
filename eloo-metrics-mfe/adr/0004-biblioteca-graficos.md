@@ -32,11 +32,13 @@ recebem dados já normalizados pela camada de serviço
 ## Consequências
 
 **Positivas**
+
 - Zero design system extra; cores e fontes derivam do tema Eloo.
 - Integração natural com `sx`, breakpoints e tema do MUI.
 - Um único vocabulário de componentes para toda a UI (Material Design).
 
 **Negativas / trade-offs**
+
 - Tipos de gráfico muito avançados/exóticos são mais limitados que em
   ECharts/Nivo — aceitável para o escopo de métricas atual.
 - Adiciona `@mui/x-charts` ao bundle; se vier a ser `shared` com o shell,

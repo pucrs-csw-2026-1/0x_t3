@@ -49,11 +49,13 @@ Toda página exposta segue **o mesmo contrato do `eloo-auth-mfe`**:
 ## Consequências
 
 **Positivas**
+
 - Remote plugável no shell sem alterar o host além do registro documentado.
 - Páginas testáveis isoladamente (standalone) com tema próprio.
 - Experiência de usuário consistente e localizada.
 
 **Negativas / trade-offs**
+
 - Exige disciplina: qualquer `useNavigate` dentro de uma página exposta é uma
   violação do contrato (verificado pelo subagent `architecture-guard`).
 

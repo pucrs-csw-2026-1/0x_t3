@@ -18,7 +18,9 @@ Relate resultados reais — se um gate falha, diga qual e cole a saída relevant
 ## Checklist de V&V
 
 ### 1. Robustez de estados (Funcionalidade 40% / Integração 25%)
+
 Para cada página/tela que consome dados, confirme tratamento explícito de:
+
 - [ ] **loading** — indicador enquanto carrega (skeleton/`CircularProgress`).
 - [ ] **erro de requisição** — `Alert` em pt-BR + ação de "tentar novamente".
 - [ ] **vazio** — estado "sem dados" para filtro/período sem resultado.
@@ -27,21 +29,25 @@ Para cada página/tela que consome dados, confirme tratamento explícito de:
 - [ ] **sem permissão** — `403` do RBAC do T2 vira mensagem clara, não erro cru.
 
 ### 2. Integração T1/T2 (25%)
+
 - [ ] Chamadas ao Metrics Service enviam `Authorization: Bearer`.
 - [ ] Auth reutiliza o storage `mfeAuth.*` (não reimplementa login).
 - [ ] Telas de dados assumem usuário autenticado (proteção no host).
 - [ ] Mapeamento snake_case ↔ camelCase e DTOs tipados na camada de serviço.
 
 ### 3. i18n e formatação (ADR-0005)
+
 - [ ] Todo texto de UI em **pt-BR**.
 - [ ] Números, percentuais e datas formatados com locale `pt-BR` (`Intl`).
 
 ### 4. Acessibilidade básica
+
 - [ ] Ícones interativos têm `aria-label`.
 - [ ] Gráficos têm alternativa textual/legível (título, legenda, ou tabela).
 - [ ] Contraste e foco de teclado não obviamente quebrados.
 
 ### 5. Testes (V&V)
+
 - [ ] Lógica de formatação/estado coberta com **partição de equivalência**,
       **valor-limite** e **transição de estado** onde aplicável.
 - [ ] **Caminhos de erro** testados (não só o caminho feliz).
@@ -49,6 +55,7 @@ Para cada página/tela que consome dados, confirme tratamento explícito de:
 - [ ] `tsc`, `eslint` e `vitest` verdes.
 
 ### 6. Uso Crítico de IA (5%)
+
 - [ ] Se houve uso relevante de IA na mudança, há registro em `.ai_log/`
       evidenciando revisão/ajuste (não aceitação cega).
 

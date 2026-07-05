@@ -11,7 +11,7 @@ Metrics Service (T2), mas hoje não os recebe.
 
 - **O consumo já existe:** o T2 projetou a ingestão assíncrona (SNS + SQS,
   fan-out por domínio — ADR-0001 v2.0 do T2). O fluxo previsto é:
-  > upstream publica *notificação leve* no tópico SNS → Metrics consome via SQS
+  > upstream publica _notificação leve_ no tópico SNS → Metrics consome via SQS
   > → consulta a API de origem → persiste no DynamoDB.
 - **O produtor não existe:** os upstreams (Event Management, Registration) **não
   publicam** eventos de domínio. Sem publicação, o Metrics fica sem dados e o
@@ -19,10 +19,10 @@ Metrics Service (T2), mas hoje não os recebe.
 - **Onde mexer:** os upstreams são **forks** do Grupo 0x — e **nenhum tem
   cliente SNS hoje**:
 
-| Fork | Serviço | Stack | Papel na integração |
-|------|---------|-------|---------------------|
-| `0x-fork-avengers-t2` | Events API (Event Management) | Fastify 5 + Drizzle + PostgreSQL + `jose` | Publica eventos de ciclo de vida de evento/atividade |
-| `0x-fork-manifestbolo-t2` | Registration | (a confirmar no fork) | Publica eventos de inscrição/check-in |
+| Fork                      | Serviço                       | Stack                                     | Papel na integração                                  |
+| ------------------------- | ----------------------------- | ----------------------------------------- | ---------------------------------------------------- |
+| `0x-fork-avengers-t2`     | Events API (Event Management) | Fastify 5 + Drizzle + PostgreSQL + `jose` | Publica eventos de ciclo de vida de evento/atividade |
+| `0x-fork-manifestbolo-t2` | Registration                  | (a confirmar no fork)                     | Publica eventos de inscrição/check-in                |
 
 Nenhum dos dois hoje tem AWS SDK / cliente SNS.
 
@@ -35,6 +35,7 @@ a **implementação acontece nos repositórios dos forks**, não no
 `eloo-metrics-mfe`.
 
 ### 1. Publicação de eventos (outbound)
+
 - Adicionar um **cliente SNS** (`@aws-sdk/client-sns`) em cada fork, isolado
   numa camada de infraestrutura (ex.: `src/clients/` no avengers-fork),
   **sem** vazar para as regras de domínio.
@@ -46,17 +47,18 @@ a **implementação acontece nos repositórios dos forks**, não no
     `EventStatusChanged`.
   - **Registration** (manifestbolo): `RegistrationConfirmed`,
     `RegistrationCancelled`, `CheckInPerformed`.
-  - *(certificados/outros domínios ficam fora do escopo desta refatoração
-    salvo decisão do usuário.)*
+  - _(certificados/outros domínios ficam fora do escopo desta refatoração
+    salvo decisão do usuário.)_
 
 ### 2. Contrato de mensagem e transporte
+
 - **Formato:** JSON com envelope estável (`eventType`, `version`, `entityId`,
   `occurredAt`, `source`). Mudanças de contrato são versionadas.
 - **Fan-out:** um tópico SNS por domínio; o Metrics assina com sua fila **SQS**
   (+ DLQ) — a assinatura/infra do lado consumidor **já existe** no T2
   (`infra/` do `0x_t2`, US-01). Esta refatoração cobre o **lado produtor**.
 - **Idempotência/entrega:** o consumidor (T2) tolera reentrega e defasagem de
-  segundos; os produtores publicam *at-least-once* e não bloqueiam a resposta
+  segundos; os produtores publicam _at-least-once_ e não bloqueiam a resposta
   ao cliente se a publicação falhar (log + retry/outbox, a definir com o
   usuário por fork).
 
@@ -75,6 +77,7 @@ a **implementação acontece nos repositórios dos forks**, não no
 ```
 
 ### 4. Banco de dados dos forks — Postgres provisionado via RDS na Ministack
+
 - Consolidar a infra de dev: em vez de cada fork subir seu próprio container
   `postgres:16-alpine`, o Postgres é **provisionado na Ministack compartilhada**
   (a mesma instância `:4566` que já serve DynamoDB/SNS/SQS) via **RDS**, por
@@ -92,10 +95,11 @@ a **implementação acontece nos repositórios dos forks**, não no
 - **Pré-requisito — CONFIRMADO:** a build de Ministack em uso **suporta RDS com
   Postgres** (verificado na documentação da Ministack, 2026-07-05). O RDS sobe
   um Postgres real acessível por wire-protocol, ao qual o fork conecta via
-  `DATABASE_URL`. *Fallback* histórico (container `postgres:16-alpine` dedicado)
+  `DATABASE_URL`. _Fallback_ histórico (container `postgres:16-alpine` dedicado)
   fica registrado apenas como plano B caso a infra mude.
 
 ### 5. Escopo de versionamento
+
 - A refatoração dos forks é versionada **nos repositórios dos forks**
   (`0x-fork-avengers-t2`, `0x-fork-manifestbolo-t2`), cada um com seu próprio
   GitFlow/PR.
@@ -107,6 +111,7 @@ a **implementação acontece nos repositórios dos forks**, não no
 ## Consequências
 
 **Positivas**
+
 - Fecha a integração assíncrona projetada no T2 → o dashboard passa a exibir
   **dados reais e atualizados** (impacta diretamente Funcionalidade 40% e
   Integração 25% da rubrica).
@@ -117,6 +122,7 @@ a **implementação acontece nos repositórios dos forks**, não no
   upstreams — um comando sobe tudo.
 
 **Negativas / trade-offs**
+
 - Introduz dependência de AWS (SNS) e complexidade operacional nos forks
   (credenciais, Ministack em dev).
 - Adiciona um módulo Terraform `rds/` e acopla o dado relacional do fork à
@@ -140,8 +146,8 @@ a **implementação acontece nos repositórios dos forks**, não no
 ## Pendências a decidir com o usuário
 
 - Definir nomes/engine-version/portas das instâncias RDS por serviço
-  (`events`, `registration`). *(Suporte a RDS/Postgres na Ministack já
-  confirmado — 2026-07-05.)*
+  (`events`, `registration`). _(Suporte a RDS/Postgres na Ministack já
+  confirmado — 2026-07-05.)_
 - Estratégia de confiabilidade por fork (outbox transacional vs. publish
   best-effort com retry).
 - Nomes/ARNs definitivos dos tópicos e mapeamento exato evento→tópico.
