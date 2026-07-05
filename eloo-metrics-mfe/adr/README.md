@@ -22,6 +22,7 @@ usuário** — nunca por iniciativa do agente.
 | [0008](0008-refatoracao-upstreams-sns-sqs.md) | Refatoração dos forks (avengers/manifestbolo) para publicar em SNS → SQS alimentando o Metrics | Aceito |
 | [0009](0009-contrato-api-metrics.md) | Contrato da API de métricas (T2 → T3): endpoints, DTOs, RBAC, erros | Aceito |
 | [0010](0010-contrato-remote-shell.md) | Contrato de integração do remote mfeMetrics com o eloo-shell | Aceito |
+| [0011](0011-estrategia-de-testes.md) | Estratégia de testes: unit (Vitest), integração (MSW), E2E (Playwright) | Aceito |
 
 ## Status possíveis
 

@@ -44,15 +44,20 @@ ADRs, pronto para receber as telas das próximas US.
 - [ ] `npm run build` (`tsc -b` + build) sem erros; `npm run serve:remote` gera
       `remoteEntry.js` servido em `:5176`.
 - [ ] **ESLint** (`lint`) e **Prettier** (`format:check`) configurados.
+- [ ] **Testes configurados (ADR-0011):** Vitest+RTL (unit), **MSW** (base de
+      handlers p/ integração, usada a partir da US-01) e **Playwright** com **1
+      smoke E2E** (app carrega e renderiza a `DashboardPage`). Scripts `test`,
+      `test:cov`, `test:e2e` (mock) e `test:e2e:real` (backend real, local).
 - [ ] **CI (GitHub Actions):** `.github/workflows/ci.yml` na raiz do repo
-      (`working-directory: eloo-metrics-mfe`) rodando ESLint → `tsc` → Prettier
-      `--check` → Vitest (gate de cobertura ≥80%), **verde** no PR — espelha o
+      (`working-directory: eloo-metrics-mfe`), jobs encadeados **ESLint → `tsc`
+      → Prettier `--check` → Vitest (cobertura ≥80%) → Playwright (E2E mock)**,
+      **verde** no PR. E2E com backend real fica fora do gate. Espelha o
       `ci.yml` do 0x_t2.
 - [ ] `README.md` inicial (quickstart + arquitetura).
 - [ ] *(Integração T1/T2 não se aplica nesta US — só esqueleto.)*
 
 ## Definition of Done
-- [ ] `tsc`, `eslint`, `prettier --check` e `vitest` verdes (setup mínimo).
+- [ ] `tsc`, `eslint`, `prettier --check`, `vitest` e `playwright` (smoke) verdes.
 - [ ] **CI (Actions) verde** no PR.
 - [ ] Contrato de remote (ADR-0005) respeitado pela página placeholder.
 - [ ] `README.md` do projeto criado/atualizado.

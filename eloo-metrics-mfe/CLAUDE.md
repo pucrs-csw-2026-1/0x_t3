@@ -75,6 +75,7 @@ ADRs de referência:
 - [0008](adr/0008-refatoracao-upstreams-sns-sqs.md) — Refatoração dos forks (SNS→SQS) que alimenta o dashboard.
 - [0009](adr/0009-contrato-api-metrics.md) — Contrato da API de métricas (T2→T3): endpoints, DTOs, RBAC, erros.
 - [0010](adr/0010-contrato-remote-shell.md) — Contrato de integração do remote mfeMetrics com o eloo-shell.
+- [0011](adr/0011-estrategia-de-testes.md) — Estratégia de testes (Vitest unit, MSW integração, Playwright E2E).
 
 ## 4. Arquitetura e contrato de páginas
 
@@ -110,11 +111,14 @@ ADRs de referência:
 
 ## 6. Testes e V&V
 
-- **Vitest** + **React Testing Library**.
+- Pirâmide (ADR-0011): **unit** (Vitest + RTL), **integração** (Vitest + **MSW**
+  contra o contrato do T2), **E2E** (**Playwright**; mock no CI, backend real
+  local via `test:e2e:real`).
 - Técnicas de caixa-preta para lógica de formatação/estado: partição de
   equivalência, valor-limite, transição de estado; e **testes de caminhos de
-  erro**. Camada de serviço testada com `fetch` mockado/fake.
-- Gates antes de PR: `tsc -b`, `eslint`, testes verdes. O agente **não**
+  erro** (401/403/404/422/5xx).
+- Gates antes de PR (locais e no CI): `tsc -b`, `eslint`, `prettier --check`,
+  Vitest (cobertura ≥80%) e Playwright (E2E mock) verdes. O agente **não**
   desliga/reduz gates para "passar" — corrige o código ou o teste.
 - Robustez (loading/erro/vazio/sessão) e a **Definition of Done** (ADR-0007)
   são verificadas pelo subagent **`vv-check`**.
