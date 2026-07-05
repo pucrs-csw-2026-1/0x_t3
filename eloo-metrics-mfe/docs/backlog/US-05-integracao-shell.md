@@ -5,8 +5,14 @@ Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do
 shell**, para **usar o dashboard dentro da experiência unificada da Eloo**.
 
 ## Contexto
-Monta o `mfeMetrics` no host seguindo o precedente do auth já integrado.
-Toca o repositório **`eloo-shell`**. ADR: [0010](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0010-contrato-remote-shell.md).
+**Monta o `mfeMetrics` no host** (eloo-shell), seguindo o precedente do auth já
+integrado.
+
+- **Toca o repositório:** `eloo-shell` (registro do remote, tipos, rota, RBAC).
+
+**ADR relacionado**
+
+- [ADR-0010 — Contrato do remote com o shell](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0010-contrato-remote-shell.md)
 
 ## Critérios de aceite
 - [ ] `mfeMetrics` buildado e servido em `:5176`

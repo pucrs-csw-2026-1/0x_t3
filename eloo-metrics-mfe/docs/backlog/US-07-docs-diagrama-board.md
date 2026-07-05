@@ -6,9 +6,14 @@ organizado**, para **entender a arquitetura, rodar o projeto e acompanhar o
 progresso**.
 
 ## Contexto
-Atende diretamente o critério **Documentação (20%)** da rubrica (nível
-Excelente: diagrama, fluxos, troubleshooting, board com histórico e ADRs
-vinculados). ADR: [0007](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0007-processo-vv-e-gestao.md).
+**Atende o critério Documentação (20%)** da rubrica, mirando o nível Excelente.
+
+- **Inclui:** diagrama arquitetural, fluxos de uso, troubleshooting/FAQ.
+- **Board:** histórico de iterações e ADRs vinculados às tarefas.
+
+**ADR relacionado**
+
+- [ADR-0007 — Processo de V&V e gestão](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0007-processo-vv-e-gestao.md)
 
 ## Critérios de aceite
 - [ ] `README.md` completo: visão geral, quickstart (dev/serve:remote), variáveis

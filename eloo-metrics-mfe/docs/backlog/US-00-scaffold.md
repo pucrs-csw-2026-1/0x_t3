@@ -1,17 +1,27 @@
 # US-00 — Scaffold do eloo-metrics-mfe (Vite + React + TS + MUI + Tailwind + Federation)
 
-## História
-Como **desenvolvedor do Grupo 0x**, quero **um esqueleto do microfrontend de
-métricas rodando standalone e como remote de Module Federation**, para **ter a
-base sobre a qual todas as telas e integrações serão construídas**.
+## Tarefa (habilitação técnica)
+> **Não é uma história de usuário** — é o setup inicial que **habilita** as US
+> seguintes (essas sim entregam valor ao usuário). Registrada como *enabler*
+> explícito, sem fingir persona de usuário.
+
+Preparar o esqueleto do `eloo-metrics-mfe`: app executável **standalone** e como
+**remote** de Module Federation, com a stack e a arquitetura já fixadas pelos
+ADRs, pronto para receber as telas das próximas US.
 
 ## Contexto
-Primeira US do T3: cria o projeto do zero seguindo a stack e a arquitetura
-fixadas nos ADRs. Não integra API ainda — só o esqueleto executável.
-ADRs: [0001](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0001-arquitetura-microfrontend.md),
-[0002](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0002-stack-tecnica.md),
-[0004](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md),
-[0005](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md).
+**Primeira US do T3** — cria o projeto do zero, ainda sem integração de API.
+
+- **O que entrega:** o esqueleto executável do MFE (standalone + remote), base
+  para todas as telas seguintes.
+- **Já decidido pelos ADRs:** stack e arquitetura são seguidas, não redecididas.
+
+**ADRs relacionados**
+
+- [ADR-0001 — Arquitetura de microfrontend](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0001-arquitetura-microfrontend.md)
+- [ADR-0002 — Stack técnica](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0002-stack-tecnica.md)
+- [ADR-0004 — Biblioteca de gráficos](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md)
+- [ADR-0005 — Contrato de páginas remote](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md)
 
 ## Critérios de aceite
 - [ ] `package.json` com as deps do ADR-0002: React 18, MUI 6 + icons, Emotion,
@@ -33,11 +43,17 @@ ADRs: [0001](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mf
 - [ ] `npm run dev` sobe standalone em `http://localhost:5177`.
 - [ ] `npm run build` (`tsc -b` + build) sem erros; `npm run serve:remote` gera
       `remoteEntry.js` servido em `:5176`.
-- [ ] ESLint configurado; `README.md` inicial (quickstart + arquitetura).
+- [ ] **ESLint** (`lint`) e **Prettier** (`format:check`) configurados.
+- [ ] **CI (GitHub Actions):** `.github/workflows/ci.yml` na raiz do repo
+      (`working-directory: eloo-metrics-mfe`) rodando ESLint → `tsc` → Prettier
+      `--check` → Vitest (gate de cobertura ≥80%), **verde** no PR — espelha o
+      `ci.yml` do 0x_t2.
+- [ ] `README.md` inicial (quickstart + arquitetura).
 - [ ] *(Integração T1/T2 não se aplica nesta US — só esqueleto.)*
 
 ## Definition of Done
-- [ ] `tsc`, `eslint` e `vitest` verdes (setup de teste mínimo funcionando).
+- [ ] `tsc`, `eslint`, `prettier --check` e `vitest` verdes (setup mínimo).
+- [ ] **CI (Actions) verde** no PR.
 - [ ] Contrato de remote (ADR-0005) respeitado pela página placeholder.
 - [ ] `README.md` do projeto criado/atualizado.
 - [ ] Prompts de IA relevantes registrados em `.ai_log/`.

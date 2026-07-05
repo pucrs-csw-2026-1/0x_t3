@@ -6,11 +6,17 @@ engajamento dos eventos**, para **acompanhar inscrições, check-ins e
 certificações num relance**.
 
 ## Contexto
-Primeira tela de dados: `DashboardPage` consumindo `/metrics/events` e
-`/metrics/engagement` do T2, com cards de counter e gráficos MUI X. ADRs:
-[0004](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md),
-[0009](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md),
-[0005](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md).
+**Primeira tela de dados** — a visão geral do dashboard.
+
+- **Consome do T2:** `/metrics/events` e `/metrics/engagement`.
+- **Mostra:** cards de counter (registered/checked_in/certified) + gráficos
+  MUI X.
+
+**ADRs relacionados**
+
+- [ADR-0004 — Biblioteca de gráficos](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md)
+- [ADR-0009 — Contrato da API de métricas](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md)
+- [ADR-0005 — Contrato de páginas remote](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md)
 
 ## Critérios de aceite
 - [ ] `DashboardPage` (exposta como remote, contrato ADR-0005) com seletor de

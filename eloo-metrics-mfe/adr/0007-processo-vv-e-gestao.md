@@ -37,7 +37,7 @@ skills.
 
 ### 2. Git e commits (base de Funcionalidade e Documentação)
 - **GitFlow:** `main` ← `dev` ← `feature/us-XX-<slug>` (ver
-  [CONTRIBUTING.md](../CONTRIBUTING.md)).
+  [CONTRIBUTING.md](../../CONTRIBUTING.md)).
 - **Conventional Commits:** `feat`, `fix`, `docs`, `style`, `refactor`,
   `test`, `chore`, `perf`. Mensagem `<tipo>(escopo?): <descrição>`.
 - **Nunca** `Co-Authored-By: Claude` (commits são do Grupo 0x); **nunca**
