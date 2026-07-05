@@ -2,16 +2,13 @@
 
 ## História
 
-Como **gestor (ADMIN/MANAGER)**, quero **ver a distribuição dos participantes
-por faixa etária, gênero, cidade, perfil e tipo de evento**, para **entender o
-público dos eventos**.
+Como **gestor (ADMIN/MANAGER)**, quero **ver a distribuição dos participantes por faixa etária, gênero, cidade, perfil e tipo de evento**, para **entender o público dos eventos**.
 
 ## Contexto
 
 **Distribuições demográficas** dos participantes.
 
-- **Consome do T2:** `/metrics/by-age`, `/by-gender`, `/by-city`,
-  `/by-profile`, `/by-type`.
+- **Consome do T2:** `/metrics/by-age`, `/by-gender`, `/by-city`, `/by-profile`, `/by-type`.
 - **Filtros:** `event_id` e período (`from`/`to`, buckets `YYYY-MM`).
 
 **ADRs relacionados**
@@ -21,10 +18,8 @@ público dos eventos**.
 
 ## Critérios de aceite
 
-- [ ] Painéis de distribuição por **faixa etária, gênero, cidade, perfil e tipo**
-      usando gráficos MUI X (pizza/barras conforme o dado).
-- [ ] Filtros opcionais `event_id` e período (`from`/`to` em `YYYY-MM`), com
-      validação (evita `422` de intervalo inválido).
+- [ ] Painéis de distribuição por **faixa etária, gênero, cidade, perfil e tipo** usando gráficos MUI X (pizza/barras conforme o dado).
+- [ ] Filtros opcionais `event_id` e período (`from`/`to` em `YYYY-MM`), com validação (evita `422` de intervalo inválido).
 - [ ] Faixas etárias conforme o backend (0-17, 18-24, ..., 65+, "desconhecido").
 - [ ] Integra a **API T2** com auth e RBAC respeitados.
 - [ ] Trata loading, erro, **vazio** (categoria sem dados) e sessão expirada.

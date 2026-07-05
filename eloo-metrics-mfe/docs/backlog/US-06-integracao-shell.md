@@ -2,13 +2,11 @@
 
 ## História
 
-Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do
-shell**, para **usar o dashboard dentro da experiência unificada da Eloo**.
+Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do shell**, para **usar o dashboard dentro da experiência unificada da Eloo**.
 
 ## Contexto
 
-**Monta o `mfeMetrics` no host** (eloo-shell), seguindo o precedente do auth já
-integrado.
+**Monta o `mfeMetrics` no host** (eloo-shell), seguindo o precedente do auth já integrado.
 
 - **Toca o repositório:** `eloo-shell` (registro do remote, tipos, rota, RBAC).
 
@@ -18,20 +16,13 @@ integrado.
 
 ## Critérios de aceite
 
-- [ ] `mfeMetrics` buildado e servido em `:5176`
-      (`npm run serve:remote`), gerando `remoteEntry.js`.
-- [ ] Shell: `src/shell/remotes.ts` com
-      `metrics: "http://localhost:5176/assets/remoteEntry.js"`.
-- [ ] Shell: blocos `declare module "metrics/…"` em `src/vite-env.d.ts`
-      (arquivo import-free no topo).
-- [ ] Shell: página(s) em `src/pages/` embrulhando o remote em `RemoteSlot`,
-      passando o tema e ligando callbacks ao `useNavigate`.
-- [ ] Shell: rotas de métricas sob **`RequireManager`** (ADMIN/MANAGER) e entrada
-      "Métricas" no `Header` para papéis autorizados.
-- [ ] `shared` do `mfeMetrics` idêntico ao do shell; `@mui/x-charts` **não**
-      compartilhado (ADR-0010).
-- [ ] Fluxo fim-a-fim: login (T1) → menu Métricas → dashboard (T2) renderiza no
-      shell.
+- [ ] `mfeMetrics` buildado e servido em `:5176` (`npm run serve:remote`), gerando `remoteEntry.js`.
+- [ ] Shell: `src/shell/remotes.ts` com `metrics: "http://localhost:5176/assets/remoteEntry.js"`.
+- [ ] Shell: blocos `declare module "metrics/…"` em `src/vite-env.d.ts` (arquivo import-free no topo).
+- [ ] Shell: página(s) em `src/pages/` embrulhando o remote em `RemoteSlot`, passando o tema e ligando callbacks ao `useNavigate`.
+- [ ] Shell: rotas de métricas sob **`RequireManager`** (ADMIN/MANAGER) e entrada "Métricas" no `Header` para papéis autorizados.
+- [ ] `shared` do `mfeMetrics` idêntico ao do shell; `@mui/x-charts` **não** compartilhado (ADR-0010).
+- [ ] Fluxo fim-a-fim: login (T1) → menu Métricas → dashboard (T2) renderiza no shell.
 
 ## Definition of Done
 
@@ -43,8 +34,7 @@ integrado.
 
 ## Dependências / bloqueadores
 
-- Depende de **US-02** (ao menos o `DashboardPage` exposto). Alterações no
-  `eloo-shell` são versionadas no repo do shell.
+- Depende de **US-02** (ao menos o `DashboardPage` exposto). Alterações no `eloo-shell` são versionadas no repo do shell.
 
 ## Metadados do board
 

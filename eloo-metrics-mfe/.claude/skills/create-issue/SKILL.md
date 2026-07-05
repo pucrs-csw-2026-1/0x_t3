@@ -5,10 +5,7 @@ description: Redige o corpo de uma User Story / issue do eloo-metrics-mfe no pad
 
 # /create-issue — redige User Story / issue no padrão do board
 
-Gera o corpo padronizado de uma US/issue conforme
-[ADR-0007](../../../adr/0007-processo-vv-e-gestao.md) e o
-[CONTRIBUTING.md](../../../../CONTRIBUTING.md). **O agente redige; quem cria a
-issue no GitHub é o usuário.**
+Gera o corpo padronizado de uma US/issue conforme [ADR-0007](../../../adr/0007-processo-vv-e-gestao.md) e o [CONTRIBUTING.md](../../../../CONTRIBUTING.md). **O agente redige; quem cria a issue no GitHub é o usuário.**
 
 ## Passos
 
@@ -24,8 +21,7 @@ issue no GitHub é o usuário.**
 
 3. **Sugerir labels** (ver lista) e a branch `feature/us-XX-<slug>`.
 
-4. **Não** rodar `gh issue create` por conta própria. Se o usuário pedir,
-   ofereça o comando `gh` pronto para ele revisar e executar.
+4. **Não** rodar `gh issue create` por conta própria. Se o usuário pedir, ofereça o comando `gh` pronto para ele revisar e executar.
 
 ## Template
 
@@ -71,10 +67,7 @@ Como **<papel>**, quero **<capacidade>** para **<benefício>**.
 
 ## Labels sugeridas
 
-`tipo:feature`, `tipo:bug`, `tipo:docs`, `tipo:infra`,
-`area:dashboard`, `area:integracao-t1`, `area:integracao-t2`,
-`area:charts`, `area:design-stitch`,
-`prioridade:alta|media|baixa`, `bloqueado`.
+`tipo:feature`, `tipo:bug`, `tipo:docs`, `tipo:infra`, `area:dashboard`, `area:integracao-t1`, `area:integracao-t2`, `area:charts`, `area:design-stitch`, `prioridade:alta|media|baixa`, `bloqueado`.
 
 ## Comando gh (opcional — para o usuário executar)
 

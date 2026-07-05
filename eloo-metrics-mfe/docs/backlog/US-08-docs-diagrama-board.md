@@ -2,9 +2,7 @@
 
 ## História
 
-Como **avaliador/novo integrante**, quero **documentação completa e um board
-organizado**, para **entender a arquitetura, rodar o projeto e acompanhar o
-progresso**.
+Como **avaliador/novo integrante**, quero **documentação completa e um board organizado**, para **entender a arquitetura, rodar o projeto e acompanhar o progresso**.
 
 ## Contexto
 
@@ -19,15 +17,11 @@ progresso**.
 
 ## Critérios de aceite
 
-- [ ] `README.md` completo: visão geral, quickstart (dev/serve:remote), variáveis
-      de ambiente, arquitetura, links para ADRs/CONTRIBUTING/CLAUDE.
-- [ ] **Diagrama arquitetural** (forks → SNS/SQS → T2 → metricsApi → mfeMetrics →
-      shell) em `docs/` (drawio/SVG).
+- [ ] `README.md` completo: visão geral, quickstart (dev/serve:remote), variáveis de ambiente, arquitetura, links para ADRs/CONTRIBUTING/CLAUDE.
+- [ ] **Diagrama arquitetural** (forks → SNS/SQS → T2 → metricsApi → mfeMetrics → shell) em `docs/` (drawio/SVG).
 - [ ] Fluxos de uso documentados (login → métricas; admin vs manager).
-- [ ] Seção de **troubleshooting/FAQ** (CORS/proxy, remote não carrega, sessão
-      expirada, Ministack/RDS).
-- [ ] Board no **GitHub Projects** com To Do/In Progress/Done, labels,
-      responsável, datas, ADRs vinculados e histórico de iterações.
+- [ ] Seção de **troubleshooting/FAQ** (CORS/proxy, remote não carrega, sessão expirada, Ministack/RDS).
+- [ ] Board no **GitHub Projects** com To Do/In Progress/Done, labels, responsável, datas, ADRs vinculados e histórico de iterações.
 
 ## Definition of Done
 

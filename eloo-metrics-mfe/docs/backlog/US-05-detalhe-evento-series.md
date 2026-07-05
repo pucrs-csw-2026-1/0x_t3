@@ -2,18 +2,14 @@
 
 ## História
 
-Como **gestor (ADMIN/MANAGER)**, quero **abrir um evento e ver suas métricas
-detalhadas e a evolução no tempo**, para **analisar desempenho e tendências de
-um evento específico**.
+Como **gestor (ADMIN/MANAGER)**, quero **abrir um evento e ver suas métricas detalhadas e a evolução no tempo**, para **analisar desempenho e tendências de um evento específico**.
 
 ## Contexto
 
 **Detalhe de um evento** e sua evolução no tempo.
 
-- **Consome do T2:** `/metrics/events/{id}`, `/checkin-rate`,
-  `/certification-rate`, `/series`, `/timeseries`.
-- **Ponto de atenção:** RBAC de manager — evento fora do escopo retorna `403`
-  e precisa de tratamento claro na UI.
+- **Consome do T2:** `/metrics/events/{id}`, `/checkin-rate`, `/certification-rate`, `/series`, `/timeseries`.
+- **Ponto de atenção:** RBAC de manager — evento fora do escopo retorna `403` e precisa de tratamento claro na UI.
 
 **ADRs relacionados**
 
@@ -23,13 +19,10 @@ um evento específico**.
 
 ## Critérios de aceite
 
-- [ ] `EventMetricsPage` recebe `eventId` (prop) e `onBack` (callback) — contrato
-      de remote (ADR-0005).
+- [ ] `EventMetricsPage` recebe `eventId` (prop) e `onBack` (callback) — contrato de remote (ADR-0005).
 - [ ] Exibe métricas do evento, taxa de check-in e de certificação.
-- [ ] Série histórica (`/timeseries`/`/series`) com granularidade selecionável,
-      em gráfico de linha MUI X.
-- [ ] Integra a **API T2**; **403** (evento fora do escopo do manager) vira
-      mensagem "você não tem permissão para ver este evento" — não erro cru.
+- [ ] Série histórica (`/timeseries`/`/series`) com granularidade selecionável, em gráfico de linha MUI X.
+- [ ] Integra a **API T2**; **403** (evento fora do escopo do manager) vira mensagem "você não tem permissão para ver este evento" — não erro cru.
 - [ ] **404** (evento inexistente) → estado "evento não encontrado".
 - [ ] Trata loading, erro, vazio e sessão expirada; pt-BR + locale pt-BR.
 
