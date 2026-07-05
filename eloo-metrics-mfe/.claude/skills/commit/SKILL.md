@@ -21,14 +21,15 @@ Cria um commit seguindo o [CONTRIBUTING.md](../../../../CONTRIBUTING.md) e o
    misturar mudanças não relacionadas, sugira separar em commits distintos.
 
 3. **Montar a mensagem** no formato:
+
    ```
    <tipo>(escopo opcional): <descrição no imperativo, em pt-BR>
    ```
    - Tipos: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `perf`, `chore`.
    - Escopo sugerido: `dashboard`, `metricsApi`, `authApi`, `charts`, `theme`,
      `federation`, `adr`, `backlog`, `ai-log`, `docs`...
-   - **Corpo obrigatório para commits não-triviais:** liste em bullets *o que*
-     mudou e o *porquê* — o subject sozinho não basta. Subject curto sem corpo
+   - **Corpo obrigatório para commits não-triviais:** liste em bullets _o que_
+     mudou e o _porquê_ — o subject sozinho não basta. Subject curto sem corpo
      só para mudanças triviais de uma linha.
    - **Referencie as US/issues** com `Refs #NN` ao final quando o commit se
      relaciona a uma US do board.
@@ -57,6 +58,7 @@ Cria um commit seguindo o [CONTRIBUTING.md](../../../../CONTRIBUTING.md) e o
 ## Exemplos
 
 Trivial (só subject):
+
 - `fix(metricsApi): trata 403 do RBAC com mensagem de sem permissão`
 - `docs(adr): registra ADR-0004 sobre MUI X Charts`
 
