@@ -43,11 +43,17 @@ ADRs, pronto para receber as telas das próximas US.
 - [ ] `npm run dev` sobe standalone em `http://localhost:5177`.
 - [ ] `npm run build` (`tsc -b` + build) sem erros; `npm run serve:remote` gera
       `remoteEntry.js` servido em `:5176`.
-- [ ] ESLint configurado; `README.md` inicial (quickstart + arquitetura).
+- [ ] **ESLint** (`lint`) e **Prettier** (`format:check`) configurados.
+- [ ] **CI (GitHub Actions):** `.github/workflows/ci.yml` na raiz do repo
+      (`working-directory: eloo-metrics-mfe`) rodando ESLint → `tsc` → Prettier
+      `--check` → Vitest (gate de cobertura ≥80%), **verde** no PR — espelha o
+      `ci.yml` do 0x_t2.
+- [ ] `README.md` inicial (quickstart + arquitetura).
 - [ ] *(Integração T1/T2 não se aplica nesta US — só esqueleto.)*
 
 ## Definition of Done
-- [ ] `tsc`, `eslint` e `vitest` verdes (setup de teste mínimo funcionando).
+- [ ] `tsc`, `eslint`, `prettier --check` e `vitest` verdes (setup mínimo).
+- [ ] **CI (Actions) verde** no PR.
 - [ ] Contrato de remote (ADR-0005) respeitado pela página placeholder.
 - [ ] `README.md` do projeto criado/atualizado.
 - [ ] Prompts de IA relevantes registrados em `.ai_log/`.
