@@ -28,36 +28,41 @@ O `mfeMetrics` deve espelhar esse mesmo contrato.
 ## Decisão
 
 ### 1. Identidade do remote
+
 - Nome de federação: **`mfeMetrics`**, `filename: "remoteEntry.js"`.
 - Servido (build+preview) em **`http://localhost:5176/assets/remoteEntry.js`**
   (portas do ADR-0001).
 - Registrado no shell em `remotes.ts`:
   ```ts
   export const remotes: Record<string, string> = {
-    login:   "http://localhost:5174/assets/remoteEntry.js",
+    login: "http://localhost:5174/assets/remoteEntry.js",
     metrics: "http://localhost:5176/assets/remoteEntry.js",
   };
   ```
   (a chave curta `metrics` é o prefixo de import: `import("metrics/…")`.)
 
 ### 2. Superfície exposta (páginas)
+
 Cada página de dashboard é exposta em `federation({ exposes })` do
 `mfeMetrics` e segue o contrato de página (ADR-0005): recebe `theme?` e reporta
 ações por callbacks (não navega sozinha). Conjunto **provisório** (finalizado
 com as telas do Stitch — ADR-0006):
 
-| Export | Componente | Props (contrato) |
-|--------|-----------|------------------|
-| `./DashboardPage` | visão geral (counters + gráficos) | `theme?`, `onSelectEvent?(eventId)` |
-| `./EventMetricsPage` | detalhe de métricas de um evento | `theme?`, `eventId`, `onBack?()` |
+| Export               | Componente                                                        | Props (contrato)                    |
+| -------------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| `./DashboardPage`    | dashboard **adaptável por papel** (admin global / manager escopo) | `theme?`                            |
+| `./EventCatalogPage` | catálogo de eventos (escopo por RBAC)                             | `theme?`, `onSelectEvent?(eventId)` |
+| `./EventMetricsPage` | detalhe de métricas de um evento                                  | `theme?`, `eventId`, `onBack?()`    |
 
 > Nomes/props definitivos são fixados por US conforme as telas são desenhadas;
 > qualquer adição atualiza **este ADR** e o `vite-env.d.ts` do shell juntos.
 
 ### 3. Tipagem ambiental no shell
+
 Para cada página exposta, o shell adiciona um bloco em `vite-env.d.ts`
 (mantendo o arquivo **sem `import`/`export` no topo**, senão os
 `declare module` deixam de ser globais):
+
 ```ts
 declare module "metrics/DashboardPage" {
   import type { Theme } from "@mui/material/styles";
@@ -70,12 +75,14 @@ declare module "metrics/DashboardPage" {
 ```
 
 ### 4. Montagem no host
+
 O shell cria uma página em `src/pages/` que faz `lazy(() => import("metrics/DashboardPage"))`,
 embrulha em **`RemoteSlot`** (Suspense + error boundary), passa o **tema do
 shell** (`src/theme/theme.ts`) e liga os callbacks ao `useNavigate` — idêntico
 ao que já é feito para o `login`.
 
 ### 5. Roteamento e RBAC (lado do shell)
+
 - As rotas de métricas ficam sob `/metrics` (provisório) e são **protegidas**:
   usuário não autenticado → `/login`.
 - **Gate de papel:** as telas de métricas são montadas sob **`RequireManager`**
@@ -85,6 +92,7 @@ ao que já é feito para o `login`.
   ```tsx
   <Route element={<RequireManager />}>
     <Route path="/metrics" element={<MetricsDashboardPage />} />
+    <Route path="/metrics/eventos" element={<EventCatalogPage />} />
     <Route path="/metrics/eventos/:eventId" element={<EventMetricsPage />} />
   </Route>
   ```
@@ -94,6 +102,7 @@ ao que já é feito para o `login`.
   ADMIN/MANAGER.
 
 ### 6. Dependências compartilhadas
+
 - `mfeMetrics` declara em `shared` **exatamente** a mesma lista do shell e do
   `mfe-auth`: `react`, `react-dom`, `react-router-dom`, `@mui/material`,
   `@emotion/react`, `@emotion/styled`.
@@ -105,12 +114,14 @@ ao que já é feito para o `login`.
 ## Consequências
 
 **Positivas**
+
 - Integração com o shell segue um caminho **já validado** (o auth), com os 6
   passos do `eloo-shell/README.md` → baixo risco.
 - Isolamento de falha (`RemoteSlot`) e tema unificado sem bundle duplicado.
 - RBAC coerente ponta-a-ponta (gate no shell + escopo no T2).
 
 **Negativas / trade-offs**
+
 - Toda página nova exige tocar **dois repositórios** (expose no metrics +
   `vite-env.d.ts`/rota no shell) de forma sincronizada.
 - O shell precisa estar ciente das portas/URL do remote (config por ambiente).

@@ -18,22 +18,23 @@ com o restante da plataforma Eloo. Dois motivos:
 
 Adotar **exatamente a mesma stack** do `eloo-auth-mfe` e do `eloo-shell`:
 
-| Camada | Tecnologia | Versão de referência |
-|--------|-----------|----------------------|
-| Build/dev | **Vite** | ^5.4 |
-| UI runtime | **React** + **React DOM** | ^18.3 |
-| Linguagem | **TypeScript** | ^5.6 |
-| Componentes | **MUI (Material UI)** + **@mui/icons-material** | ^6.1 |
-| Estilização de baixo nível | **TailwindCSS** | ^3.4 |
-| CSS-in-JS (peer do MUI) | **@emotion/react** + **@emotion/styled** | ^11 |
-| Roteamento | **react-router-dom** | ^6.27 |
-| Federação | **@originjs/vite-plugin-federation** | ^1.3 |
-| Gráficos | **@mui/x-charts** | ver [ADR-0004](0004-biblioteca-graficos.md) |
+| Camada                     | Tecnologia                                      | Versão de referência                        |
+| -------------------------- | ----------------------------------------------- | ------------------------------------------- |
+| Build/dev                  | **Vite**                                        | ^5.4                                        |
+| UI runtime                 | **React** + **React DOM**                       | ^18.3                                       |
+| Linguagem                  | **TypeScript**                                  | ^5.6                                        |
+| Componentes                | **MUI (Material UI)** + **@mui/icons-material** | ^6.1                                        |
+| Estilização de baixo nível | **TailwindCSS**                                 | ^3.4                                        |
+| CSS-in-JS (peer do MUI)    | **@emotion/react** + **@emotion/styled**        | ^11                                         |
+| Roteamento                 | **react-router-dom**                            | ^6.27                                       |
+| Federação                  | **@originjs/vite-plugin-federation**            | ^1.3                                        |
+| Gráficos                   | **@mui/x-charts**                               | ver [ADR-0004](0004-biblioteca-graficos.md) |
 
 **Divisão de responsabilidades de estilo:**
+
 - **MUI** para componentes, tema e tokens semânticos (`ThemeProvider`,
   paleta, tipografia) — fonte de verdade do visual, alinhado ao Material Design.
-- **Tailwind** para *layout utilitário* (espaçamento, flex/grid,
+- **Tailwind** para _layout utilitário_ (espaçamento, flex/grid,
   posicionamento, efeitos decorativos), como já é feito no `mfe-auth`
   (ex.: `className="flex flex-col gap-6"`). Os tokens do Tailwind
   (`tailwind.config.js`) espelham os do `DESIGN.md`.
@@ -45,11 +46,13 @@ prop `theme`) quando montado como remote (ver [ADR-0005](0005-contrato-paginas-r
 ## Consequências
 
 **Positivas**
+
 - Federação funciona sem duplicar singletons (mesmas versões `shared`).
 - Design consistente com o resto da Eloo sem reinventar tokens.
 - Curva de aprendizado zero para quem já trabalhou no `mfe-auth`.
 
 **Negativas / trade-offs**
+
 - Manter as versões `shared` **sincronizadas** com o shell é obrigatório;
   divergência de major de React/MUI/Emotion quebra a federação.
 - Coexistência MUI + Tailwind exige disciplina para não haver conflito de

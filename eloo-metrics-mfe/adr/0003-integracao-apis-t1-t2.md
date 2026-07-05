@@ -24,7 +24,9 @@ diretas do browser seriam bloqueadas.
 ## Decisão
 
 ### 1. Camada de serviço isolada
+
 Todo acesso a rede fica em `src/services/`:
+
 - `authApi.ts` — **reaproveita o padrão de `eloo-auth-mfe`**: login, perfil,
   armazenamento/validação de tokens e o evento `sessionExpired`. Não
   reimplementar autenticação.
@@ -35,6 +37,7 @@ Todo acesso a rede fica em `src/services/`:
 Nenhum componente faz `fetch` direto — sempre via a camada de serviço.
 
 ### 2. Origem própria + proxy server-to-server (contorno de CORS)
+
 Requisições vão para `/api` na **própria origem** do app, resolvida via
 `new URL(import.meta.url).origin` (não caminho relativo — assim continua
 correto quando o módulo roda dentro da página do shell). O `vite.config.ts`
@@ -51,6 +54,7 @@ proxy: {
 URLs configuráveis por `.env` (`METRICS_SERVICE_URL`, `AUTH_SERVICE_URL`).
 
 ### 3. Autenticação e autorização
+
 - O usuário se autentica pelo remote de auth (T1); o token de acesso é lido do
   storage (`mfeAuth.accessToken`) — a mesma chave usada pelo `mfe-auth`.
 - Toda chamada ao Metrics Service envia `Authorization: Bearer <accessToken>`.
@@ -61,7 +65,9 @@ URLs configuráveis por `.env` (`METRICS_SERVICE_URL`, `AUTH_SERVICE_URL`).
   não um erro genérico.
 
 ### 4. Tratamento consistente de estados (exigência da rubrica)
+
 Toda página de dados trata explicitamente:
+
 - **loading** — skeleton/`CircularProgress` enquanto carrega.
 - **erro de requisição** — `Alert` com mensagem em português + ação de
   "tentar novamente".
@@ -73,6 +79,7 @@ Toda página de dados trata explicitamente:
 ## Consequências
 
 **Positivas**
+
 - Integração T1 **e** T2 explícita e testável, atendendo diretamente ao
   critério de 25%.
 - CORS resolvido pelo mesmo padrão já validado na plataforma.
@@ -80,6 +87,7 @@ Toda página de dados trata explicitamente:
   "Excelente" da rubrica ("experiência fluida mesmo em cenários de erro").
 
 **Negativas / trade-offs**
+
 - O proxy só existe no dev/preview server do Vite; um deploy de produção
   precisaria de um proxy equivalente (documentar no README).
 - Depende de o Auth e o Metrics estarem rodando localmente para o fluxo

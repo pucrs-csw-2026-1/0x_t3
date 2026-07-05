@@ -36,12 +36,14 @@ Adotar o fluxo **Stitch → tokens Eloo → MUI/Tailwind → código**:
 ## Consequências
 
 **Positivas**
+
 - Prototipagem rápida com saída já em Material Design.
 - Design system Eloo preservado (Stitch não dita tokens).
 - Handoff design→código documentado (pontua em Documentação e Apresentação da
   rubrica).
 
 **Negativas / trade-offs**
+
 - A saída do Stitch não é usada verbatim — há retrabalho de tradução para MUI e
   reconciliação de tokens. É intencional (evita drift do design system).
 

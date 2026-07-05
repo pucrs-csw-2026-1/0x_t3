@@ -8,13 +8,13 @@
 
 **Rubrica:** o projeto é avaliado por uma rubrica com pesos explícitos:
 
-| Critério | Peso |
-|----------|------|
-| Funcionalidade | 40% |
-| Integração com APIs (T1/T2) | 25% |
-| Documentação (código + **board de gestão**) | 20% |
-| Apresentação | 10% |
-| Uso Crítico de IA | 5% |
+| Critério                                    | Peso |
+| ------------------------------------------- | ---- |
+| Funcionalidade                              | 40%  |
+| Integração com APIs (T1/T2)                 | 25%  |
+| Documentação (código + **board de gestão**) | 20%  |
+| Apresentação                                | 10%  |
+| Uso Crítico de IA                           | 5%   |
 
 **Objetivo:** este ADR fixa o **processo** que faz o projeto atingir os níveis
 "Bom/Excelente" da rubrica, e vira a referência dos agentes de verificação e das
@@ -23,6 +23,7 @@ skills.
 ## Decisão
 
 ### 1. Gestão de tarefas — GitHub Projects (Documentação, 20%)
+
 - Board no **GitHub Projects** com colunas **To Do / In Progress / Done**.
 - Cada trabalho é uma **User Story** numerada (`US 00`, `US 01`, ...) registrada
   como **issue** com: **labels**, **responsável**, **data de entrega**,
@@ -36,6 +37,7 @@ skills.
   redige.
 
 ### 2. Git e commits (base de Funcionalidade e Documentação)
+
 - **GitFlow:** `main` ← `dev` ← `feature/us-XX-<slug>` (ver
   [CONTRIBUTING.md](../../CONTRIBUTING.md)).
 - **Conventional Commits:** `feat`, `fix`, `docs`, `style`, `refactor`,
@@ -45,6 +47,7 @@ skills.
 - A skill [`/commit`](../.claude/skills/commit/SKILL.md) padroniza a mensagem.
 
 ### 3. Verificação & Validação (Funcionalidade 40% + Integração 25%)
+
 - **Verificação de arquitetura:** o subagent
   [`architecture-guard`](../.claude/agents/architecture-guard.md) checa o
   contrato de remote (ADR-0005), a camada de serviço (ADR-0003), fronteiras de
@@ -61,7 +64,9 @@ skills.
   agente não desliga/reduz gates para "passar".
 
 ### 4. Definition of Done (DoD) de cada US
+
 Uma US só entra em **Done** quando:
+
 - [ ] Requisito da US implementado e demonstrável no fluxo real.
 - [ ] Integra a API correta (T1 e/ou T2) com auth e RBAC respeitados.
 - [ ] Trata loading, erro, vazio e sessão expirada.
@@ -72,6 +77,7 @@ Uma US só entra em **Done** quando:
 - [ ] Prompts de IA relevantes registrados (ver item 5).
 
 ### 5. Uso Crítico de IA (5%)
+
 - Prompts e iterações relevantes com IA são registrados em `.ai_log/`
   (JSON por data/autor), espelhando a convenção do repositório raiz.
 - O log evidencia **revisão crítica**: o que foi aceito, o que foi ajustado e
@@ -80,11 +86,13 @@ Uma US só entra em **Done** quando:
 ## Consequências
 
 **Positivas**
+
 - Cada critério da rubrica tem um mecanismo concreto (board, DoD, agentes,
   logs) → tende aos níveis "Bom/Excelente".
 - Rastreabilidade decisão↔tarefa↔commit↔ADR.
 
 **Negativas / trade-offs**
+
 - Processo mais cerimonioso; exige constância no board e nos logs de IA. É
   intencional — a rubrica pontua justamente essa disciplina.
 

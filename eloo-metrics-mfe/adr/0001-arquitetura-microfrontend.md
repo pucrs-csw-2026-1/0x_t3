@@ -7,7 +7,7 @@
 ## Contexto
 
 **Plataforma:** a Eloo é composta por aplicações frontend independentes
-montadas em runtime por uma aplicação *host* (`eloo-shell`) usando
+montadas em runtime por uma aplicação _host_ (`eloo-shell`) usando
 **Module Federation** (`@originjs/vite-plugin-federation`).
 
 - **Precedente:** já existe um remote de autenticação (`eloo-auth-mfe`, remote
@@ -43,10 +43,10 @@ mesmo padrão de `eloo-auth-mfe`:
 Para não colidir com os serviços já existentes (shell 5173, mfe-auth
 5174/5175):
 
-| Uso | Porta |
-|-----|-------|
-| Dev standalone (`npm run dev`) | 5177 |
-| Preview como remote (`serve:remote`) | 5176 |
+| Uso                                  | Porta |
+| ------------------------------------ | ----- |
+| Dev standalone (`npm run dev`)       | 5177  |
+| Preview como remote (`serve:remote`) | 5176  |
 
 O shell registra o remote em `src/shell/remotes.ts` apontando para
 `http://localhost:5176/assets/remoteEntry.js`.
@@ -54,6 +54,7 @@ O shell registra o remote em `src/shell/remotes.ts` apontando para
 ## Consequências
 
 **Positivas**
+
 - Deploy e evolução independentes; a equipe de métricas não bloqueia nem é
   bloqueada pelas demais.
 - Consistência com o ecossistema Eloo — o shell integra o remote com o mesmo
@@ -62,6 +63,7 @@ O shell registra o remote em `src/shell/remotes.ts` apontando para
   error boundary), então um remote lento/quebrado não derruba o restante.
 
 **Negativas / trade-offs**
+
 - Toda dependência `shared` nova precisa ser adicionada **nos dois lados**
   (remote e shell) sob pena de duplicar React/Emotion em runtime.
 - Module Federation resolve remotes em runtime; o TypeScript não enxerga
