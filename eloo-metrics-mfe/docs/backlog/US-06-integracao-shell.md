@@ -1,10 +1,12 @@
 # US-06 — Integração do remote mfeMetrics no eloo-shell
 
 ## História
+
 Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do
 shell**, para **usar o dashboard dentro da experiência unificada da Eloo**.
 
 ## Contexto
+
 **Monta o `mfeMetrics` no host** (eloo-shell), seguindo o precedente do auth já
 integrado.
 
@@ -15,6 +17,7 @@ integrado.
 - [ADR-0010 — Contrato do remote com o shell](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0010-contrato-remote-shell.md)
 
 ## Critérios de aceite
+
 - [ ] `mfeMetrics` buildado e servido em `:5176`
       (`npm run serve:remote`), gerando `remoteEntry.js`.
 - [ ] Shell: `src/shell/remotes.ts` com
@@ -31,6 +34,7 @@ integrado.
       shell.
 
 ## Definition of Done
+
 - [ ] `tsc`/`eslint`/build verdes nos **dois** repositórios.
 - [ ] Contrato de remote (ADR-0005/0010) respeitado; gate de acesso no host.
 - [ ] Docs (README do shell e do metrics) atualizadas.
@@ -38,10 +42,12 @@ integrado.
 - [ ] Revisado em PR (GitFlow) e aprovado.
 
 ## Dependências / bloqueadores
+
 - Depende de **US-02** (ao menos o `DashboardPage` exposto). Alterações no
   `eloo-shell` são versionadas no repo do shell.
 
 ## Metadados do board
+
 - **ADR:** 0010
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07

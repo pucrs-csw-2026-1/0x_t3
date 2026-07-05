@@ -27,14 +27,14 @@ padrão do agente.
 `eloo-metrics-mfe` é a interface de **métricas/analytics** de eventos da Eloo.
 É um **microfrontend remote** montado pelo `eloo-shell` via Module Federation.
 
-| Camada | Projeto | Papel |
-|--------|---------|-------|
-| **T1** | `0x_t1` (`ms-auth`, :8080) | Autenticação OAuth2 + JWT, perfil, RBAC |
-| **T2** | `0x_t2` (`ms-metrics`) | API de métricas (read-mostly), JWKS + RBAC |
-| **T3** | `eloo-metrics-mfe` | **Este projeto** — dashboards, remote do shell |
-| host | `eloo-shell` (:5173) | Monta os remotes, dono do layout/tema |
-| upstream | `0x-fork-avengers-t2` | Events API (fork) — passa a publicar em SNS |
-| upstream | `0x-fork-manifestbolo-t2` | Registration (fork) — passa a publicar em SNS |
+| Camada   | Projeto                    | Papel                                          |
+| -------- | -------------------------- | ---------------------------------------------- |
+| **T1**   | `0x_t1` (`ms-auth`, :8080) | Autenticação OAuth2 + JWT, perfil, RBAC        |
+| **T2**   | `0x_t2` (`ms-metrics`)     | API de métricas (read-mostly), JWKS + RBAC     |
+| **T3**   | `eloo-metrics-mfe`         | **Este projeto** — dashboards, remote do shell |
+| host     | `eloo-shell` (:5173)       | Monta os remotes, dono do layout/tema          |
+| upstream | `0x-fork-avengers-t2`      | Events API (fork) — passa a publicar em SNS    |
+| upstream | `0x-fork-manifestbolo-t2`  | Registration (fork) — passa a publicar em SNS  |
 
 **Versionamento:** a referência de git é o **repositório raiz `0x_t3`**
 (GitHub: `pucrs-csw-2026-1/0x_t3`), que versiona a pasta `eloo-metrics-mfe/`.
@@ -65,6 +65,7 @@ usuário** antes de qualquer linha de código. Dependências `shared` da federa�
 mudam **nos dois lados** (este remote e o shell).
 
 ADRs de referência:
+
 - [0001](adr/0001-arquitetura-microfrontend.md) — Module Federation (remote `mfeMetrics`).
 - [0002](adr/0002-stack-tecnica.md) — Stack Vite/React/TS/MUI/Tailwind.
 - [0003](adr/0003-integracao-apis-t1-t2.md) — Integração APIs T1 (auth) + T2 (metrics).
@@ -126,12 +127,14 @@ ADRs de referência:
 ## 7. Agentes e skills do projeto
 
 **Subagents** (`.claude/agents/`, delegáveis, read-only por padrão):
+
 - **`architecture-guard`** — verifica contrato de remote, camada de serviço,
   fronteiras de pastas e `shared`. Reporta violações; não corrige sozinho.
 - **`vv-check`** — verifica robustez (loading/erro/vazio/sessão), i18n,
   acessibilidade básica e a DoD contra o diff.
 
 **Skills** (`.claude/skills/<nome>/SKILL.md`, invocáveis por `/<nome>`):
+
 - **`/commit`** — cria commit em Conventional Commits a partir do que está
   staged, confirmando a mensagem. Nunca `Co-Authored-By: Claude`, nunca
   `--no-verify`, nunca commita em `main`/`dev`, nunca amenda.

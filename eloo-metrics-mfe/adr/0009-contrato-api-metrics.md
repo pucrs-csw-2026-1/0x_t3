@@ -29,24 +29,24 @@ No T3 são alcançados via proxy como **`/api/metrics/...`** (ADR-0003).
 
 ### Endpoints de leitura consumidos pelo dashboard
 
-| Método | Caminho | Parâmetros principais | Uso no dashboard |
-|--------|---------|-----------------------|------------------|
-| GET | `/metrics/events` | `start_date`, `end_date` (obrigatórios), `status`, `event_type`, `page` (≥1), `page_size` (1–200) | Lista de counters por evento (registered/checked_in/certified), paginada |
-| GET | `/metrics/events/{event_id}` | — | Métricas de um evento |
-| GET | `/metrics/events/{event_id}/checkin-rate` | — | Taxa de check-in do evento |
-| GET | `/metrics/events/{event_id}/certification-rate` | — | Taxa de certificação do evento |
-| GET | `/metrics/engagement` | janela (`start_date`+`end_date`) **ou** `event_id`; `type` opcional | Engajamento (checked_in/registered) |
-| GET | `/metrics/hours` | filtros de janela/evento | Horas de participação |
-| GET | `/metrics/hours/distribution` | idem | Distribuição de horas |
-| GET | `/metrics/by-age` | `event_id`, `from`, `to` (buckets `YYYY-MM`) | Distribuição por faixa etária |
-| GET | `/metrics/by-gender` | idem | Distribuição por gênero |
-| GET | `/metrics/by-city` | idem | Distribuição por cidade |
-| GET | `/metrics/by-profile` | idem | Distribuição por perfil de participante |
-| GET | `/metrics/by-type` | filtros | Distribuição por tipo de evento |
-| GET | `/metrics/participants/distribution` | filtros | Distribuição de participantes |
-| GET | `/metrics/buckets/{bucket}` | `bucket` = `YYYY-MM`, `event_type` | Métricas de um mês |
-| GET | `/metrics/series` | `granularity` (`month`…), `start_date`, `end_date` | Série agregada |
-| GET | `/metrics/timeseries` | janela + granularidade | Série histórica |
+| Método | Caminho                                         | Parâmetros principais                                                                             | Uso no dashboard                                                         |
+| ------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| GET    | `/metrics/events`                               | `start_date`, `end_date` (obrigatórios), `status`, `event_type`, `page` (≥1), `page_size` (1–200) | Lista de counters por evento (registered/checked_in/certified), paginada |
+| GET    | `/metrics/events/{event_id}`                    | —                                                                                                 | Métricas de um evento                                                    |
+| GET    | `/metrics/events/{event_id}/checkin-rate`       | —                                                                                                 | Taxa de check-in do evento                                               |
+| GET    | `/metrics/events/{event_id}/certification-rate` | —                                                                                                 | Taxa de certificação do evento                                           |
+| GET    | `/metrics/engagement`                           | janela (`start_date`+`end_date`) **ou** `event_id`; `type` opcional                               | Engajamento (checked_in/registered)                                      |
+| GET    | `/metrics/hours`                                | filtros de janela/evento                                                                          | Horas de participação                                                    |
+| GET    | `/metrics/hours/distribution`                   | idem                                                                                              | Distribuição de horas                                                    |
+| GET    | `/metrics/by-age`                               | `event_id`, `from`, `to` (buckets `YYYY-MM`)                                                      | Distribuição por faixa etária                                            |
+| GET    | `/metrics/by-gender`                            | idem                                                                                              | Distribuição por gênero                                                  |
+| GET    | `/metrics/by-city`                              | idem                                                                                              | Distribuição por cidade                                                  |
+| GET    | `/metrics/by-profile`                           | idem                                                                                              | Distribuição por perfil de participante                                  |
+| GET    | `/metrics/by-type`                              | filtros                                                                                           | Distribuição por tipo de evento                                          |
+| GET    | `/metrics/participants/distribution`            | filtros                                                                                           | Distribuição de participantes                                            |
+| GET    | `/metrics/buckets/{bucket}`                     | `bucket` = `YYYY-MM`, `event_type`                                                                | Métricas de um mês                                                       |
+| GET    | `/metrics/series`                               | `granularity` (`month`…), `start_date`, `end_date`                                                | Série agregada                                                           |
+| GET    | `/metrics/timeseries`                           | janela + granularidade                                                                            | Série histórica                                                          |
 
 > Endpoints `admin_*` (cache, counters, DLQ, reconcile, scope) são
 > **operacionais/administrativos** do T2 e **não** fazem parte do contrato do
@@ -77,13 +77,13 @@ No T3 são alcançados via proxy como **`/api/metrics/...`** (ADR-0003).
    página".
 5. **Mapeamento de erros → UI** (complementa ADR-0003):
 
-   | HTTP | Significado | Tratamento no T3 |
-   |------|-------------|------------------|
-   | 401 | sem token / token inválido | limpa sessão + `mfeAuth:sessionExpired` → host redireciona a `/login` |
-   | 403 | endpoint de admin como manager, ou evento fora do escopo | mensagem "você não tem permissão para ver estas métricas" |
-   | 404 | evento inexistente | estado "evento não encontrado" |
-   | 422 | parâmetro inválido (bucket fora de `YYYY-MM`, intervalo de datas invertido) | erro de validação de filtro, sem quebrar a tela |
-   | 5xx / rede | falha do serviço | `Alert` + "tentar novamente" |
+   | HTTP       | Significado                                                                 | Tratamento no T3                                                      |
+   | ---------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+   | 401        | sem token / token inválido                                                  | limpa sessão + `mfeAuth:sessionExpired` → host redireciona a `/login` |
+   | 403        | endpoint de admin como manager, ou evento fora do escopo                    | mensagem "você não tem permissão para ver estas métricas"             |
+   | 404        | evento inexistente                                                          | estado "evento não encontrado"                                        |
+   | 422        | parâmetro inválido (bucket fora de `YYYY-MM`, intervalo de datas invertido) | erro de validação de filtro, sem quebrar a tela                       |
+   | 5xx / rede | falha do serviço                                                            | `Alert` + "tentar novamente"                                          |
 
 6. **Versionamento do contrato:** o contrato é **de propriedade do T2**.
    Mudanças breaking são coordenadas entre T2 e T3; o T3 fixa os campos que
@@ -93,6 +93,7 @@ No T3 são alcançados via proxy como **`/api/metrics/...`** (ADR-0003).
 ## Consequências
 
 **Positivas**
+
 - Contrato explícito → `metricsApi.ts` e telas construídos sobre base estável;
   atende ao critério de Integração (25%) com tratamento de auth/RBAC/erros.
 - DTOs tipados pegam divergências em tempo de compilação (`tsc`).
@@ -100,6 +101,7 @@ No T3 são alcançados via proxy como **`/api/metrics/...`** (ADR-0003).
   404/422 — ver coleção Bruno do T2).
 
 **Negativas / trade-offs**
+
 - Acopla o T3 ao formato de resposta do T2; mudança breaking do backend exige
   ajuste coordenado (mitigado por: ignorar campos desconhecidos + pinar só o
   consumido).

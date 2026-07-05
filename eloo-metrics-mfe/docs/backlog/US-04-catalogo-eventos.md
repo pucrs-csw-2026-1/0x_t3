@@ -1,11 +1,13 @@
 # US-04 — Catálogo de eventos
 
 ## História
+
 Como **gestor (ADMIN/MANAGER)**, quero **navegar por uma lista dos eventos**
 (admin: todos; manager: apenas os do meu escopo), para **encontrar um evento e
 abrir suas métricas detalhadas**.
 
 ## Contexto
+
 **Porta de entrada** para o detalhe de métricas de um evento (US-05).
 
 - **Consome do T2:** `GET /metrics/events` (paginado, com período). O backend
@@ -20,6 +22,7 @@ abrir suas métricas detalhadas**.
 - [ADR-0005 — Contrato de páginas remote](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md)
 
 ## Critérios de aceite
+
 - [ ] `EventCatalogPage` (exposta como remote, contrato ADR-0005): lista de
       eventos com nome, período/status e counters resumidos.
 - [ ] **Paginação** (`page`/`page_size`) e filtro de período; escopo por papel
@@ -32,6 +35,7 @@ abrir suas métricas detalhadas**.
 - [ ] Textos em pt-BR; datas/números com locale pt-BR.
 
 ## Definition of Done
+
 - [ ] `tsc`, `eslint`, Vitest (unit + integração MSW) verdes; caminhos de erro
       cobertos.
 - [ ] Contrato de remote (ADR-0005) respeitado.
@@ -39,10 +43,12 @@ abrir suas métricas detalhadas**.
 - [ ] Revisado em PR (GitFlow) e aprovado.
 
 ## Dependências / bloqueadores
+
 - Depende da **US-01** (camada de serviço). **Habilita** a US-05 (detalhe do
   evento).
 
 ## Metadados do board
+
 - **ADR:** 0009, 0005
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07
