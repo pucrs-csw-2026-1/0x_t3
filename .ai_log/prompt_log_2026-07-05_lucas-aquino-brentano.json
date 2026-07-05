@@ -1340,5 +1340,544 @@
     },
     "role": "assistant",
     "content": "Confirmado. Faço os dois commits, push e PR (base `dev`), sem atribuição de Claude (padrão do projeto):"
+  },
+  {
+    "timestamp": "2026-07-05T05:48:23.290Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Dois commits feitos e branch publicada. Agora abro o PR para `dev`:"
+  },
+  {
+    "timestamp": "2026-07-05T05:50:16.023Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "PR aberto: **#9** → https://github.com/pucrs-csw-2026-1/0x_t3/pull/9 (`feature/revisao-backlog-us` → `dev`).\n\nAgora ajusto a skill `/commit` para exigir esse padrão (corpo descritivo + `Refs` + separar concerns + ai_log/legado):"
+  },
+  {
+    "timestamp": "2026-07-05T05:52:03.543Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Skill ajustada. Commito a mudança da skill (usando o próprio padrão novo) e adiciono ao PR:"
+  },
+  {
+    "timestamp": "2026-07-05T05:52:43.097Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Tudo commitado e no PR. Deixa eu atualizar a memória com o estado atual e o ajuste da skill:"
+  },
+  {
+    "timestamp": "2026-07-05T05:54:30.701Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Tudo fechado neste bloco. Resumo:\n\n## Feito\n- **2 commits** (via padrão `/commit`, sem atribuição de Claude):\n  - `docs(backlog)` — revisão das 8 US (esqueleto ambulante, US-00/US-06 reframadas, Contexto em bullets, links de ADR limpos) · `Refs #1–#8`\n  - `chore(ai-log)` — log de IA da sessão\n- **Skill `/commit` ajustada** (+ commit `chore(commit-skill)`): agora exige **corpo descritivo**, `Refs #NN`, **separar concerns** e commitar `.ai_log`/remover legado.\n- **GitFlow estabelecido:** `dev` criada e publicada; **PR #9** aberto (`feature/revisao-backlog-us` → `dev`) → https://github.com/pucrs-csw-2026-1/0x_t3/pull/9\n- Stash de junho descartado (versão depreciada).\n\n## Estado do board (issues #1–#8)\nTodas revisadas: US com persona correta, Contexto em bullets, ADRs em lista com título descritivo e links funcionando (repo privado → abrem para membros).\n\n## Próximo passo\n**US-00 — scaffold** (habilitação técnica). Eu partiria de `dev`, criaria `feature/us-00-scaffold` e montaria: `package.json`, `vite.config.ts` (federation `mfeMetrics`, portas 5177/5176, proxy `/api`+`/auth-api`), `tailwind.config.js` + `theme.ts` (tokens do DESIGN.md), estrutura `src/` e a `DashboardPage` placeholder — depois commit via `/commit`.\n\nDuas perguntas rápidas antes de eu começar:\n1. Quer **mergear o PR #9** para `dev` antes, ou deixo aberto e sigo (a US-00 é código, independe dele)?\n2. Sigo para o **scaffold da US-00** agora?"
+  },
+  {
+    "timestamp": "2026-07-05T05:55:52.813Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "user",
+    "content": "o CONTRIBUTING não deveria estar na raíz do projeto? tem também alguns problemas de formatação, os textos do Gitflow não estão alinhados, e devemos criar os critérios do actions, de testes de lint, validação, formatação, etc, ou isso é só após a US 00?"
+  },
+  {
+    "timestamp": "2026-07-05T05:56:38.162Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Boas questões — deixa eu investigar antes de responder: como os projetos irmãos tratam o CONTRIBUTING e o CI (Actions), e reler o nosso CONTRIBUTING pra achar os problemas de formatação."
+  },
+  {
+    "timestamp": "2026-07-05T05:58:33.746Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Achados úteis:\n\n- **CONTRIBUTING:** os irmãos `0x_t1` e `0x_t2` têm `CONTRIBUTING.md` **na raiz do repo**. Então você está certo — no nosso caso a raiz é `0x_t3/`, e é lá que o GitHub reconhece o arquivo (mostra o link em issues/PRs). Vou movê-lo e corrigir a formatação/alinhamento do GitFlow.\n- **CI/Actions:** os irmãos têm `.github/workflows/` com `ci.yml` (lint → typecheck → test, cobertura ≥80%), `pr-gate.yml`, etc. **Mas o CI precisa do scaffold** (package.json com scripts `lint`/`build`/`test`) para rodar — não há o que lintar/testar antes da US-00.\n\nDeixa eu ver o que referencia o CONTRIBUTING antes de mover (pra não quebrar links):"
+  },
+  {
+    "timestamp": "2026-07-05T06:00:06.501Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Referências mapeadas (5 links a ajustar). Vou: criar o `CONTRIBUTING.md` na **raiz `0x_t3/`** com formatação corrigida (GitFlow em lista, sem desalinhamento), remover o aninhado, e consertar os links. Começando pelo novo arquivo na raiz:"
+  },
+  {
+    "timestamp": "2026-07-05T06:00:46.118Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Novo CONTRIBUTING criado na raiz. Agora ajusto os 4 links que apontavam para ele e removo o aninhado:"
+  },
+  {
+    "timestamp": "2026-07-05T06:01:34.691Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Removo o aninhado e commito a mudança (na branch atual, entra no PR #9):"
+  },
+  {
+    "timestamp": "2026-07-05T06:02:17.082Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "CONTRIBUTING movido para a raiz (`0x_t3/CONTRIBUTING.md`), GitFlow em lista (sem desalinhamento), links corrigidos, board com as colunas reais — commitado (`c6001c5`) no PR #9.\n\n## Resposta sobre o CI (Actions)\n\n**Precisa do scaffold para existir.** O workflow roda `npm run lint/typecheck/test/format` — esses scripts só existem depois da US-00 (que cria `package.json`, ESLint, Vitest, tsconfig). Então **não dá para o CI rodar antes da US-00** — não há o que lintar/testar.\n\nO que **já** está definido são os **critérios** (gates), em [ADR-0007](eloo-metrics-mfe/adr/0007-processo-vv-e-gestao.md) e agora no CONTRIBUTING. Falta o **arquivo do workflow** (`.github/workflows/ci.yml` na raiz do repo, com `working-directory: eloo-metrics-mfe`), espelhando o padrão dos irmãos (`0x_t2` tem `ci.yml` lint→typecheck→test + `pr-gate.yml`). Para o front seria: **ESLint → tsc → Prettier `--check` → Vitest (com gate de cobertura, tipo ≥80% como o T2)**.\n\nOu seja: o CI nasce **junto/logo após** o scaffold. Como quer encaixar?"
+  },
+  {
+    "timestamp": "2026-07-05T06:03:01.412Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Certo — CI junto com a US-00. Vou adicionar isso aos critérios/DoD da US-00 e atualizar a issue #1:"
+  },
+  {
+    "timestamp": "2026-07-05T06:04:04.153Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Tudo encaixado. Resumo do que fechamos nesta rodada:\n\n## Feito\n- **CONTRIBUTING.md** movido para a **raiz `0x_t3/`** (padrão dos irmãos; GitHub reconhece), com **GitFlow em lista** (desalinhamento corrigido), colunas reais do board e gates de CI. Links relativos ajustados em CLAUDE.md, ADR-0007 e nas 2 skills.\n- **CI decidido:** entra **junto com a US-00** — adicionei o critério/DoD do `ci.yml` (ESLint→tsc→Prettier→Vitest+cobertura ≥80%, `working-directory: eloo-metrics-mfe`, espelhando o `0x_t2`). Issue #1 atualizada.\n- Commits `c6001c5` e `158d8f6` no **PR #9**.\n\n## PR #9 (feature/revisao-backlog-us → dev) contém agora\nRevisão do backlog + US-00/06 reframadas + skill /commit ajustada + CONTRIBUTING na raiz + CI no escopo da US-00.\n\n## Próximo passo: implementar a US-00 (scaffold + CI)\nVou criar `feature/us-00-scaffold` a partir de `dev` e montar: `package.json` (stack ADR-0002), `vite.config.ts` (federation `mfeMetrics`, portas 5177/5176, proxy `/api`+`/auth-api`), tsconfig/tailwind/postcss/`theme.ts`/`index.css`, `src/` (main, App standalone, `DashboardPage` placeholder com MUI + 1 gráfico X), ESLint + Prettier + Vitest (+1 teste), `.github/workflows/ci.yml` na raiz, `.env.example` e `README.md`.\n\nDuas coisas antes de eu começar:"
+  },
+  {
+    "timestamp": "2026-07-05T06:05:32.249Z",
+    "source": "claude",
+    "git_branch": "feature/revisao-backlog-us",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Certo — mesclo o #9 em `dev`, preparo a branch da US-00, e **não escrevo código ainda** (te trago o plano arquivo-a-arquivo)."
+  },
+  {
+    "timestamp": "2026-07-05T06:08:25.882Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Feito: **PR #9 mesclado em `dev`** (merge commit `6833fa4`), e estou em **`feature/us-00-scaffold`** (a partir de `dev`). Nenhum código escrito ainda — aqui está o **plano arquivo-a-arquivo** da US-00 para você aprovar:\n\n## Plano do scaffold — US-00\n\nTudo mirando o padrão do `eloo-auth-mfe` e a stack do ADR-0002.\n\n### Config (raiz de `eloo-metrics-mfe/`)\n| Arquivo | Conteúdo |\n|---|---|\n| `package.json` | `name: mfe-metrics`; scripts: `dev`, `build` (`tsc -b && vite build`), `preview`, `serve:remote` (5176), `lint`, `format`/`format:check`, `test`, `test:cov`. Deps: React 18, react-router-dom 6, MUI 6 + icons, **@mui/x-charts**, Emotion. DevDeps: Vite 5, plugin-react, **vite-plugin-federation**, TS 5, Tailwind 3, postcss, autoprefixer, ESLint, **Prettier**, **Vitest** + Testing Library + jsdom |\n| `vite.config.ts` | `federation({ name: \"mfeMetrics\", exposes: { \"./DashboardPage\" }, shared })`; `server.port 5177`, `preview.port 5176`; proxy `/api`→`:8000` e `/auth-api`→`:8080` (via `loadEnv`) |\n| `tsconfig.json` / `.app.json` / `.node.json` | espelham o auth-mfe |\n| `tailwind.config.js` + `postcss.config.js` | tokens do `DESIGN.md` (primary `#b8336a`, Public Sans/Space Grotesk, raios sm/md) |\n| `eslint.config.js` + `.prettierrc` (+ignore) | lint TS/React + formatação |\n| `vitest.config.ts` + `src/test/setup.ts` | ambiente jsdom + RTL, gate de cobertura |\n| `index.html`, `.env.example` | entry HTML; `METRICS_SERVICE_URL`/`AUTH_SERVICE_URL` |\n| `README.md` | quickstart (dev/serve:remote) + arquitetura |\n\n### `src/`\n| Arquivo | Conteúdo |\n|---|---|\n| `main.tsx` | entry standalone (`ThemeProvider` + `CssBaseline` + `BrowserRouter` + `App`) |\n| `App.tsx` | router standalone (rota → `DashboardPage`) — só quando roda sozinho |\n| `theme.ts` | tema MUI próprio (fallback), tokens Eloo |\n| `index.css` | diretivas Tailwind + fontes |\n| `vite-env.d.ts` | ambient types |\n| `pages/DashboardPage.tsx` | **placeholder** no contrato do ADR-0005 (`theme?` + `ThemeProvider` fallback, callback `onSelectEvent?`), em pt-BR, com um `Card` MUI + **um gráfico MUI X de exemplo** (dados estáticos — sem API) |\n| `pages/DashboardPage.test.tsx` | teste mínimo Vitest+RTL (renderiza e verifica um texto) |\n| `components/charts/` , `services/` | pastas criadas (services fica p/ US-01) |\n\n### CI (raiz do repo `0x_t3/`)\n| Arquivo | Conteúdo |\n|---|---|\n| `.github/workflows/ci.yml` | `working-directory: eloo-metrics-mfe`; dispara em PR/push p/ `dev`/`main`; jobs encadeados **lint (ESLint) → format (Prettier --check) → typecheck (`tsc`) → test (Vitest + cobertura)** + `build`. Espelha o `ci.yml` do `0x_t2` |\n\n### Observações\n- **Sem integração de API** (é US-01) — `DashboardPage` mostra tema + gráfico com dados estáticos, só para provar que o app roda e renderiza no padrão.\n- Ao final: `/commit` (provavelmente 2–3 commits: `chore(scaffold)`, `ci`, `test`) e PR para `dev`.\n\nAprova esse plano (ou quer ajustar algo — nomes, portas, incluir/remover algum arquivo) antes de eu escrever?"
+  },
+  {
+    "timestamp": "2026-07-05T06:08:50.373Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "user",
+    "content": "para o actions, poderia também incluir testes de integração e end-to-end, como cypress ou algo assim, e outros testes que cobrem front-back"
+  },
+  {
+    "timestamp": "2026-07-05T06:09:42.288Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Ótimo ponto — isso completa a **pirâmide de testes** e reforça o critério de Funcionalidade/Integração. Deixa eu estruturar e pegar duas–três decisões suas, porque envolve trade-offs reais (principalmente como lidar com o backend no CI).\n\n## Pirâmide proposta\n| Nível | Ferramenta | O que cobre | Onde roda |\n|---|---|---|---|\n| **Unit** | Vitest + RTL | componentes, lógica de formatação/estado | CI (rápido) |\n| **Integração** | Vitest + **MSW** (mock de rede) | `metricsApi.ts` contra o **contrato** do T1/T2 (ADR-0009), mapeamento, erros 401/403/404/422 | CI |\n| **E2E (front-back)** | **Playwright** ou Cypress | fluxos reais no browser (login → dashboard → métrica) | CI + local |\n\n**Sequência:** o *setup* de E2E/integração entra na **US-00** (infra + 1 smoke test), mas os testes E2E \"de verdade\" só têm o que exercitar a partir da **US-01/US-02** (quando existe login→dashboard). O CI já ganha o job de E2E desde a US-00.\n\nO ponto sensível é **como o E2E enxerga o backend no CI** — subir T1+T2+Ministack no CI é possível mas pesado/frágil; mockar é rápido e determinístico. Suas escolhas:"
+  },
+  {
+    "timestamp": "2026-07-05T06:12:04.887Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Decisões: **Playwright**, **MSW mock no CI + real local**, e **ADR-0011** próprio. Vou registrar o ADR e refletir isso no plano/US-00. Criando o ADR-0011:"
+  },
+  {
+    "timestamp": "2026-07-05T06:12:27.012Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Agora atualizo o índice de ADRs, o CLAUDE.md e o escopo da US-00 (setup de MSW + Playwright + jobs de CI):"
+  },
+  {
+    "timestamp": "2026-07-05T06:12:58.306Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Agora o escopo de testes na US-00 (setup de MSW + Playwright + jobs de CI; os testes \"de verdade\" crescem na US-01+):"
+  },
+  {
+    "timestamp": "2026-07-05T06:13:26.655Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Registrado. Commito o ADR-0011 + reflexos (via padrão) e atualizo a issue #1:"
+  },
+  {
+    "timestamp": "2026-07-05T06:14:05.175Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "ADR-0011 e escopo commitados (`317da85`), issue #1 atualizada. **Plano da US-00 atualizado** com a camada de testes:\n\n## Adições ao plano (testes — ADR-0011)\n| Arquivo | Conteúdo |\n|---|---|\n| `package.json` (devDeps) | + **`msw`**, + **`@playwright/test`**; scripts `test`, `test:cov`, `test:e2e` (mock), `test:e2e:real` (backend real, local) |\n| `src/test/setup.ts` | setup do Vitest (matchers RTL + start/reset/close do MSW) |\n| `src/test/msw/handlers.ts` + `server.ts` | **handlers base do MSW** (contrato T1/T2 — placeholders; crescem na US-01) |\n| `src/pages/DashboardPage.test.tsx` | **unit** (renderiza a placeholder, verifica texto pt-BR) |\n| `playwright.config.ts` | config Playwright (sobe o dev server 5177, mock via `page.route`/MSW) |\n| `e2e/smoke.spec.ts` | **1 smoke E2E** — app carrega e mostra a `DashboardPage` |\n| `.github/workflows/ci.yml` | jobs: **lint → format → typecheck → vitest (cov ≥80%) → playwright (E2E mock) → build**; instala browsers do Playwright; E2E real **fora** do gate |\n\nO restante do plano segue igual ao que apresentei (config Vite/TS/Tailwind/theme, `src/` com `main`/`App`/`DashboardPage` placeholder + gráfico MUI X estático, `README`, `.env.example`).\n\n## Resumo do fluxo\n`feature/us-00-scaffold` (já criada, a partir de `dev`) → implemento tudo → `/commit` (provavelmente: `chore(scaffold)`, `test`, `ci`) → PR para `dev`.\n\n**Aprova o plano completo (scaffold + testes + CI)?** Se sim, começo a escrever o código. Se quiser ajustar algo (portas, nomes, um teste a mais/menos, versão de Node no CI), me diz agora."
+  },
+  {
+    "timestamp": "2026-07-05T06:17:46.556Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "user",
+    "content": "um detalhe antes de a gente iniciar, para o frontend/telas, vamos seguir também esta lógica, além das que decidimos antes:\n\npágina dashboard global para o admin\num dashboard com escopo para o gerente\num catálogo de eventos para o admin e para o gerente"
+  },
+  {
+    "timestamp": "2026-07-05T06:18:56.923Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Ótimo — isso refina o conjunto de telas e, importante, **preenche uma lacuna**: hoje a US-04 fala em \"abrir um evento\", mas não havia uma tela de **catálogo/lista** de onde abrir. Vou capturar isso antes de iniciar.\n\n## Mapa de telas resultante\n| Tela | Papel | Escopo | US |\n|---|---|---|---|\n| Dashboard **global** | Admin | todos os eventos | US-02 |\n| Dashboard **escopo** | Manager | só os eventos do gerente | US-02 |\n| **Catálogo de eventos** | Admin + Manager | admin: todos / manager: escopo | **nova US** |\n| Detalhe de evento + séries | Admin + Manager | via catálogo | US-04 |\n| Distribuições demográficas | Admin + Manager | conforme papel | US-03 |\n\nO RBAC já está nos ADRs (ADR-0009: o token do manager já faz o backend retornar só o escopo dele; evento fora do escopo → 403). Então a diferença admin/manager é sobretudo de **framing/rota**. Uma decisão muda a estrutura:"
+  },
+  {
+    "timestamp": "2026-07-05T06:20:46.833Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Decidido: **dashboard único adaptável por papel** (admin=global, manager=escopo; o backend já escopa via RBAC) e **catálogo como US própria antes da US-04**.\n\nVou refletir isso em: US-02 (framing adaptável), **nova US do catálogo**, e ADR-0010 (superfície exposta ganha `EventCatalogPage`). Só um ponto de numeração — o catálogo executa **antes** da US-04, e o ADR-0007 diz que a numeração segue a ordem de execução:"
+  },
+  {
+    "timestamp": "2026-07-05T06:21:52.591Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Certo — renumerando (catálogo = US-04). Vou renomear os arquivos, criar o catálogo, atualizar US-02 e o ADR-0010, e então sincronizar as issues. Primeiro os renames + leio as linhas que preciso ajustar (header/branch/dependências):"
+  },
+  {
+    "timestamp": "2026-07-05T06:23:05.084Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Os renames trocaram os nomes dos arquivos (o Edit exige Read antes). Faço as trocas de header/branch/dependência via `sed`:"
+  },
+  {
+    "timestamp": "2026-07-05T06:27:18.625Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Renumeração dos arquivos OK. Agora crio o **US-04 (catálogo)** e leio o ADR-0010 para adicionar a página exposta:"
+  },
+  {
+    "timestamp": "2026-07-05T06:27:49.482Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "US-04 catálogo criado. Agora adiciono a `EventCatalogPage` ao ADR-0010 (tabela + rota) e a nota de \"adaptável por papel\" na US-02:"
+  },
+  {
+    "timestamp": "2026-07-05T06:28:21.895Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Feito no nível de arquivos. Commito a mudança e depois sincronizo as issues:"
+  },
+  {
+    "timestamp": "2026-07-05T06:28:54.766Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Arquivos commitados (`b30eee5`). Agora sincronizo as issues do GitHub: re-titulo as renumeradas, atualizo US-02, e crio a issue do catálogo no board:"
+  },
+  {
+    "timestamp": "2026-07-05T06:29:47.383Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Board totalmente sincronizado. Deixa eu atualizar a memória com a estrutura nova de telas/US:"
+  },
+  {
+    "timestamp": "2026-07-05T06:31:41.487Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Capturado e sincronizado. O board agora reflete a decisão de telas:\n\n## Board \"0x Metrics MFE T3\" (#14) — 9 US em Backlog\n| US | Tela/Trabalho | Issue |\n|----|---------------|-------|\n| US-00 | Scaffold + CI | #1 |\n| US-01 | Esqueleto ambulante | #2 |\n| US-02 | Dashboard **adaptável** (admin global / manager escopo) | #3 |\n| US-03 | Distribuições demográficas | #4 |\n| **US-04** | **Catálogo de eventos** (novo) | **#10** |\n| US-05 | Detalhe de evento + séries | #5 |\n| US-06 | Integração no shell | #6 |\n| US-07 | Refatoração forks (SNS+RDS) | #7 |\n| US-08 | Docs + diagrama | #8 |\n\n- **Dashboard:** uma página adaptável (o backend escopa via RBAC).\n- **Catálogo:** nova US-04, porta de entrada para o detalhe (US-05).\n- **ADR-0010** atualizado: expõe `EventCatalogPage` + rota `/metrics/eventos`.\n- Tudo commitado em `feature/us-00-scaffold` (`b30eee5`) e issues re-tituladas/criadas.\n\n## Planejamento completo ✅\nScreens, testes (ADR-0011: Vitest/MSW/Playwright) e CI (junto da US-00) todos decididos e documentados.\n\n**Posso começar a escrever o scaffold da US-00 agora?** (package.json, vite.config com federation, tsconfig/tailwind/theme, `src/` com `DashboardPage` placeholder + gráfico MUI X, ESLint/Prettier, Vitest+MSW, Playwright smoke, `.github/workflows/ci.yml`, README, `.env.example`) — depois `/commit` em alguns commits temáticos e PR para `dev`."
+  },
+  {
+    "timestamp": "2026-07-05T06:31:59.625Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "user",
+    "content": "sim, agora podemos"
+  },
+  {
+    "timestamp": "2026-07-05T06:34:28.689Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vamos lá. Escrevendo o scaffold da US-00 em `feature/us-00-scaffold`. Começo pelos arquivos de configuração:"
+  },
+  {
+    "timestamp": "2026-07-05T06:35:35.246Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Agora o `src/`:"
+  },
+  {
+    "timestamp": "2026-07-05T06:36:34.296Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Agora o E2E, o `.github/workflows/ci.yml` (raiz do repo), o README e o ajuste do `.gitignore`:"
+  },
+  {
+    "timestamp": "2026-07-05T06:36:53.780Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Agora o README:"
+  },
+  {
+    "timestamp": "2026-07-05T06:37:23.101Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Todos os ~30 arquivos do scaffold estão escritos. Agora **verifico de verdade** — instalo as dependências (gera o `package-lock.json` que o CI usa) e rodo os gates. Isso pode levar alguns minutos:"
+  },
+  {
+    "timestamp": "2026-07-05T06:40:55.785Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "`npm install` OK (528 pacotes, lockfile gerado; Node 22, npm 11). Agora rodo os gates — formato, lint, typecheck e testes:"
+  },
+  {
+    "timestamp": "2026-07-05T06:42:39.300Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Gates verdes: **prettier** formatou tudo, **eslint** limpo, **tsc -b** exit 0, **vitest** 1 teste passou. O `format` também normalizou os `.md` (necessário para o `format:check` do CI passar). Agora confirmo `format:check`, a **cobertura ≥80%** (o CI roda `test:cov`) e o **build**:"
+  },
+  {
+    "timestamp": "2026-07-05T06:43:53.626Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Cobertura **100%** (≥80 ✓), **build** OK (gerou `remoteEntry.js` + `__federation_expose_DashboardPage` — federação funciona). Só o `format:check` pegou um arquivo desalinhado (`US-00-scaffold.md`). Rodo o format de novo e reconfirmo:"
+  },
+  {
+    "timestamp": "2026-07-05T06:45:08.738Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "O `format` escreve, mas algo reverte o arquivo logo depois. Deixa eu ver exatamente o que o Prettier quer nesse arquivo:"
+  },
+  {
+    "timestamp": "2026-07-05T06:45:51.332Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "É um conflito de formatação numa linha específica (um trecho de código inline `federation({...})` que quebra em 3 linhas). Vou reescrever esse critério para não ter esse span multi-linha problemático. Deixa eu ler a seção:"
+  },
+  {
+    "timestamp": "2026-07-05T06:47:12.608Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "`format:check` limpo — **todos os gates locais passam**:\n\n| Gate | Resultado |\n|---|---|\n| ESLint | ✅ limpo |\n| Prettier `format:check` | ✅ limpo |\n| `tsc -b` | ✅ exit 0 |\n| Vitest | ✅ 1 teste, **cobertura 100%** |\n| `vite build` | ✅ gera `remoteEntry.js` + `__federation_expose_DashboardPage` |\n\nFalta só o E2E do Playwright — vou instalar o Chromium e rodar o smoke (verificação de verdade, ponta-a-ponta):"
+  },
+  {
+    "timestamp": "2026-07-05T06:49:29.139Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "**E2E smoke passou também** (1 passed, 17.4s). Scaffold **totalmente verificado** — todos os 6 gates verdes. 🎉\n\nAgora commito em partes temáticas (via padrão `/commit`) e abro o PR. Primeiro o scaffold (staging verificado):"
+  },
+  {
+    "timestamp": "2026-07-05T06:49:48.502Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Staging correto (só scaffold + CI, sem `node_modules`/`dist`). Commit 1:"
+  },
+  {
+    "timestamp": "2026-07-05T06:50:28.418Z",
+    "source": "claude",
+    "git_branch": "feature/us-00-scaffold",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Commit 1 (scaffold, 32 arquivos) ✅. Agora o commit de estilo dos docs, o log de IA, push e PR:"
   }
 ]
