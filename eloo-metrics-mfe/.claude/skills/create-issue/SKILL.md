@@ -33,12 +33,15 @@ issue no GitHub é o usuário.**
 # US-NN — <Título>
 
 ## História
+
 Como **<papel>**, quero **<capacidade>** para **<benefício>**.
 
 ## Contexto
+
 <1–3 frases. Link para ADR: adr/000X-....md>
 
 ## Critérios de aceite
+
 - [ ] <comportamento observável e verificável 1>
 - [ ] <comportamento observável e verificável 2>
 - [ ] Integra a API <T1/T2> com auth e RBAC respeitados
@@ -46,6 +49,7 @@ Como **<papel>**, quero **<capacidade>** para **<benefício>**.
 - [ ] Textos em pt-BR; números/datas com locale pt-BR
 
 ## Definition of Done
+
 - [ ] `tsc`, `eslint` e `vitest` verdes (casos de erro/limite cobertos)
 - [ ] Contrato de remote (ADR-0005) respeitado
 - [ ] Docs/README atualizados quando aplicável
@@ -53,9 +57,11 @@ Como **<papel>**, quero **<capacidade>** para **<benefício>**.
 - [ ] Revisado em PR (GitFlow) e aprovado
 
 ## Dependências / bloqueadores
+
 - <ex.: depende da US-0X / endpoint do T2 disponível>
 
 ## Metadados do board
+
 - **ADR:** adr/000X-....md
 - **Responsável:** <nome>
 - **Entrega alvo:** <aaaa-mm-dd>
