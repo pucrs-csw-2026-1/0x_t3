@@ -6,12 +6,18 @@ detalhadas e a evolução no tempo**, para **analisar desempenho e tendências d
 um evento específico**.
 
 ## Contexto
-`EventMetricsPage` (por `eventId`) consumindo `/metrics/events/{id}`,
-`/checkin-rate`, `/certification-rate`, `/series` e `/timeseries`. Aqui o RBAC
-de manager (evento fora do escopo → `403`) precisa ser tratado com clareza.
-ADRs: [0009](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md),
-[0004](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md),
-[0005](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md).
+**Detalhe de um evento** e sua evolução no tempo.
+
+- **Consome do T2:** `/metrics/events/{id}`, `/checkin-rate`,
+  `/certification-rate`, `/series`, `/timeseries`.
+- **Ponto de atenção:** RBAC de manager — evento fora do escopo retorna `403`
+  e precisa de tratamento claro na UI.
+
+**ADRs relacionados**
+
+- [ADR-0009 — Contrato da API de métricas](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md)
+- [ADR-0004 — Biblioteca de gráficos](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md)
+- [ADR-0005 — Contrato de páginas remote](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0005-contrato-paginas-remote.md)
 
 ## Critérios de aceite
 - [ ] `EventMetricsPage` recebe `eventId` (prop) e `onBack` (callback) — contrato

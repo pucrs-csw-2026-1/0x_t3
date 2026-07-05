@@ -6,11 +6,16 @@ por faixa etária, gênero, cidade, perfil e tipo de evento**, para **entender o
 público dos eventos**.
 
 ## Contexto
-Telas/painéis de distribuição consumindo `/metrics/by-age`, `/by-gender`,
-`/by-city`, `/by-profile`, `/by-type` do T2, com filtros `event_id`/`from`/`to`
-(buckets `YYYY-MM`). ADRs:
-[0004](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md),
-[0009](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md).
+**Distribuições demográficas** dos participantes.
+
+- **Consome do T2:** `/metrics/by-age`, `/by-gender`, `/by-city`,
+  `/by-profile`, `/by-type`.
+- **Filtros:** `event_id` e período (`from`/`to`, buckets `YYYY-MM`).
+
+**ADRs relacionados**
+
+- [ADR-0004 — Biblioteca de gráficos](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0004-biblioteca-graficos.md)
+- [ADR-0009 — Contrato da API de métricas](https://github.com/pucrs-csw-2026-1/0x_t3/blob/main/eloo-metrics-mfe/adr/0009-contrato-api-metrics.md)
 
 ## Critérios de aceite
 - [ ] Painéis de distribuição por **faixa etária, gênero, cidade, perfil e tipo**
