@@ -1,0 +1,50 @@
+name: Sync dev ← main
+
+# Quando a main fica à frente da dev (pós-release/hotfix), traz a main de volta
+# para a dev. Tenta fast-forward direto; se a proteção bloquear, abre um PR de
+# sincronização. Ver a decisão sobre token/bypass no CONTRIBUTING.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sincroniza dev com main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Configura git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sincroniza (fast-forward ou PR)
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main dev
+          if git merge-base --is-ancestor origin/main origin/dev; then
+            echo "dev já contém main — nada a sincronizar."
+            exit 0
+          fi
+          git checkout dev
+          if git merge --ff-only origin/main && git push origin HEAD:dev; then
+            echo "Sincronizado via fast-forward."
+            exit 0
+          fi
+          echo "Fast-forward/push bloqueado pela proteção — abrindo PR de sincronização."
+          if [ -z "$(gh pr list --base dev --head main --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --base dev --head main \
+              --title "chore: sync dev ← main" \
+              --body "Sincronização automática: a \`main\` está à frente da \`dev\`. Este PR traz a \`main\` de volta para a \`dev\`."
+          else
+            echo "PR de sync já aberto — nada a fazer."
+          fi
