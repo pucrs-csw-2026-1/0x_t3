@@ -1,4 +1,4 @@
-# US-05 — Integração do remote mfeMetrics no eloo-shell
+# US-06 — Integração do remote mfeMetrics no eloo-shell
 
 ## História
 Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do
@@ -46,4 +46,4 @@ integrado.
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07
 - **Labels sugeridas:** `tipo:feature`, `area:dashboard`, `prioridade:alta`
-- **Branch:** `feature/us-05-integracao-shell`
+- **Branch:** `feature/us-06-integracao-shell`

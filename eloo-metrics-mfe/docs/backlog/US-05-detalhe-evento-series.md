@@ -1,4 +1,4 @@
-# US-04 — Detalhe de evento + séries históricas
+# US-05 — Detalhe de evento + séries históricas
 
 ## História
 Como **gestor (ADMIN/MANAGER)**, quero **abrir um evento e ver suas métricas
@@ -38,11 +38,11 @@ um evento específico**.
 - [ ] Revisado em PR (GitFlow) e aprovado.
 
 ## Dependências / bloqueadores
-- Depende da **US-01**; navegação a partir da **US-02** (`onSelectEvent`).
+- Depende da **US-01** e da **US-04** (catálogo); o detalhe é aberto a partir do catálogo de eventos.
 
 ## Metadados do board
 - **ADR:** 0004, 0005, 0009
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07
 - **Labels sugeridas:** `tipo:feature`, `area:dashboard`, `area:charts`, `area:integracao-t2`, `prioridade:media`
-- **Branch:** `feature/us-04-detalhe-evento-series`
+- **Branch:** `feature/us-05-detalhe-evento-series`

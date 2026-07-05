@@ -11,6 +11,9 @@ certificações num relance**.
 - **Consome do T2:** `/metrics/events` e `/metrics/engagement`.
 - **Mostra:** cards de counter (registered/checked_in/certified) + gráficos
   MUI X.
+- **Adaptável por papel:** uma única página — **admin** vê a visão **global**
+  (todos os eventos), **manager** vê o **escopo** dele. O backend já escopa via
+  RBAC (ADR-0009); muda o título/indicador de escopo, não o código.
 
 **ADRs relacionados**
 

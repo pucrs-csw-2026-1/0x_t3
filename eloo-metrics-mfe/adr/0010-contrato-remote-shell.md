@@ -48,7 +48,8 @@ com as telas do Stitch — ADR-0006):
 
 | Export | Componente | Props (contrato) |
 |--------|-----------|------------------|
-| `./DashboardPage` | visão geral (counters + gráficos) | `theme?`, `onSelectEvent?(eventId)` |
+| `./DashboardPage` | dashboard **adaptável por papel** (admin global / manager escopo) | `theme?` |
+| `./EventCatalogPage` | catálogo de eventos (escopo por RBAC) | `theme?`, `onSelectEvent?(eventId)` |
 | `./EventMetricsPage` | detalhe de métricas de um evento | `theme?`, `eventId`, `onBack?()` |
 
 > Nomes/props definitivos são fixados por US conforme as telas são desenhadas;
@@ -85,6 +86,7 @@ ao que já é feito para o `login`.
   ```tsx
   <Route element={<RequireManager />}>
     <Route path="/metrics" element={<MetricsDashboardPage />} />
+    <Route path="/metrics/eventos" element={<EventCatalogPage />} />
     <Route path="/metrics/eventos/:eventId" element={<EventMetricsPage />} />
   </Route>
   ```

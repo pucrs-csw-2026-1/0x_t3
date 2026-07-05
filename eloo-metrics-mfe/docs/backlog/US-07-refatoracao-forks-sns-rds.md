@@ -1,4 +1,4 @@
-# US-06 — Refatoração dos forks: publisher SNS + Postgres via RDS
+# US-07 — Refatoração dos forks: publisher SNS + Postgres via RDS
 
 ## História
 Como **gestor (ADMIN/MANAGER)**, quero **que o dashboard reflita os dados reais e
@@ -52,4 +52,4 @@ dashboard receber dados reais.
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07
 - **Labels sugeridas:** `tipo:infra`, `area:integracao-t2`, `prioridade:alta`
-- **Branch (nos forks):** `feature/us-06-publisher-sns-rds`
+- **Branch (nos forks):** `feature/us-07-publisher-sns-rds`
