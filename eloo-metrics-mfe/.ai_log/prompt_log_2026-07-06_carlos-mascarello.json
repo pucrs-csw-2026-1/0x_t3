@@ -1,0 +1,101 @@
+[
+  {
+    "timestamp": "2026-07-06T18:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — componentes obrigatórios sem endpoint no contrato ADR-0009 (ParticipantsTable, GoalProgressPanel).",
+    "prompt": "Implementar US-02 com toda a hierarquia de componentes da referência visual (counters, gráficos, tabela de participantes, painel de meta).",
+    "resposta_resumo": "A IA identificou que 'últimos participantes' e 'meta/progresso' não existem no contrato de métricas (ADR-0009) e que criar funções de serviço para endpoints não confirmados violaria o contrato. Propôs opções e perguntou antes de agir (AskUserQuestion), conforme CLAUDE.md §1.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Decisão do usuário: OMITIR ParticipantsTable, StatusBadge e GoalProgressPanel por estarem fora do contrato T2. Evita acoplar o frontend a campos não documentados no OpenAPI. Registrado como escopo de US futura."
+  },
+  {
+    "timestamp": "2026-07-06T18:12:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — fonte de dados do EngagementBarChart. Referência mostra barras por evento; ADR-0009 define /metrics/engagement como agregado.",
+    "prompt": "De onde o gráfico de barras 'Engajamento por Evento' deve tirar os dados?",
+    "resposta_resumo": "A IA apontou o descasamento (referência por evento x contrato agregado) e perguntou se as barras vêm de /metrics/events ou de um DTO novo assumido para /metrics/engagement.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Decisão do usuário: barras vêm de /metrics/events (registered/checked_in por evento); /metrics/engagement é consumido à parte como taxa agregada (nota '68% taxa' no card). Fiel ao contrato sem inventar shape de resposta; o gráfico recebe tudo por props, sem fetch (ADR-0004)."
+  },
+  {
+    "timestamp": "2026-07-06T18:45:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — 13 testes pré-existentes (authApi/metricsApi) falhando com 'localStorage is undefined'.",
+    "prompt": "vitest verde faz parte da DoD; os testes de serviço quebram por localStorage indefinido.",
+    "resposta_resumo": "A IA primeiro tentou definir a URL do jsdom em vitest.config (hipótese de origem opaca); não resolveu. Investigando com um teste-sonda, achou a causa real: Node 22 traz um localStorage experimental que exige --localstorage-file e sombreia o storage do jsdom. Propôs um polyfill de Storage em memória no setup de teste.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "A 1ª hipótese (URL do jsdom) foi REJEITADA após o teste-sonda mostrar window.localStorage ainda indefinido e o warning do Node. O fix aceito instala um Storage em memória só quando o nativo falha — corrige o ambiente sem mexer em deps nem enfraquecer gates (CLAUDE.md §6). Restaurou 13 testes que estavam vermelhos nesta máquina."
+  },
+  {
+    "timestamp": "2026-07-06T19:05:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — título/indicador de escopo por papel (admin x manager) numa única página.",
+    "prompt": "Adaptar o título por papel sem duplicar página nem reimplementar RBAC no frontend.",
+    "resposta_resumo": "A IA extraiu um helper resolveScope(profile) que lê o perfil do storage compartilhado (mfeAuth.*) e só troca título/subtítulo: admin='Administrador Global', manager='Escopo de <nome>'. A filtragem continua no backend (ADR-0009).",
+    "decisao": "aceito",
+    "avaliacao_critica": "Validado que o frontend não reimplementa checagem de escopo. Como o perfil não carrega um 'nome de escopo' dedicado, usou-se o nome do gestor como indicador, com fallback para username. Helper isolado e testado (partição por papel + perfil ausente)."
+  },
+  {
+    "timestamp": "2026-07-06T20:20:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — popular o dashboard com dados mockados para demo/standalone sem o T2 no ar.",
+    "prompt": "Colocar os dados mockados na tela.",
+    "resposta_resumo": "A IA criou src/services/mockData.ts e um flag VITE_USE_MOCKS lido pela camada de serviço. O flag foi posto em .env.development (não em .env) para o modo mock ligar só no dev; o Vitest roda em mode 'test', que não carrega .env.development, então os testes seguem batendo no contrato via MSW.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Ponto crítico: se o flag fosse para .env (sempre carregado), o Vitest passaria a receber mocks e os testes de contrato perderiam sentido. Isolar em .env.development evita isso. Confirmado por build --mode development que o flag inlina para true e o dataset mock embarca; em produção USE_MOCKS fica false (API real). Componentes seguem sem fetch — o mock vive na camada de serviço."
+  },
+  {
+    "timestamp": "2026-07-06T20:45:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — sidebar e cabeçalho da referência não haviam sido implementados.",
+    "prompt": "Adicionar a sidebar e o cabeçalho que faltavam, conforme o HTML de referência.",
+    "resposta_resumo": "A IA criou SideNavBar e TopNavBar e as compôs no App.tsx (shell standalone), NÃO dentro do DashboardPage exposto. Reintroduziu ParticipantsTable/StatusBadge/GoalProgressPanel alimentados por mock.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Tensão com ADR-0005/0010: layout/nav/tema são do eloo-shell; um remote não deve renderizar chrome próprio. Solução: sidebar/topbar só no App.tsx standalone (visão de demo), mantendo o DashboardPage exposto livre de chrome. Tabela/meta são conteúdo de página e só aparecem quando há dados (ocultas com backend real, que ainda não expõe esses endpoints)."
+  },
+  {
+    "timestamp": "2026-07-06T22:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — remoção do box 'Próxima Grande Meta'.",
+    "prompt": "Retire o box da 'Próxima grande meta'.",
+    "resposta_resumo": "A IA removeu o GoalProgressPanel da renderização do DashboardPage (e o fetch/estado de goal), voltando o gráfico à largura total, mantendo o componente e a função de serviço reutilizáveis.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Escopo conservador (CLAUDE.md §1): 'retire o box' = parar de renderizar; não apagar módulos reutilizáveis sem pedido. Testes do painel de meta ajustados. (Depois o usuário pediu a limpeza definitiva — ver entrada seguinte.)"
+  },
+  {
+    "timestamp": "2026-07-06T22:30:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — limpeza definitiva de GoalProgressPanel e ParticipantsTable; novo ranking Top 5 melhores/piores.",
+    "prompt": "Faça a limpeza do GoalProgressPanel e do ParticipantsPanel e adicione o ranking de top 5 melhores e piores eventos.",
+    "resposta_resumo": "Apagou GoalProgressPanel, ParticipantsTable e StatusBadge (só a tabela usava) com testes, e limpou resíduos em mockData/metricsApi. Criou helper puro rankEventsByAdhesion(events, limit) e o componente EventRanking (duas colunas), derivando de /metrics/events — sem endpoint novo nem fetch no componente.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Métrica assumida e registrada: ranking por TAXA DE ADESÃO (check-ins ÷ inscritos), que compara eventos de tamanhos diferentes de forma justa, em vez de volume absoluto. Ordenação num helper puro/testável (valor-limite: inscritos=0 sem divisão por zero); componente só renderiza (ADR-0005). Mock ampliado para 10 eventos com taxas distintas para os Top 5 não se sobreporem. Sem endpoint novo — respeita ADR-0009."
+  },
+  {
+    "timestamp": "2026-07-06T23:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — responsividade.",
+    "prompt": "É possível adicionar responsividade?",
+    "resposta_resumo": "A IA apontou que grande parte já era responsiva (grids xs/md/lg, header que empilha) e corrigiu os pontos fracos: gráfico de 10 barras que espremia passou a rolar na horizontal com largura mínima por barra; o menu hambúrguer (antes inerte) passou a abrir um Drawer com a SideNavBar (permanente em md+, drawer no mobile); título menor no xs.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Preferiu-se scroll horizontal a espremer/rotacionar barras. A visibilidade da sidebar saiu do componente e foi para o App (quem conhece o breakpoint), deixando SideNavBar apresentacional e reutilizável no drawer. Tudo chrome standalone (ADR-0005) — não toca o contrato de remote. Teste do onMenuClick adicionado."
+  },
+  {
+    "timestamp": "2026-07-06T23:40:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — abas do topo inacessíveis no mobile e drawer visualmente quebrado.",
+    "prompt": "Ao diminuir a tela as opções da topbar somem e não dá pra acessá-las; depois: o drawer com as abas ficou feio (dois blocos colados com fundos diferentes).",
+    "resposta_resumo": "Primeiro as abas foram para o drawer como uma List branca separada, colada ao painel ciano da sidebar — ficou feio. A correção final integrou as abas DENTRO da SideNavBar via prop opcional 'tabs': seção 'Navegação' com ícones, no mesmo fundo/estilo, separada por divisor da seção 'Painel'. A lista virou módulo próprio (navTabs.ts).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "A 1ª tentativa (List separada) foi REJEITADA pelo usuário por estética. Lição aplicada: não colar componentes heterogêneos; unificar no mesmo painel. A prop 'tabs' mantém a SideNavBar apresentacional e reutilizável (desktop sem tabs, mobile com tabs), sem duplicar estilo. Extrair navTabs.ts também removeu um warning de fast-refresh do eslint."
+  },
+  {
+    "timestamp": "2026-07-06T23:55:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-02 — logo no cabeçalho e remoção do rótulo 'Admin Global'; depois mover o logo para a sidebar e aumentá-lo.",
+    "prompt": "Adicione o logo.png no canto superior direito e remova a informação 'Admin Global'; depois: troque o logo para a sidebar; depois: aumente o tamanho do logo.",
+    "resposta_resumo": "logo.png (raiz do repo) foi copiado para src/assets e importado (Vite empacota com hash — resolve certo standalone e como remote). Primeiro exibido no topbar; depois movido para o topo da SideNavBar (onde ficava a marca 'Admin Global', removida) e ampliado de 36px para 56px.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Asset importado de src/assets (não de public/): como o mfe é montado no shell, um caminho absoluto /logo.png resolveria contra a origem do host e quebraria; o import gera URL do próprio remote. Removido só o rótulo 'Admin Global' da sidebar (chrome standalone); MANTIDO o indicador de escopo do H1 do DashboardPage, que é critério de aceite da US-02 (admin global x manager escopo)."
+  }
+]
