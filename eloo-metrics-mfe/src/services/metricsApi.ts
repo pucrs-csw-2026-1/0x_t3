@@ -1,5 +1,20 @@
 import { getStoredAccessToken, notifySessionExpired } from "./authApi";
-import { MOCK_ENGAGEMENT, MOCK_EVENTS_PAGE } from "./mockData";
+import {
+  MOCK_ENGAGEMENT,
+  MOCK_EVENTS_PAGE,
+  MOCK_BY_AGE,
+  MOCK_BY_GENDER,
+  MOCK_BY_CITY,
+  MOCK_BY_PROFILE,
+  MOCK_BY_TYPE,
+} from "./mockData";
+import {
+  AGE_RANGES,
+  toAgeRange,
+  genderLabel,
+  profileLabel,
+  typeLabel,
+} from "../utils/demographics";
 
 // Modo demonstração: quando VITE_USE_MOCKS=true (só em .env.development), a
 // camada devolve dados mockados sem tocar a rede — útil para rodar o dashboard
@@ -181,6 +196,153 @@ export async function getEngagement(params: EngagementParams): Promise<Engagemen
 
   const data = (await authedGet("/metrics/engagement", query)) as Record<string, unknown>;
   return toEngagement(data);
+}
+
+// ---------------------------------------------------------------------------
+// US-03 — Distribuições demográficas
+// GET /metrics/by-age | by-gender | by-city | by-profile | by-type (ADR-0009).
+// Todos aceitam `event_id` (opcional) e a janela mensal `from`/`to` (YYYY-MM).
+// Cada método devolve um array de buckets já em camelCase e com rótulos pt-BR;
+// a normalização (faixas canônicas, tradução, ordenação, top-N) vive aqui —
+// os gráficos só recebem dados por props (ADR-0004).
+// ---------------------------------------------------------------------------
+
+export interface DistributionParams {
+  from: string; // YYYY-MM
+  to: string; // YYYY-MM
+  eventId?: string;
+}
+
+// Todos os DTOs de distribuição compartilham `count` (valor absoluto no período),
+// o que permite somatórios/percentuais genéricos na UI.
+export interface AgeDistribution {
+  range: string; // faixa canônica (0-17…65+, "Desconhecido")
+  label: string; // rótulo exibível (== range, em pt-BR)
+  count: number;
+}
+
+export interface GenderDistribution {
+  gender: string; // chave normalizada do backend
+  label: string; // rótulo pt-BR (Feminino/Masculino/Outro/Desconhecido)
+  count: number;
+}
+
+export interface CityDistribution {
+  city: string;
+  count: number;
+}
+
+export interface ProfileDistribution {
+  profile: string;
+  label: string;
+  count: number;
+}
+
+export interface TypeDistribution {
+  type: string;
+  label: string;
+  count: number;
+}
+
+// Top de cidades exibido pela US-03 (critério de aceite: "top 10 cidades").
+const CITY_TOP_N = 10;
+
+// O contrato exato do corpo destes endpoints ainda não está fixado no OpenAPI do
+// T2 (ADR-0009 lista os caminhos, não o shape). Toleramos array puro ou envelope
+// (`items`/`buckets`/`data`), ignorando o resto (evolução aditiva).
+function asBuckets(data: unknown): Record<string, unknown>[] {
+  if (Array.isArray(data)) return data as Record<string, unknown>[];
+  const envelope = data as Record<string, unknown> | null;
+  const list = envelope?.items ?? envelope?.buckets ?? envelope?.data;
+  return Array.isArray(list) ? (list as Record<string, unknown>[]) : [];
+}
+
+// Contagem do bucket, tolerando os nomes de campo mais prováveis do backend.
+function bucketCount(raw: Record<string, unknown>): number {
+  return Number(raw.count ?? raw.total ?? raw.value ?? 0) || 0;
+}
+
+function distributionQuery(params: DistributionParams): URLSearchParams {
+  const query = new URLSearchParams({ from: params.from, to: params.to });
+  if (params.eventId) query.set("event_id", params.eventId);
+  return query;
+}
+
+// Agrega contagens por rótulo preservando a ordem de primeira aparição.
+function aggregateByLabel(
+  buckets: Record<string, unknown>[],
+  keyOf: (raw: Record<string, unknown>) => string,
+  labelOf: (raw: Record<string, unknown>) => string,
+): { key: string; label: string; count: number }[] {
+  const order: string[] = [];
+  const byKey = new Map<string, { key: string; label: string; count: number }>();
+  for (const raw of buckets) {
+    const key = keyOf(raw);
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.count += bucketCount(raw);
+    } else {
+      byKey.set(key, { key, label: labelOf(raw), count: bucketCount(raw) });
+      order.push(key);
+    }
+  }
+  return order.map((key) => byKey.get(key)!);
+}
+
+// Normaliza para as 8 faixas canônicas, na ordem fixa e SEMPRE completas (faixa
+// sem dado vira 0). Faixas fora do conjunto colapsam em "Desconhecido".
+function normalizeAge(buckets: Record<string, unknown>[]): AgeDistribution[] {
+  const counts = new Map<string, number>();
+  for (const raw of buckets) {
+    const range = toAgeRange(raw.age_range ?? raw.range ?? raw.bucket ?? raw.key);
+    counts.set(range, (counts.get(range) ?? 0) + bucketCount(raw));
+  }
+  return AGE_RANGES.map((range) => ({ range, label: range, count: counts.get(range) ?? 0 }));
+}
+
+export async function getByAge(params: DistributionParams): Promise<AgeDistribution[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_BY_AGE);
+  const data = await authedGet("/metrics/by-age", distributionQuery(params));
+  return normalizeAge(asBuckets(data));
+}
+
+export async function getByGender(params: DistributionParams): Promise<GenderDistribution[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_BY_GENDER);
+  const data = await authedGet("/metrics/by-gender", distributionQuery(params));
+  return aggregateByLabel(
+    asBuckets(data),
+    (raw) => genderLabel(raw.gender ?? raw.key),
+    (raw) => genderLabel(raw.gender ?? raw.key),
+  ).map(({ label, count }) => ({ gender: label, label, count }));
+}
+
+export async function getByCity(params: DistributionParams): Promise<CityDistribution[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_BY_CITY);
+  const data = await authedGet("/metrics/by-city", distributionQuery(params));
+  return asBuckets(data)
+    .map((raw) => ({ city: String(raw.city ?? raw.key ?? "—"), count: bucketCount(raw) }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, CITY_TOP_N);
+}
+
+export async function getByProfile(params: DistributionParams): Promise<ProfileDistribution[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_BY_PROFILE);
+  const data = await authedGet("/metrics/by-profile", distributionQuery(params));
+  return aggregateByLabel(
+    asBuckets(data),
+    (raw) => profileLabel(raw.profile ?? raw.key),
+    (raw) => profileLabel(raw.profile ?? raw.key),
+  ).map(({ label, count }) => ({ profile: label, label, count }));
+}
+
+export async function getByType(params: DistributionParams): Promise<TypeDistribution[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_BY_TYPE);
+  const data = await authedGet("/metrics/by-type", distributionQuery(params));
+  return aggregateByLabel(
+    asBuckets(data),
+    (raw) => typeLabel(raw.event_type ?? raw.type ?? raw.key),
+    (raw) => typeLabel(raw.event_type ?? raw.type ?? raw.key),
+  ).map(({ label, count }) => ({ type: label, label, count }));
 }
 
 // Sinaliza à UI que estamos em modo demonstração (ex.: exibir a tendência mock

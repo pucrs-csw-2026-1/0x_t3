@@ -142,5 +142,32 @@
     "resposta_resumo": "A IA rodou os gates reais: npm run build (tsc -b + vite build, com os dois remotes expostos) OK; eslint e prettier limpos; vitest 93/93 verde; cobertura 98,95% (thresholds 80% atendidos); smoke Playwright verde. Mapeou cada item da robustez a código+teste (loading→skeletons N=page_size; erro→ErrorAlert+retry; vazio→EmptyState período/escopo + busca; 401→sessionExpired do host, sem redirect local).",
     "decisao": "aceito",
     "avaliacao_critica": "Nenhuma correção de código foi necessária nesta passada — a US-04 já satisfazia a DoD e os critérios do backlog. Registrada uma limitação conhecida e aceita: não há guarda de resposta obsoleta (stale-response) em cliques rápidos, o mesmo padrão da US-02 (DashboardPage) — adicioná-la só aqui divergiria do irmão sem defeito observável no uso normal. A única ação corretiva foi documental: esta entrada de log (item 5 do ADR-0007)."
+  },
+  {
+    "timestamp": "2026-07-06T21:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-03 — conflito entre reaproveitar o PeriodSelector da US-02 (datas YYYY-MM-DD) e os endpoints de distribuição, que usam buckets mensais from/to em YYYY-MM (ADR-0009).",
+    "prompt": "Implementar a US-03 mantendo a componentização, reaproveitando PeriodSelector/ErrorAlert/EmptyState e enviando o período em YYYY-MM.",
+    "resposta_resumo": "A IA apontou que o PeriodSelector emite YYYY-MM-DD e os by-* consomem YYYY-MM, e ofereceu três caminhos (novo seletor mensal; adaptar o PeriodSelector; derivar YYYY-MM das datas na camada de serviço) via AskUserQuestion antes de codar (CLAUDE.md §1).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Decisão do usuário: DERIVAR YYYY-MM das datas. Reusa o PeriodSelector da US-02 sem tocá-lo (não mexe em componente já testado) e concentra a conversão data→mês em util puro (periodToMonthRange) + validação (validatePeriod). Mantém uma única semântica de período na UI e respeita o ADR-0009 no envio."
+  },
+  {
+    "timestamp": "2026-07-06T21:22:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-03 — o ADR-0009 lista os caminhos by-age/gender/city/profile/type, mas não fixa o shape do corpo (o OpenAPI do T2 é a fonte viva e ainda não foi confirmado para estes).",
+    "prompt": "Adicionar getByAge/Gender/City/Profile/Type mapeando snake_case → camelCase, sem gráfico fazendo fetch.",
+    "resposta_resumo": "A IA implementou um parser tolerante (aceita array puro ou envelope items/buckets/data; nomes de contagem count/total/value) e concentrou TODA a normalização na camada de serviço: 8 faixas etárias canônicas sempre completas/ordenadas, tradução pt-BR das categorias, top-10 de cidades por volume. Os gráficos só recebem props (ADR-0004).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Como o corpo não está fixado no OpenAPI, preferiu-se tolerância a evolução aditiva (ignora campos desconhecidos, cai em 'Desconhecido' fora do conjunto) em vez de acoplar a um shape presumido — mesmo princípio da US-02 (item 2 do contrato ADR-0009). A normalização mora no serviço, não no componente, cumprindo 'gráficos sem fetch/transformação'. Ponto a revisar quando o Swagger do T2 confirmar os campos reais."
+  },
+  {
+    "timestamp": "2026-07-06T21:34:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-03 — 'falha em um painel não derruba os outros' + 'intervalo inválido não dispara fetch' + retry por painel.",
+    "prompt": "Cada distribuição com loading/erro/vazio próprios, fetches paralelos e validação antes do fetch (evitar 422).",
+    "resposta_resumo": "A IA extraiu um hook useDistribution(fetcher, params) por painel: os 5 disparam em paralelo na mesma renderização (independentes por construção), com guarda de resposta obsoleta (requestId) e params=null quando o período é inválido — nesse caso não busca e mantém os últimos dados, exibindo o erro inline no toolbar (não alert global).",
+    "decisao": "aceito",
+    "avaliacao_critica": "Optou-se por independência real via um hook por painel (a falha de um não afeta os outros) em vez de um Promise.allSettled central — o efeito paralelo emerge naturalmente e o retry por painel fica trivial (reload do próprio hook). Diferente da limitação registrada na US-02/04, AQUI foi adicionada a guarda de stale-response, pois a troca rápida de evento/período é esperada nesta tela. Validação coberta por unit (validatePeriod) e por integração (inverter o intervalo não gera novo fetch)."
   }
 ]

@@ -6,6 +6,7 @@ import { SideNavBar } from "./components/layout/SideNavBar";
 import { TopNavBar } from "./components/layout/TopNavBar";
 import DashboardPage from "./pages/DashboardPage";
 import EventCatalogPage from "./pages/EventCatalogPage";
+import DemographicsPage from "./pages/DemographicsPage";
 
 // Standalone: aqui o App faz o papel do host (shell). É o host quem navega
 // (ADR-0005) — o EventCatalogPage só reporta a seleção via onSelectEvent; a
@@ -49,6 +50,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/catalogo" element={<CatalogRoute />} />
+          <Route path="/demografia" element={<DemographicsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>

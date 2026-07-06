@@ -8831,5 +8831,852 @@
     },
     "role": "assistant",
     "content": "Agora executo os 4 commits, cada um com seus arquivos por tipo:"
+  },
+  {
+    "timestamp": "2026-07-06T19:15:20.010Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Todos os 4 commits criados. Deixa eu confirmar o resultado e o que ficou de fora:"
+  },
+  {
+    "timestamp": "2026-07-06T19:15:42.419Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Pronto. Separei o trabalho da US-04 em 4 commits por tipo, seguindo o CONTRIBUTING.md (Conventional Commits, corpo com bullets no imperativo, sem `Co-Authored-By`, sem `--no-verify`, sem amend, na branch de feature):\n\n| Commit | Tipo | Conteúdo |\n|---|---|---|\n| `da370c3` | **feat(catalog)** | `EventCatalogPage` + 6 componentes, extensão do `metricsApi`/`mockData`, rota `/catalogo`, navegação unificada na sidebar + exposição remote |\n| `accda54` | **test(catalog)** | unit + integração MSW + testes existentes atualizados + handler base |\n| `2786aea` | **docs(ai-log)** | log automático da sessão (raiz) |\n| `116675b` | **docs(ai-log)** | log curado de revisão crítica (mfe) — segue o padrão da US-02 |\n\n**Deixei de fora de propósito** (não são da US-04):\n- `node_modules/` e `package-lock.json` (raiz) — artefatos avulsos, sem `.gitignore` na raiz;\n- `eloo-metrics-mfe/package-lock.json` — mudança pré-existente a esta sessão (18 remoções que eu não gerei; não instalei dependências).\n\nSe quiser, posso tratar esses três à parte (ex.: um `chore` para o lock do mfe, ou adicionar um `.gitignore` na raiz para o `node_modules`/lock avulsos) — me diz como prefere. Não fiz `push` nem abri PR, conforme as regras do CLAUDE.md."
+  },
+  {
+    "timestamp": "2026-07-06T19:21:37.892Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "faça uma mensagem de pr com base no que foi feito em US-02"
+  },
+  {
+    "timestamp": "2026-07-06T19:21:48.732Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vou procurar o PR da US-02 para espelhar a estrutura/estilo. Deixa eu ver se há template de PR e o PR anterior:"
+  },
+  {
+    "timestamp": "2026-07-06T19:22:46.793Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Entendido — aqui está a mensagem de PR pronta para copiar, no mesmo formato/estilo da US-02 (título Conventional Commits, resumo, o que foi feito, ADRs, critérios de aceite, DoD/gates, como testar):\n\n---\n\n**Título:**\n```\nfeat(catalog): US-04 — Catálogo de eventos\n```\n\n**Base:** `dev` ← **Compare:** `feature/us-04-catalogo-eventos`\n\n---\n\n## Resumo\n\nImplementa a **US-04 — Catálogo de eventos**: a porta de entrada para o detalhe de métricas de um evento (US-05). Lista os eventos retornados pelo T2 com nome, período/situação e counters resumidos, com paginação server-side e filtro de período. O escopo por papel é **transparente** — admin e manager chamam o mesmo endpoint e o backend escopa via RBAC (ADR-0009); o frontend só exibe o que recebe.\n\n## O que foi feito\n\n- **`EventCatalogPage`** exposta como remote (ADR-0005): recebe `onSelectEvent(eventId)` e **nunca navega sozinha**; período sempre enviado e **paginação server-side** (`page`/`page_size`, reset para a página 1 ao trocar período/tamanho).\n- **Componentes próprios** (cada um em arquivo): `CatalogToolbar`, `SearchInput`, `EventList`, `EventCard`, `EventCardSkeleton`, `PaginationControls`. Reaproveita `PeriodSelector`, `ErrorAlert`, `EmptyState` e os helpers `formatNumber`/`formatDate`/`formatPercent` da US-02.\n- **Camada de serviço**: `EventMetrics` estendido com situação e período do evento (mapeamento tolerante snake_case→camelCase), normalização de status (ativo/encerrado/rascunho); `mockData` com status/datas para o modo demo.\n- **Navegação do shell standalone** unificada na `SideNavBar` (rota ativa via router); rota `/catalogo` no `App` e o `TopNavBar` deixou de duplicar a navegação.\n\n## ADRs\n\n- **ADR-0009** — Contrato da API de métricas (endpoint paginado, período obrigatório, RBAC, erros).\n- **ADR-0005** — Contrato de páginas remote (tema por prop, navegação por callback, i18n pt-BR).\n\n## Critérios de aceite\n\n- [x] `EventCatalogPage` exposta como remote com nome, período/status e counters resumidos.\n- [x] Paginação (`page`/`page_size`) e filtro de período; escopo por RBAC do T2.\n- [x] Selecionar evento dispara `onSelectEvent(eventId)` — o host navega.\n- [x] Integra a API T2 com `Authorization: Bearer`.\n- [x] Trata loading, erro, vazio (período/escopo) e sessão expirada.\n- [x] Textos em pt-BR; datas/números com locale pt-BR.\n\n## Robustez (loading / erro / vazio / sessão)\n\n- **Loading** → N `EventCardSkeleton` (N = `page_size`), região `aria-busy`.\n- **Erro** → `ErrorAlert` com retry funcional.\n- **Vazio** → `EmptyState` contextual: período (admin) vs. escopo (manager) + busca local sem resultado.\n- **401** → serviço dispara `mfeAuth:sessionExpired` (host redireciona); a página só propaga a mensagem, sem redirecionar sozinha.\n\n## Definition of Done / gates\n\n- [x] `npm run build` (`tsc -b` + build) sem erros — remotes `DashboardPage` e `EventCatalogPage` expostos.\n- [x] `npm run lint` limpo.\n- [x] `npm run format:check` limpo.\n- [x] `vitest` verde — **93/93**, com casos de erro/limite; cobertura **98,95%** (thresholds 80%).\n- [x] Smoke Playwright verde.\n- [x] Contrato de remote (ADR-0005) respeitado.\n- [x] Prompts de IA registrados em `.ai_log/`.\n\n## Commits (por tipo)\n\n- `feat(catalog)`: página + componentes + serviço + mock + navegação + exposição remote\n- `test(catalog)`: unit + integração MSW + testes atualizados + handler\n- `docs(ai-log)`: prompts da sessão da US-04\n- `docs(ai-log)`: revisão crítica de IA da US-04\n\n## Como testar\n\n```bash\nnpm ci\nnpm run build && npm run lint && npm run format:check && npm run test\nnpm run dev   # abrir /catalogo no shell standalone\n```\n\n## Notas / fora de escopo\n\n- **RBAC não é reimplementado no frontend** — filtragem é do T2.\n- Datas usam `formatDate` (dd/mm/aaaa) por reuso explícito do helper da US-02 (o exemplo \"07 jul. 2026\" do enunciado exigiria um segundo formatador global — decisão do usuário).\n- Sem guarda de *stale-response* em cliques muito rápidos — mesmo padrão da US-02 (`DashboardPage`).\n- Ficaram **fora deste PR**: `node_modules/` e `package-lock.json` da raiz e a alteração pré-existente em `eloo-metrics-mfe/package-lock.json` (não pertencem à US-04).\n\n---\n\nQuer que eu ajuste o tom, encurte, ou inclua um `Closes #NN` com o número da issue do board?"
+  },
+  {
+    "timestamp": "2026-07-06T19:29:44.223Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "reescreva como código md"
+  },
+  {
+    "timestamp": "2026-07-06T19:30:12.357Z",
+    "source": "claude",
+    "git_branch": "feature/us-04-catalogo-eventos",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Aqui está a mensagem de PR como um único bloco Markdown para copiar:\n\n```markdown\n# feat(catalog): US-04 — Catálogo de eventos\n\n**Base:** `dev` ← **Compare:** `feature/us-04-catalogo-eventos`\n\n## Resumo\n\nImplementa a **US-04 — Catálogo de eventos**: a porta de entrada para o detalhe\nde métricas de um evento (US-05). Lista os eventos retornados pelo T2 com nome,\nperíodo/situação e counters resumidos, com paginação server-side e filtro de\nperíodo. O escopo por papel é **transparente** — admin e manager chamam o mesmo\nendpoint e o backend escopa via RBAC (ADR-0009); o frontend só exibe o que recebe.\n\n## O que foi feito\n\n- **`EventCatalogPage`** exposta como remote (ADR-0005): recebe\n  `onSelectEvent(eventId)` e **nunca navega sozinha**; período sempre enviado e\n  **paginação server-side** (`page`/`page_size`, reset para a página 1 ao trocar\n  período/tamanho).\n- **Componentes próprios** (cada um em arquivo): `CatalogToolbar`, `SearchInput`,\n  `EventList`, `EventCard`, `EventCardSkeleton`, `PaginationControls`. Reaproveita\n  `PeriodSelector`, `ErrorAlert`, `EmptyState` e os helpers\n  `formatNumber`/`formatDate`/`formatPercent` da US-02.\n- **Camada de serviço**: `EventMetrics` estendido com situação e período do evento\n  (mapeamento tolerante snake_case→camelCase), normalização de status\n  (ativo/encerrado/rascunho); `mockData` com status/datas para o modo demo.\n- **Navegação do shell standalone** unificada na `SideNavBar` (rota ativa via\n  router); rota `/catalogo` no `App` e o `TopNavBar` deixou de duplicar a navegação.\n\n## ADRs\n\n- **ADR-0009** — Contrato da API de métricas (endpoint paginado, período\n  obrigatório, RBAC, erros).\n- **ADR-0005** — Contrato de páginas remote (tema por prop, navegação por\n  callback, i18n pt-BR).\n\n## Critérios de aceite\n\n- [x] `EventCatalogPage` exposta como remote com nome, período/status e counters resumidos.\n- [x] Paginação (`page`/`page_size`) e filtro de período; escopo por RBAC do T2.\n- [x] Selecionar evento dispara `onSelectEvent(eventId)` — o host navega.\n- [x] Integra a API T2 com `Authorization: Bearer`.\n- [x] Trata loading, erro, vazio (período/escopo) e sessão expirada.\n- [x] Textos em pt-BR; datas/números com locale pt-BR.\n\n## Robustez (loading / erro / vazio / sessão)\n\n- **Loading** → N `EventCardSkeleton` (N = `page_size`), região `aria-busy`.\n- **Erro** → `ErrorAlert` com retry funcional.\n- **Vazio** → `EmptyState` contextual: período (admin) vs. escopo (manager) +\n  busca local sem resultado.\n- **401** → serviço dispara `mfeAuth:sessionExpired` (host redireciona); a página\n  só propaga a mensagem, sem redirecionar sozinha.\n\n## Definition of Done / gates\n\n- [x] `npm run build` (`tsc -b` + build) sem erros — remotes `DashboardPage` e `EventCatalogPage` expostos.\n- [x] `npm run lint` limpo.\n- [x] `npm run format:check` limpo.\n- [x] `vitest` verde — **93/93**, com casos de erro/limite; cobertura **98,95%** (thresholds 80%).\n- [x] Smoke Playwright verde.\n- [x] Contrato de remote (ADR-0005) respeitado.\n- [x] Prompts de IA registrados em `.ai_log/`.\n\n## Commits (por tipo)\n\n- `feat(catalog)`: página + componentes + serviço + mock + navegação + exposição remote\n- `test(catalog)`: unit + integração MSW + testes atualizados + handler\n- `docs(ai-log)`: prompts da sessão da US-04\n- `docs(ai-log)`: revisão crítica de IA da US-04\n\n## Como testar\n\n```bash\nnpm ci\nnpm run build && npm run lint && npm run format:check && npm run test\nnpm run dev   # abrir /catalogo no shell standalone\n```\n\n## Notas / fora de escopo\n\n- **RBAC não é reimplementado no frontend** — filtragem é do T2.\n- Datas usam `formatDate` (dd/mm/aaaa) por reuso explícito do helper da US-02 (o\n  exemplo \"07 jul. 2026\" do enunciado exigiria um segundo formatador global —\n  decisão do usuário).\n- Sem guarda de *stale-response* em cliques muito rápidos — mesmo padrão da US-02\n  (`DashboardPage`).\n- Ficaram **fora deste PR**: `node_modules/` e `package-lock.json` da raiz e a\n  alteração pré-existente em `eloo-metrics-mfe/package-lock.json` (não pertencem à US-04).\n```"
+  },
+  {
+    "timestamp": "2026-07-06T19:59:06.425Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "crie a tela:\n\n<!DOCTYPE html>\n\n\n<html lang=\"pt-BR\"><!-- Material Symbols -->\n<link href=\"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap\" rel=\"stylesheet\"/>\n<!-- Google Fonts: Public Sans & Space Grotesk -->\n<link href=\"https://fonts.googleapis.com\" rel=\"preconnect\"/>\n<link crossorigin=\"\" href=\"https://fonts.gstatic.com\" rel=\"preconnect\"/>\n<link href=\"https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;family=Space+Grotesk:wght@600&amp;display=swap\" rel=\"stylesheet\"/>\n<link href=\"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap\" rel=\"stylesheet\"/>\n<!-- Tailwind CSS -->\n<script src=\"https://cdn.tailwindcss.com?plugins=forms,container-queries\"></script>\n<script id=\"tailwind-config\">\n       tailwind.config = {\n           darkMode: \"class\",\n           theme: {\n               extend: {\n                   \"colors\": {\n                       \"surface-container-lowest\": \"#ffffff\",\n                       \"secondary\": \"#7b4d88\",\n                       \"primary-fixed\": \"#ffd9e2\",\n                       \"on-secondary-fixed-variant\": \"#61356f\",\n                       \"surface-container-highest\": \"#d1e7e9\",\n                       \"tertiary-container\": \"#3d6c8a\",\n                       \"on-primary-fixed-variant\": \"#8c0849\",\n                       \"error-container\": \"#ffdad6\",\n                       \"on-secondary-container\": \"#72447f\",\n                       \"on-tertiary-container\": \"#d0eaff\",\n                       \"tertiary\": \"#215470\",\n                       \"surface-container-low\": \"#e2f8fb\",\n                       \"on-primary\": \"#ffffff\",\n                       \"on-tertiary-fixed\": \"#001e2e\",\n                       \"on-primary-fixed\": \"#3e001d\",\n                       \"inverse-primary\": \"#ffb1c7\",\n                       \"inverse-on-surface\": \"#dff5f8\",\n                       \"on-secondary-fixed\": \"#310540\",\n                       \"surface-bright\": \"#ebfdff\",\n                       \"inverse-surface\": \"#203436\",\n                       \"tertiary-fixed\": \"#c7e7ff\",\n                       \"surface-container\": \"#dcf2f5\",\n                       \"secondary-fixed-dim\": \"#eab3f7\",\n                       \"on-surface\": \"#0a1e21\",\n                       \"on-tertiary-fixed-variant\": \"#164b68\",\n                       \"primary-container\": \"#b8336a\",\n                       \"surface-variant\": \"#d1e7e9\",\n                       \"background\": \"#ebfdff\",\n                       \"surface-container-high\": \"#d6ecef\",\n                       \"surface\": \"#ebfdff\",\n                       \"on-tertiary\": \"#ffffff\",\n                       \"tertiary-fixed-dim\": \"#9dccee\",\n                       \"outline-variant\": \"#ddbfc6\",\n                       \"secondary-container\": \"#f0b9fd\",\n                       \"on-background\": \"#0a1e21\",\n                       \"error\": \"#ba1a1a\",\n                       \"on-primary-container\": \"#ffdfe6\",\n                       \"surface-tint\": \"#ac2961\",\n                       \"outline\": \"#8a7177\",\n                       \"secondary-fixed\": \"#fad7ff\",\n                       \"on-secondary\": \"#ffffff\",\n                       \"surface-dim\": \"#c8dee1\",\n                       \"on-error\": \"#ffffff\",\n                       \"on-error-container\": \"#93000a\",\n                       \"on-surface-variant\": \"#574147\",\n                       \"primary\": \"#981652\",\n                       \"primary-fixed-dim\": \"#ffb1c7\"\n                   },\n                   \"borderRadius\": {\n                       \"DEFAULT\": \"0.125rem\",\n                       \"lg\": \"0.25rem\",\n                       \"xl\": \"0.5rem\",\n                       \"full\": \"0.75rem\"\n                   },\n                   \"spacing\": {\n                       \"margin\": \"24px\",\n                       \"xl\": \"32px\",\n                       \"gutter\": \"16px\",\n                       \"md\": \"16px\",\n                       \"lg\": \"24px\",\n                       \"sm\": \"8px\"\n                   },\n                   \"fontFamily\": {\n                       \"headline-md\": [\"Public Sans\"],\n                       \"headline-lg-mobile\": [\"Public Sans\"],\n                       \"headline-lg\": [\"Public Sans\"],\n                       \"body-md\": [\"Public Sans\"],\n                       \"label-caps\": [\"Space Grotesk\"],\n                       \"body-sm\": [\"Public Sans\"]\n                   },\n                   \"fontSize\": {\n                       \"headline-md\": [\"2rem\", { \"lineHeight\": \"1.3\", \"fontWeight\": \"600\" }],\n                       \"headline-lg-mobile\": [\"2rem\", { \"lineHeight\": \"1.2\", \"fontWeight\": \"700\" }],\n                       \"headline-lg\": [\"3rem\", { \"lineHeight\": \"1.2\", \"fontWeight\": \"700\" }],\n                       \"body-md\": [\"1rem\", { \"lineHeight\": \"1.6\", \"fontWeight\": \"400\" }],\n                       \"label-caps\": [\"0.75rem\", { \"lineHeight\": \"1\", \"letterSpacing\": \"0.05em\", \"fontWeight\": \"600\" }],\n                       \"body-sm\": [\"0.875rem\", { \"lineHeight\": \"1.6\", \"fontWeight\": \"400\" }]\n                   }\n               },\n           },\n       }\n   </script>\n</head>\n<body class=\"bg-background text-on-background font-body-md h-screen overflow-hidden flex antialiased\">\n<!-- Shell: SideNavBar -->\n<nav class=\"hidden md:flex flex-col h-full py-md px-sm bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant docked left-0 w-64 z-20 shrink-0\">\n<!-- Header -->\n<div class=\"mb-xl px-sm flex items-center gap-3\">\n<div class=\"w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container\">\n<span class=\"material-symbols-outlined\" data-weight=\"fill\">corporate_fare</span>\n</div>\n</div>\n</div>\n<!-- CTA -->\n<div class=\"px-sm mb-lg\">\n<button class=\"w-full bg-primary text-on-primary font-label-caps text-label-caps py-3 rounded hover:bg-primary/90 transition-colors flex items-center justify-center gap-2\">\n<span class=\"material-symbols-outlined text-[18px]\">add</span>\n               Novo Evento\n           </button>\n</div>\n<!-- Main Nav -->\n<ul class=\"flex-1 flex flex-col gap-1\">\n<!-- Active Tab: Dashboard -->\n<span class=\"font-label-md text-label-md\">Dashboard</span>\n</a>\n</li>\n<!-- Inactive Tabs -->\n<span class=\"font-label-md text-label-md\">Participantes</span>\n</a>\n</li>\n<span class=\"font-label-md text-label-md\">Certificações</span>\n</a>\n</li>\n<span class=\"font-label-md text-label-md\">Engajamento</span>\n</a>\n</li>\n<span class=\"font-label-md text-label-md\">Administração</span>\n</a>\n</li>\n</ul>\n<!-- Footer Nav -->\n<ul class=\"flex flex-col gap-1 border-t border-outline-variant/30 pt-md mt-auto\">\n<span class=\"font-label-md text-label-md\">Suporte</span>\n</a>\n</li>\n<span class=\"font-label-md text-label-md\">Sair</span>\n</a>\n</li>\n</ul>\n</nav>\n<!-- Main Content Area -->\n<main class=\"flex-1 flex flex-col min-w-0 h-full relative bg-surface\">\n<!-- Shell: TopNavBar -->\n<header class=\"flex justify-between items-center w-full px-lg h-16 max-w-container-max mx-auto bg-surface-container-lowest dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline-variant docked full-width top-0 z-10 shrink-0\">\n<!-- Brand Mobile (Hidden on Desktop as SideNav has it) -->\n<div class=\"md:hidden font-headline-md text-headline-md font-bold text-primary dark:text-primary\">\n               Dashboard Corp\n           </div>\n<!-- Navigation Links (Active: Relatórios for contextual fit, though Dashboard is active in SideNav. We align Top Nav to the specific sub-view) -->\n<nav class=\"hidden md:flex gap-6 h-full items-center\">\n<a class=\"text-on-surface-variant font-medium hover:text-secondary transition-colors duration-200 h-full flex items-center\" href=\"#\">Visão Geral</a>\n<!-- Active -->\n<a class=\"text-secondary border-b-2 border-secondary font-bold hover:text-secondary transition-colors duration-200 h-full flex items-center opacity-80 transition-opacity\" href=\"#\">Relatórios</a>\n<a class=\"text-on-surface-variant font-medium hover:text-secondary transition-colors duration-200 h-full flex items-center\" href=\"#\">Eventos</a>\n<a class=\"text-on-surface-variant font-medium hover:text-secondary transition-colors duration-200 h-full flex items-center\" href=\"#\">Configurações</a>\n</nav>\n<!-- Trailing Icons -->\n<div class=\"flex items-center gap-4 text-primary dark:text-primary\">\n<button class=\"hover:bg-surface-container-high p-2 rounded-full transition-colors flex\"><span class=\"material-symbols-outlined\">notifications</span></button>\n<button class=\"hover:bg-surface-container-high p-2 rounded-full transition-colors flex\"><span class=\"material-symbols-outlined\">settings</span></button>\n<button class=\"hover:bg-surface-container-high p-2 rounded-full transition-colors flex\"><span class=\"material-symbols-outlined\">help</span></button>\n<div class=\"w-8 h-8 rounded-full bg-secondary-container overflow-hidden ml-2 border border-outline-variant\">\n<img alt=\"Avatar do Administrador\" class=\"w-full h-full object-cover\" data-alt=\"A small, stylized avatar image representing a corporate administrator. The avatar features a minimalist, professional silhouette against a soft pastel background, matching the corporate modern aesthetic of the design system. The lighting is flat and clean.\" src=\"https://lh3.googleusercontent.com/aida-public/AB6AXuBZK-qq_GKL8c3_rD-dXAdIHwpi1qoFLY-XwNlJfBAujOtK_iFstvmXqPMkNCRDWegrdDhQ2Cd4ZELwNUySHXK90DTegDeCMhnk2jExHul-Mpnz5ILpRiF5YQ9vk_MV1BXF1HbtkZllQ7ZHQnF6GEOK7PwG4QBVK8NAHR_e424RoOA0u50WwZLnB9LcXax4EZ-NTTbJcdd63ceJSOE7m4ulYiZHPaiPZr2j3mFOe0-mDnO7f8HwbWEU6d4ikAk_65TPcEh7V8OIC8U\"/>\n</div>\n</div>\n</header>\n<!-- Scrollable Canvas -->\n<div class=\"flex-1 overflow-y-auto p-md lg:p-margin pb-xl\">\n<div class=\"max-w-[1440px] mx-auto\">\n<!-- Toolbar -->\n<div class=\"mb-xl flex flex-col md:flex-row md:items-end justify-between gap-md\">\n</div>\n<!-- Filters -->\n<div class=\"flex flex-wrap items-center gap-3 bg-surface-container-lowest p-2 rounded-lg border border-outline-variant/30 shadow-sm\">\n<select class=\"form-select border-0 bg-transparent text-body-sm font-body-sm text-on-surface focus:ring-0 py-2 pl-3 pr-8 cursor-pointer\">\n</select>\n<div class=\"h-6 w-px bg-outline-variant/40\"></div>\n<div class=\"flex items-center gap-2 px-2\">\n<input class=\"form-input border-0 bg-transparent text-body-sm text-on-surface p-1 focus:ring-0 w-32 cursor-pointer\" type=\"month\" value=\"2023-01\"/>\n<span class=\"text-on-surface-variant font-body-sm\">até</span>\n<input class=\"form-input border-0 bg-transparent text-body-sm text-on-surface p-1 focus:ring-0 w-32 cursor-pointer text-error\" type=\"month\" value=\"2022-12\"/>\n</div>\n<button class=\"bg-primary text-on-primary font-label-caps text-label-caps px-4 py-2 rounded shadow-sm hover:bg-primary/90 transition-colors h-full\">\n                           Aplicar\n                       </button>\n</div>\n</div>\n<!-- Inline Error Message -->\n<div class=\"flex items-center gap-2 text-error font-body-sm mb-lg animate-pulse\">\n<span class=\"material-symbols-outlined text-[18px]\">error</span>\n</div>\n<!-- Grid of Panels -->\n<div class=\"grid grid-cols-1 lg:grid-cols-2 gap-gutter\">\n<!-- 1. Painel Faixa Etária -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-6\">\n<h3 class=\"font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider\">Faixa Etária</h3>\n<div class=\"flex flex-col gap-4 mt-2\">\n<!-- Bar Item -->\n<div class=\"flex items-center gap-4\">\n<span class=\"w-12 text-body-sm font-semibold text-on-surface text-right\">18-24</span>\n<div class=\"flex-1 bg-surface-container-high rounded-full h-2.5 overflow-hidden\">\n<div class=\"bg-primary h-full rounded-full w-[25%] transition-all duration-1000\"></div>\n</div>\n<span class=\"w-12 text-body-sm text-on-surface-variant\">25,0%</span>\n</div>\n<!-- Bar Item -->\n<div class=\"flex items-center gap-4\">\n<span class=\"w-12 text-body-sm font-semibold text-on-surface text-right\">25-34</span>\n<div class=\"flex-1 bg-surface-container-high rounded-full h-2.5 overflow-hidden\">\n<div class=\"bg-primary h-full rounded-full w-[45%] transition-all duration-1000\"></div>\n</div>\n<span class=\"w-12 text-body-sm text-on-surface-variant\">45,0%</span>\n</div>\n<!-- Bar Item -->\n<div class=\"flex items-center gap-4\">\n<span class=\"w-12 text-body-sm font-semibold text-on-surface text-right\">35-44</span>\n<div class=\"flex-1 bg-surface-container-high rounded-full h-2.5 overflow-hidden\">\n<div class=\"bg-primary h-full rounded-full w-[20%] transition-all duration-1000\"></div>\n</div>\n<span class=\"w-12 text-body-sm text-on-surface-variant\">20,0%</span>\n</div>\n<!-- Bar Item -->\n<div class=\"flex items-center gap-4\">\n<span class=\"w-12 text-body-sm font-semibold text-on-surface text-right\">45+</span>\n<div class=\"flex-1 bg-surface-container-high rounded-full h-2.5 overflow-hidden\">\n<div class=\"bg-primary h-full rounded-full w-[10%] transition-all duration-1000\"></div>\n</div>\n<span class=\"w-12 text-body-sm text-on-surface-variant\">10,0%</span>\n</div>\n</div>\n</div>\n<!-- 2. Painel Gênero (Pie Chart) -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-4\">\n<h3 class=\"font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider\">Gênero</h3>\n<div class=\"flex items-center justify-center gap-8 flex-1 mt-2\">\n<!-- SVG Pie Chart -->\n<div class=\"relative w-32 h-32\">\n<svg class=\"w-full h-full pie-chart rounded-full bg-surface-container\" viewbox=\"0 0 32 32\">\n<!-- Circumference = 100 for easy percentage math (r = 15.9155) -->\n<!-- Outro: 7% -->\n<circle cx=\"16\" cy=\"16\" fill=\"transparent\" r=\"15.9155\" stroke=\"#ddbfc6\" stroke-dasharray=\"7 93\" stroke-dashoffset=\"0\" stroke-width=\"32\"></circle>\n<!-- Masculino: 41% -->\n<circle cx=\"16\" cy=\"16\" fill=\"transparent\" r=\"15.9155\" stroke=\"#981652\" stroke-dasharray=\"41 59\" stroke-dashoffset=\"-7\" stroke-width=\"32\"></circle>\n<!-- Feminino: 52% -->\n<circle cx=\"16\" cy=\"16\" fill=\"transparent\" r=\"15.9155\" stroke=\"#7b4d88\" stroke-dasharray=\"52 48\" stroke-dashoffset=\"-48\" stroke-width=\"32\"></circle>\n</svg>\n</div>\n<!-- Legend -->\n<div class=\"flex flex-col gap-3\">\n<div class=\"flex items-center gap-2\">\n<div class=\"w-3 h-3 rounded-full bg-secondary\"></div>\n<span class=\"font-body-sm text-on-surface\">Feminino</span>\n<span class=\"font-body-sm font-semibold ml-auto\">52%</span>\n</div>\n<div class=\"flex items-center gap-2\">\n<div class=\"w-3 h-3 rounded-full bg-primary\"></div>\n<span class=\"font-body-sm text-on-surface\">Masculino</span>\n<span class=\"font-body-sm font-semibold ml-auto\">41%</span>\n</div>\n<div class=\"flex items-center gap-2\">\n<div class=\"w-3 h-3 rounded-full bg-outline-variant\"></div>\n<span class=\"font-body-sm text-on-surface\">Outro</span>\n<span class=\"font-body-sm font-semibold ml-auto\">7%</span>\n</div>\n</div>\n</div>\n</div>\n<!-- 3. Painel Cidade (Vertical Bars SVG) -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-4 lg:col-span-2\">\n<h3 class=\"font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider\">Cidades (Top 10)</h3>\n<div class=\"w-full h-64 mt-4 relative\">\n<!-- We use SVG for the bars and simple HTML/CSS for positioning to keep it clean and responsive -->\n<svg class=\"overflow-visible\" height=\"100%\" preserveaspectratio=\"none\" viewbox=\"0 0 1000 200\" width=\"100%\">\n<!-- Grid Lines -->\n<line stroke=\"#e2f8fb\" stroke-width=\"1\" x1=\"0\" x2=\"1000\" y1=\"50\" y2=\"50\"></line>\n<line stroke=\"#e2f8fb\" stroke-width=\"1\" x1=\"0\" x2=\"1000\" y1=\"100\" y2=\"100\"></line>\n<line stroke=\"#e2f8fb\" stroke-width=\"1\" x1=\"0\" x2=\"1000\" y1=\"150\" y2=\"150\"></line>\n<line stroke=\"#d1e7e9\" stroke-width=\"2\" x1=\"0\" x2=\"1000\" y1=\"200\" y2=\"200\"></line>\n<!-- Bars (Heights represent relative data, mapped to 0-200y) -->\n<!-- Sao Paulo -->\n<rect fill=\"#981652\" height=\"180\" rx=\"4\" width=\"40\" x=\"30\" y=\"20\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"50\" y=\"10\">450</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 50 220)\" x=\"50\" y=\"220\">São Paulo</text>\n<!-- Rio -->\n<rect fill=\"#7b4d88\" height=\"140\" rx=\"4\" width=\"40\" x=\"130\" y=\"60\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"150\" y=\"50\">310</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 150 220)\" x=\"150\" y=\"220\">Rio de Janeiro</text>\n<!-- BH -->\n<rect fill=\"#3d6c8a\" height=\"110\" rx=\"4\" width=\"40\" x=\"230\" y=\"90\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"250\" y=\"80\">240</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 250 220)\" x=\"250\" y=\"220\">Belo Horizonte</text>\n<!-- Curitiba -->\n<rect fill=\"#981652\" fill-opacity=\"0.7\" height=\"90\" rx=\"4\" width=\"40\" x=\"330\" y=\"110\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"350\" y=\"100\">180</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 350 220)\" x=\"350\" y=\"220\">Curitiba</text>\n<!-- Porto Alegre -->\n<rect fill=\"#7b4d88\" fill-opacity=\"0.7\" height=\"70\" rx=\"4\" width=\"40\" x=\"430\" y=\"130\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"450\" y=\"120\">150</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 450 220)\" x=\"450\" y=\"220\">Porto Alegre</text>\n<!-- Salvador -->\n<rect fill=\"#3d6c8a\" fill-opacity=\"0.7\" height=\"55\" rx=\"4\" width=\"40\" x=\"530\" y=\"145\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"550\" y=\"135\">120</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 550 220)\" x=\"550\" y=\"220\">Salvador</text>\n<!-- Recife -->\n<rect fill=\"#981652\" fill-opacity=\"0.5\" height=\"40\" rx=\"4\" width=\"40\" x=\"630\" y=\"160\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"650\" y=\"150\">95</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 650 220)\" x=\"650\" y=\"220\">Recife</text>\n<!-- Brasilia -->\n<rect fill=\"#7b4d88\" fill-opacity=\"0.5\" height=\"30\" rx=\"4\" width=\"40\" x=\"730\" y=\"170\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"750\" y=\"160\">70</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 750 220)\" x=\"750\" y=\"220\">Brasília</text>\n<!-- Fortaleza -->\n<rect fill=\"#3d6c8a\" fill-opacity=\"0.5\" height=\"25\" rx=\"4\" width=\"40\" x=\"830\" y=\"175\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"850\" y=\"165\">60</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 850 220)\" x=\"850\" y=\"220\">Fortaleza</text>\n<!-- Manaus -->\n<rect fill=\"#ddbfc6\" height=\"15\" rx=\"4\" width=\"40\" x=\"930\" y=\"185\"></rect>\n<text fill=\"#574147\" font-family=\"Space Grotesk\" font-size=\"12\" text-anchor=\"middle\" x=\"950\" y=\"175\">45</text>\n<text fill=\"#0a1e21\" font-family=\"Public Sans\" font-size=\"14\" text-anchor=\"end\" transform=\"rotate(-45 950 220)\" x=\"950\" y=\"220\">Manaus</text>\n</svg>\n</div>\n</div>\n<!-- 4. Painel Perfil do Participante -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-6\">\n<h3 class=\"font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider\">Perfil do Participante</h3>\n<div class=\"flex flex-col gap-5 mt-2\">\n<!-- Profile Item -->\n<span class=\"text-body-sm text-on-surface-variant\">42%</span>\n</div>\n<div class=\"w-full bg-surface-container-high rounded-full h-2 overflow-hidden\">\n<div class=\"bg-secondary h-full rounded-full w-[42%]\"></div>\n</div>\n</div>\n<!-- Profile Item -->\n<span class=\"text-body-sm text-on-surface-variant\">28%</span>\n</div>\n<div class=\"w-full bg-surface-container-high rounded-full h-2 overflow-hidden\">\n<div class=\"bg-secondary h-full rounded-full w-[28%] opacity-80\"></div>\n</div>\n</div>\n<!-- Profile Item -->\n<span class=\"text-body-sm text-on-surface-variant\">18%</span>\n</div>\n<div class=\"w-full bg-surface-container-high rounded-full h-2 overflow-hidden\">\n<div class=\"bg-secondary h-full rounded-full w-[18%] opacity-60\"></div>\n</div>\n</div>\n<!-- Profile Item -->\n<span class=\"text-body-sm text-on-surface-variant\">12%</span>\n</div>\n<div class=\"w-full bg-surface-container-high rounded-full h-2 overflow-hidden\">\n<div class=\"bg-secondary h-full rounded-full w-[12%] opacity-40\"></div>\n</div>\n</div>\n</div>\n</div>\n<!-- 5. Painel Tipo de Evento (Estado Vazio) -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-outline-variant/20 shadow-sm flex flex-col items-center justify-center min-h-[250px] text-center\">\n<span class=\"material-symbols-outlined text-[48px] text-outline-variant mb-4 opacity-50\">event_busy</span>\n<h4 class=\"font-headline-sm text-on-surface font-semibold mb-2\">Nenhum dado encontrado</h4>\n<p class=\"font-body-sm text-on-surface-variant max-w-xs\">Sem dados para esta categoria no período selecionado.</p>\n</div>\n<!-- 6. Painel Erro (Exemplo) -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-error/30 shadow-sm flex flex-col items-center justify-center min-h-[250px] text-center bg-error-container/20\">\n<span class=\"material-symbols-outlined text-[40px] text-error mb-4\">error</span>\n<h4 class=\"font-headline-sm text-on-surface font-semibold mb-2\">Falha na Conexão</h4>\n<p class=\"font-body-sm text-on-surface-variant max-w-xs mb-4\">Erro ao carregar distribuição por cidade.</p>\n<button class=\"border border-error text-error font-label-caps text-label-caps px-4 py-2 rounded hover:bg-error/10 transition-colors\">\n                           Tentar novamente\n                       </button>\n</div>\n<!-- 7. Painel Skeleton -->\n<div class=\"bg-surface-container-lowest p-[24px] rounded-xl border border-outline-variant/20 shadow-sm animate-pulse flex flex-col gap-6\">\n<div class=\"h-4 bg-surface-container-high rounded w-1/3 mb-2\"></div>\n<div class=\"flex flex-col gap-5\">\n<div class=\"flex items-center gap-4\">\n<div class=\"h-3 bg-surface-container-high rounded w-12\"></div>\n<div class=\"flex-1 h-3 bg-surface-container-high rounded-full\"></div>\n</div>\n<div class=\"flex items-center gap-4\">\n<div class=\"h-3 bg-surface-container-high rounded w-12\"></div>\n<div class=\"flex-1 h-3 bg-surface-container-high rounded-full w-3/4\"></div>\n</div>\n<div class=\"flex items-center gap-4\">\n<div class=\"h-3 bg-surface-container-high rounded w-12\"></div>\n<div class=\"flex-1 h-3 bg-surface-container-high rounded-full w-1/2\"></div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</main>\n</body></html>\n\ncom base na us-03 mantendo a componentização e criando os dados mockados:\n\nImplemente a User Story US-03 — Distribuições demográficas em um projeto React\ncom TypeScript, arquitetura de Micro Frontend (MFE).\n\n## Contexto\nFrontend de métricas (eloo-metrics-mfe). As USs anteriores já implementaram:\n- US-01: camada de serviço e autenticação (authApi.ts, metricsApi.ts, proxy Vite)\n- US-02: DashboardPage com padrões de componentização, tokens de design,\n  helpers de formatação e componentes de feedback (ErrorAlert, EmptyState,\n  skeletons, PeriodSelector)\n\nLeia todos os arquivos existentes antes de implementar para entender os\npadrões, contratos, tokens de design e estrutura já estabelecidos.\nReaproveite tudo que já existe — não duplique.\n\n## Integração com a API T2 (ADR-0003)\n- Todas as chamadas passam pela camada de serviço (metricsApi.ts) — nunca\n  fetch direto em componente\n- Requisições vão para /api na própria origem (proxy Vite → T2)\n- Header obrigatório: Authorization: Bearer <accessToken> (lido de mfeAuth.accessToken)\n- 401 → limpa tokens + dispara mfeAuth:sessionExpired → host redireciona\n- 403 → mensagem \"sem permissão\", não erro genérico\n- RBAC transparente: mesmo endpoint, dados diferentes por token\n\n## Endpoints consumidos\n- GET /api/metrics/by-age?event_id=&from=&to=\n- GET /api/metrics/by-gender?event_id=&from=&to=\n- GET /api/metrics/by-city?event_id=&from=&to=\n- GET /api/metrics/by-profile?event_id=&from=&to=\n- GET /api/metrics/by-type?event_id=&from=&to=\n\nTodos os parâmetros são opcionais, mas from/to devem sempre ser enviados\njuntos e validados antes do fetch (evitar 422 de intervalo inválido).\nFormato de data: YYYY-MM (bucket mensal).\n\n## Estrutura de componentes obrigatória\nCada componente em arquivo próprio.\n\n### Componente raiz\n- `DemographicsPage` — exposta como remote (ADR-0005)\n  - Orquestra todos os fetches, filtros e composição dos painéis\n  - Props: eventId? (opcional — se não passado, exibe dados globais)\n\n### Componentes de controle\n- `DemographicsToolbar`\n  - `PeriodSelector` — reaproveite da US-02\n  - `EventSelector` — dropdown opcional de event_id (pode ser \"Todos\")\n  - Validação inline: bloqueia submit se from > to ou formato inválido\n\n### Componentes de distribuição (um por dimensão)\nCada um recebe dados via props — nunca faz fetch:\n\n- `AgeDistributionChart` — gráfico de barras horizontais\n  - Faixas obrigatórias: 0-17, 18-24, 25-34, 35-44, 45-54, 55-64, 65+, Desconhecido\n  - Exibe valor absoluto + percentual em cada barra\n\n- `GenderDistributionChart` — gráfico de pizza (MUI X PieChart)\n  - Categorias conforme backend; legenda com percentuais\n\n- `CityDistributionChart` — gráfico de barras verticais (top 10 cidades)\n  - Ordena por volume decrescente\n  - Exibe rótulo da cidade + contador\n\n- `ProfileDistributionChart` — gráfico de barras horizontais\n  - Perfis de participante conforme backend\n\n- `TypeDistributionChart` — gráfico de barras verticais ou pizza\n  - Tipos de evento conforme backend\n\n### Componente genérico reutilizável\n- `DistributionPanel` — wrapper visual padronizado para cada gráfico\n  - Props: title, description, children, loading, error, empty, onRetry\n  - Renderiza skeleton quando loading=true\n  - Renderiza ErrorAlert quando error != null\n  - Renderiza EmptyState quando dados vazios\n  - Acessibilidade: aria-label, título visível, legenda\n\n- `DistributionPanelSkeleton` — skeleton do painel (pulse, padrão US-02)\n\n### Componentes de feedback\n- Reaproveite ErrorAlert e EmptyState da US-02\n- EmptyState com mensagem específica: \"Sem dados para esta categoria\n  no período selecionado.\"\n\n## Tarefas\n\n### 1. Camada de serviço (metricsApi.ts)\nAdicione os métodos (não recrie o arquivo):\n- `getByAge(params): Promise<AgeDistribution[]>`\n- `getByGender(params): Promise<GenderDistribution[]>`\n- `getByCity(params): Promise<CityDistribution[]>`\n- `getByProfile(params): Promise<ProfileDistribution[]>`\n- `getByType(params): Promise<TypeDistribution[]>`\n\nMapeie snake_case → camelCase nos DTOs.\nTrate 401, 403 e erros de rede de forma consistente com o padrão existente.\n\n### 2. DemographicsPage\n- Exposta como remote respeitando ADR-0005\n- Período padrão: último mês (YYYY-MM do mês atual menos 1)\n- event_id padrão: undefined (todos os eventos)\n- Todos os 5 fetches são independentes — falha em um não bloqueia os outros\n- Ao mudar filtros: revalida período antes de disparar fetch\n\n### 3. Validação de período\nAntes de qualquer fetch, valide:\n- Formato YYYY-MM em from e to\n- from <= to (intervalo não invertido)\n- Exibir mensagem de erro inline no toolbar, não como alert global\n- Nunca disparar fetch com intervalo inválido\n\n### 4. Gráficos MUI X Charts\n- Use BarChart e PieChart do @mui/x-charts\n- Gráficos recebem dados via props — nunca fazem fetch\n- Acessibilidade obrigatória em todos:\n  - Atributo aria-label descritivo\n  - Título visível acima do gráfico\n  - Legenda com rótulos legíveis\n- Categorias e rótulos em pt-BR\n- Percentuais formatados com locale pt-BR (ex.: \"34,2%\")\n\n### 5. Estados da interface (por painel, independentes)\n- Loading: DistributionPanelSkeleton\n- Erro: ErrorAlert com retry (refaz apenas aquele fetch)\n- Vazio: EmptyState com mensagem de categoria\n- 401: dispara mfeAuth:sessionExpired → host redireciona\n- 403: mensagem \"Sem permissão para visualizar esta distribuição\"\n\n### 6. Localização\n- Textos e categorias em pt-BR\n- Faixas etárias traduzidas: \"Desconhecido\" para unknown\n- Percentuais: locale pt-BR\n- Datas no toolbar: formato YYYY-MM (buckets mensais conforme ADR-0009)\n- Reaproveite formatPercent e formatNumber da US-02\n\n### 7. Testes (vitest)\nUnitários:\n- `AgeDistributionChart` — renderiza todas as 8 faixas; exibe percentuais\n- `GenderDistributionChart` — renderiza legenda com categorias\n- `DistributionPanel` — renderiza skeleton, erro e vazio corretamente\n- Validação de período — from > to bloqueia fetch; formato inválido bloqueia fetch\n\nIntegração (MSW):\n- `DemographicsPage` loading → dados renderizados para cada distribuição\n- Falha em um endpoint não bloqueia os outros painéis\n- 401 → dispara sessionExpired\n- 403 → exibe mensagem de permissão\n- Intervalo inválido → não dispara fetch\n\n## Critérios de Aceite (todos devem passar)\n- [ ] Painéis de distribuição por faixa etária, gênero, cidade, perfil e tipo\n      usando MUI X Charts (pizza/barras conforme o dado)\n- [ ] Filtros de event_id e período com validação (não dispara fetch com 422)\n- [ ] Faixas etárias: 0-17, 18-24, 25-34, 35-44, 45-54, 55-64, 65+, Desconhecido\n- [ ] Auth com Bearer token e RBAC respeitados (403 tratado)\n- [ ] Falha em um painel não derruba os outros\n- [ ] Loading, erro, vazio e sessão expirada tratados por painel\n- [ ] Textos e categorias em pt-BR; percentuais com locale pt-BR\n- [ ] Gráficos sem fetch próprio — dados via props\n- [ ] Acessibilidade básica em todos os gráficos\n\n## Pontos de atenção obrigatórios\n\n### Fetches independentes por painel\nOs 5 endpoints são chamados em paralelo (Promise.allSettled).\nFalha em /by-city não impede /by-age de renderizar.\nCada DistributionPanel gerencia seu próprio estado de loading/erro/vazio.\n\n### Validação antes do fetch — nunca deixar passar 422\nValide from <= to e formato YYYY-MM antes de qualquer chamada.\nErro de validação é inline no toolbar, não um alert global.\n\n### Gráficos não fazem fetch\nComponentes de gráfico recebem dados via props.\nToda lógica de fetch e transformação fica em DemographicsPage e metricsApi.ts.\n\n### Reaproveite da US-02\nPeriodSelector, ErrorAlert, EmptyState, formatNumber, formatPercent,\ntokens de design e padrão de skeleton já existem. Importe — não duplique.\n\n### Registrar prompts de IA\nSalve os prompts relevantes em .ai_log/ conforme Definition of Done.\n\n## Definition of Done\n- [ ] tsc sem erros\n- [ ] eslint sem violações\n- [ ] vitest verde — unitários e integração com MSW\n- [ ] Contrato de remote (ADR-0005) respeitado\n- [ ] Gráficos sem fetch próprio\n- [ ] Acessibilidade básica implementada\n- [ ] Prompts de IA registrados em .ai_log/\n- [ ] PR revisado e aprovado (GitFlow — branch: feature/us-03-distribuicoes-demograficas)\n\n## Restrições\n- Leia os arquivos existentes antes de implementar\n- Use MUI X Charts (ADR-0004) — não use outra biblioteca de gráficos\n- Siga ADR-0003 (proxy /api, Bearer token, sessionExpired)\n- Siga ADR-0009 (formato YYYY-MM, parâmetros obrigatórios)\n- Siga ADR-0005 (contrato de remote)\n- Não duplique lógica da US-01 e US-02\n- Branch: feature/us-03-distribuicoes-demograficas"
+  },
+  {
+    "timestamp": "2026-07-06T19:59:15.263Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "I'll start by exploring the existing codebase to understand the established patterns before implementing US-03."
+  },
+  {
+    "timestamp": "2026-07-06T19:59:40.265Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me read the key existing files to understand the established patterns."
+  },
+  {
+    "timestamp": "2026-07-06T19:59:48.610Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me read the reusable components, utilities, and ADRs."
+  },
+  {
+    "timestamp": "2026-07-06T19:59:59.985Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me read the charts, mock data, MSW handlers, test setup, and key ADRs."
+  },
+  {
+    "timestamp": "2026-07-06T20:00:06.218Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now let me read ADR-0009 (API contract), ADR-0005 (remote contract), authApi, App.tsx, and an existing test for patterns."
+  },
+  {
+    "timestamp": "2026-07-06T20:00:16.510Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me check the remaining reference files: theme, scope, the catalog page (recent similar work), and the ai_log structure."
+  },
+  {
+    "timestamp": "2026-07-06T20:00:25.303Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me check the ai_log structure, metricsApi test patterns, and vite federation config."
+  },
+  {
+    "timestamp": "2026-07-06T20:01:15.356Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "I've now read all the established patterns (US-01 service layer, US-02 dashboard/components, US-04 catalog, ADR-0005/0009, MSW/test setup, ai_log format). I have one genuine design fork to resolve before implementing, because CLAUDE.md §1 forbids me from deciding screen-modeling/patterns on my own.\n\nThe conflict: the US-03 spec says \"reaproveite `PeriodSelector` da US-02\", but that selector is **date-based** (`type=\"date\"`, emits `YYYY-MM-DD` as `start_date`/`end_date`). The demographics endpoints (ADR-0009) instead take `from`/`to` as **`YYYY-MM` month buckets**, and the spec explicitly requires `type=\"month\"` / `YYYY-MM`. These two can't both be literally true."
+  },
+  {
+    "timestamp": "2026-07-06T20:05:49.015Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "The user chose **\"Derivar YYYY-MM de datas\"**: keep US-02's date-based `PeriodSelector` as-is and convert to `YYYY-MM` buckets in the service layer. That maximizes reuse. Now I'll implement everything.\n\nLet me start with the pure helpers (`utils/demographics.ts`):"
+  },
+  {
+    "timestamp": "2026-07-06T20:06:05.025Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the service layer additions (`metricsApi.ts`):"
+  },
+  {
+    "timestamp": "2026-07-06T20:06:42.351Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now append the distribution DTOs, params, normalization and 5 methods at the end of the service:"
+  },
+  {
+    "timestamp": "2026-07-06T20:07:19.593Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now add the mock data:"
+  },
+  {
+    "timestamp": "2026-07-06T20:08:10.821Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the shared chart legend + the panel wrapper and skeleton:"
+  },
+  {
+    "timestamp": "2026-07-06T20:09:18.572Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the 5 chart components. First the horizontal-bar charts (Age, Profile):"
+  },
+  {
+    "timestamp": "2026-07-06T20:10:02.025Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the Gender pie chart:"
+  },
+  {
+    "timestamp": "2026-07-06T20:10:14.477Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the City and Type vertical-bar charts:"
+  },
+  {
+    "timestamp": "2026-07-06T20:10:55.344Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the EventSelector and DemographicsToolbar:"
+  },
+  {
+    "timestamp": "2026-07-06T20:11:45.655Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the `useDistribution` hook that gives each panel independent, parallel fetch + retry:"
+  },
+  {
+    "timestamp": "2026-07-06T20:14:41.791Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the orchestrating `DemographicsPage`:"
+  },
+  {
+    "timestamp": "2026-07-06T20:15:00.781Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now wire up the remote exposure (vite.config), standalone route (App.tsx), and MSW default handlers:"
+  },
+  {
+    "timestamp": "2026-07-06T20:15:45.110Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now add default MSW handlers for the 5 distribution endpoints:"
+  },
+  {
+    "timestamp": "2026-07-06T20:16:34.603Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now let me typecheck before writing tests, to catch API issues early:"
+  },
+  {
+    "timestamp": "2026-07-06T20:16:59.929Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Typecheck is clean. Now let me write the tests. First the unit tests:"
+  },
+  {
+    "timestamp": "2026-07-06T20:18:52.785Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now the MSW integration test for the page:"
+  },
+  {
+    "timestamp": "2026-07-06T20:19:18.135Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me strengthen the invalid-interval test to actually invert the period through the UI:"
+  },
+  {
+    "timestamp": "2026-07-06T20:20:26.823Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now let me run the full test suite for the new files plus typecheck:"
+  },
+  {
+    "timestamp": "2026-07-06T20:20:58.245Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Unit tests pass (21). The 4 integration tests fail at `findByText(\"18-24\")`. Let me get the real error:"
+  },
+  {
+    "timestamp": "2026-07-06T20:21:47.373Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Data renders fine — the labels just appear **twice** (SVG axis tick + accessible legend). Let me fix the ambiguous queries to use `getAllByText`:"
+  },
+  {
+    "timestamp": "2026-07-06T20:22:59.477Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "All 5 pass. Now the full gate: complete test suite, tsc, eslint, prettier:"
+  },
+  {
+    "timestamp": "2026-07-06T20:24:25.387Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "tsc and eslint clean. Let me fix formatting:"
+  },
+  {
+    "timestamp": "2026-07-06T20:24:46.885Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Formatting is clean now. Let me run the complete test suite to confirm nothing regressed:"
+  },
+  {
+    "timestamp": "2026-07-06T20:25:12.753Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "All 22 test files / 118 tests pass. Now let me register the AI-critical-review log per the DoD and my memory note (curated logs go in `eloo-metrics-mfe/.ai_log`). Let me read the existing curated log to append properly:"
+  },
+  {
+    "timestamp": "2026-07-06T20:25:46.173Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Now let me append the US-03 curated AI-review entries to the log:"
+  },
+  {
+    "timestamp": "2026-07-06T20:26:26.656Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Let me confirm the production build (remote exposure) compiles, since the DoD includes the remote contract:"
+  },
+  {
+    "timestamp": "2026-07-06T20:27:01.533Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Build succeeds — `__federation_expose_DemographicsPage` is emitted as a remote alongside the existing two. Everything is complete.\n\n## Resumo — US-03 Distribuições Demográficas\n\nImplementei a US-03 seguindo os padrões já estabelecidos (US-01/02/04), sem duplicar lógica. Todos os gates da DoD estão verdes: **`tsc -b`**, **`eslint`**, **`prettier --check`**, **`vitest` 118/118**, e **`vite build`** com o remote exposto.\n\n**Decisão sua (registrada no `.ai_log`):** para o conflito \"reaproveitar PeriodSelector (datas) × endpoints em `YYYY-MM`\", você escolheu **derivar `YYYY-MM` das datas** na camada de serviço — reuso total do PeriodSelector da US-02, sem tocá-lo.\n\n**Arquivos criados:**\n- Serviço: `getByAge/Gender/City/Profile/Type` em [metricsApi.ts](eloo-metrics-mfe/src/services/metricsApi.ts) (snake→camel, parser tolerante, normalização) + mocks em [mockData.ts](eloo-metrics-mfe/src/services/mockData.ts)\n- Utils puros: [demographics.ts](eloo-metrics-mfe/src/utils/demographics.ts) (buckets, validação de intervalo, rótulos pt-BR, 8 faixas canônicas)\n- Hook: [useDistribution.ts](eloo-metrics-mfe/src/hooks/useDistribution.ts) — um por painel, fetches paralelos independentes, guarda de resposta obsoleta, não busca com período inválido\n- Página remote: [DemographicsPage.tsx](eloo-metrics-mfe/src/pages/DemographicsPage.tsx) (exposta em [vite.config.ts](eloo-metrics-mfe/vite.config.ts) + rota standalone em [App.tsx](eloo-metrics-mfe/src/App.tsx))\n- Componentes: [DistributionPanel](eloo-metrics-mfe/src/components/DistributionPanel.tsx), [DistributionPanelSkeleton](eloo-metrics-mfe/src/components/DistributionPanelSkeleton.tsx), [DemographicsToolbar](eloo-metrics-mfe/src/components/DemographicsToolbar.tsx), [EventSelector](eloo-metrics-mfe/src/components/EventSelector.tsx)\n- Gráficos MUI X (dados só via props): [Age](eloo-metrics-mfe/src/components/charts/AgeDistributionChart.tsx), [Gender (pizza)](eloo-metrics-mfe/src/components/charts/GenderDistributionChart.tsx), [City](eloo-metrics-mfe/src/components/charts/CityDistributionChart.tsx), [Profile](eloo-metrics-mfe/src/components/charts/ProfileDistributionChart.tsx), [Type](eloo-metrics-mfe/src/components/charts/TypeDistributionChart.tsx) + legenda acessível compartilhada\n- Testes: unit (demografia, painel, 2 gráficos) + integração MSW da página (dados, falha isolada, 401→sessionExpired, 403→permissão, intervalo inválido→sem fetch)\n\n**Reuso:** `PeriodSelector`, `ErrorAlert`, `EmptyState`, `formatNumber`, `formatPercent`, `listEventMetrics`, tokens de tema e padrão de skeleton — importados, não duplicados.\n\n**Pontos que valem sua atenção:**\n- O **shape do corpo** dos endpoints `by-*` não está fixado no OpenAPI do T2 (ADR-0009 lista só os caminhos). Usei parser tolerante + mocks plausíveis; convém reconferir quando o Swagger confirmar os campos.\n- A mensagem de 403 usa a da camada compartilhada (\"Você não tem permissão para ver estas métricas\") em vez do texto literal sugerido no enunciado — mantém consistência com US-02/04.\n\nNão commitei nada (aguardando sua revisão, conforme GitFlow/CLAUDE.md §1). Quer que eu prepare o commit com `/commit`?"
+  },
+  {
+    "timestamp": "2026-07-06T20:29:15.791Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "crie o caminho"
+  },
+  {
+    "timestamp": "2026-07-06T20:29:21.531Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vou criar o caminho de navegação para a nova tela, seguindo o padrão da US-04 (navTabs + SideNavBar/TopNavBar). Deixe-me ver a estrutura atual."
+  },
+  {
+    "timestamp": "2026-07-06T20:29:32.964Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vou adicionar a rota da tela de demografia à navegação, seguindo o mesmo padrão de Dashboard/Catálogo. A rota `/demografia` já existe no [App.tsx](eloo-metrics-mfe/src/App.tsx); falta ligá-la ao menu (navTabs + ícone na SideNavBar)."
+  },
+  {
+    "timestamp": "2026-07-06T20:30:20.832Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Agora vou verificar o TopNavBar (usa a mesma lista) e rodar os gates:"
+  },
+  {
+    "timestamp": "2026-07-06T20:30:56.952Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Os comandos rodaram do diretório errado. Vou corrigir:"
+  },
+  {
+    "timestamp": "2026-07-06T20:31:11.714Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "tsc e layout tests verdes. Vou rodar a suíte completa + lint + prettier:"
+  },
+  {
+    "timestamp": "2026-07-06T20:31:51.867Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Pronto. Criei o caminho de navegação para a tela de Distribuições Demográficas, seguindo o padrão da US-04.\n\n**O que foi ligado:**\n- [navTabs.ts](eloo-metrics-mfe/src/components/layout/navTabs.ts) — adicionada a rota `{ label: \"Distribuições Demográficas\", path: \"/demografia\" }`. Como TopNavBar, SideNavBar e o drawer mobile leem a mesma `NAV_ROUTES`, o item aparece nas três superfícies de uma vez.\n- [SideNavBar.tsx](eloo-metrics-mfe/src/components/layout/SideNavBar.tsx) — ícone dedicado (`GroupsOutlinedIcon`) para a rota, com destaque de rota ativa e `aria-current` já herdados do padrão existente.\n- A rota `/demografia` → `<DemographicsPage />` no [App.tsx](eloo-metrics-mfe/src/App.tsx) já havia sido criada na implementação anterior.\n\n**Gates verdes:** `tsc -b`, `eslint`, `prettier --check` e `vitest` 118/118 (incluindo os testes de layout que exercitam os links da navegação).\n\nVale lembrar (ADR-0005/0010): isso é chrome do **shell standalone/demo** — no runtime real como remote, quem navega é o `eloo-shell`; o `DemographicsPage` continua sem router próprio. Nada foi commitado ainda."
+  },
+  {
+    "timestamp": "2026-07-06T20:36:32.754Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "ambos as tabelas tem \"participantes\" (nas tabelas) com o escrito em cima dos números da tabela"
+  },
+  {
+    "timestamp": "2026-07-06T20:37:01.573Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Bom olhar. O problema é o rótulo do eixo Y (\"Participantes\") dos gráficos **verticais** (Cidades e Tipo) sobrepondo os números do eixo, porque não há margem esquerda suficiente reservada. Vou aumentar a margem esquerda nos dois gráficos verticais."
+  },
+  {
+    "timestamp": "2026-07-06T20:37:45.267Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Ambos os gráficos verticais (Cidades e Tipo de Evento) corrigidos. Vou validar:"
+  },
+  {
+    "timestamp": "2026-07-06T20:37:59.052Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Corrigido. O rótulo do eixo Y (\"Participantes\") dos dois gráficos verticais estava sem margem esquerda reservada, então ficava sobreposto aos números das marcações (400/200/0).\n\nAdicionei `margin={{ left: 64, ... }}` em ambos:\n- [CityDistributionChart.tsx](eloo-metrics-mfe/src/components/charts/CityDistributionChart.tsx) (Cidades)\n- [TypeDistributionChart.tsx](eloo-metrics-mfe/src/components/charts/TypeDistributionChart.tsx) (Tipo de Evento)\n\nAgora o rótulo fica à esquerda dos números, sem colisão. `tsc`, `prettier` e os testes da página seguem verdes.\n\nOs gráficos horizontais (Faixa Etária e Perfil) não têm esse problema porque ali o \"Participantes\" fica no eixo X (embaixo), que já tinha espaço."
+  },
+  {
+    "timestamp": "2026-07-06T20:39:52.101Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "ainda está errado"
+  },
+  {
+    "timestamp": "2026-07-06T20:40:31.543Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Você está certo — a margem não resolveu; o rótulo do eixo Y do MUI X continua sendo posicionado colado aos números. A solução confiável é **remover o rótulo \"Participantes\" do eixo Y** dos gráficos verticais (o significado já fica claro pela legenda abaixo e pelo próprio contexto). Isso também alinha com o design de referência, que não tinha esse rótulo lateral."
+  },
+  {
+    "timestamp": "2026-07-06T20:43:10.783Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Removi o rótulo \"Participantes\" do eixo Y dos dois gráficos verticais ([Cidades](eloo-metrics-mfe/src/components/charts/CityDistributionChart.tsx) e [Tipo de Evento](eloo-metrics-mfe/src/components/charts/TypeDistributionChart.tsx)). \n\nO MUI X posiciona esse rótulo colado aos números das marcações — por isso a margem sozinha não resolvia. Sem o rótulo lateral, ficam só os números (0/200/400/600) limpos, e o significado \"Participantes\" continua evidente pela legenda logo abaixo de cada gráfico e pela série. Também bate com o design de referência, que não tinha esse rótulo vertical.\n\n`tsc`, `prettier` e os testes seguem verdes. Os gráficos horizontais (Faixa Etária e Perfil) mantêm o \"Participantes\" no eixo X inferior, onde não há sobreposição."
+  },
+  {
+    "timestamp": "2026-07-06T20:45:42.620Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "revise, com base na US-03, e corrija caso haja erros"
+  },
+  {
+    "timestamp": "2026-07-06T20:47:26.211Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vou revisar a implementação contra os critérios da US-03 e corrigir o que faltar. Deixe-me reler os critérios do backlog e os pontos da especificação detalhada, checando cada gráfico."
+  },
+  {
+    "timestamp": "2026-07-06T20:47:42.853Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "A implementação cobre os critérios, mas há um ponto da especificação a reforçar: para a **Faixa Etária** o critério pede \"valor absoluto + percentual **em cada barra**\" e para **Cidade** \"rótulo + **contador**\". Hoje o valor/percentual aparecem só na legenda ao lado. Vou colocar o valor absoluto **sobre cada barra** (via `barLabel`), mantendo o percentual na legenda — assim atende literalmente. Aplico nos quatro gráficos de barras por consistência."
+  },
+  {
+    "timestamp": "2026-07-06T20:48:46.905Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Entendido — vou remover os `barLabel` que acabei de adicionar (Age e City) e não adicionar nos demais."
+  },
+  {
+    "timestamp": "2026-07-06T20:49:05.841Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Revertido — sem `barLabel` em nenhum gráfico. Os valores absolutos e percentuais continuam na legenda de cada painel. Deixe-me rodar a verificação completa para confirmar que está tudo verde após a revisão:"
+  },
+  {
+    "timestamp": "2026-07-06T20:49:37.055Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Revisão concluída. Fiz o cross-check da implementação contra os critérios de aceite e a DoD da US-03 (arquivo aberto no IDE) — está tudo coberto, e a única alteração que cheguei a aplicar (`barLabel`) foi revertida a seu pedido.\n\n**Checklist da US-03 — situação:**\n\n| Critério | Status |\n|---|---|\n| Painéis por faixa etária, gênero, cidade, perfil e tipo (MUI X pizza/barras) | ✅ pizza no gênero, barras nos demais |\n| Filtros `event_id` + período `YYYY-MM` com validação (evita 422) | ✅ `validatePeriod` bloqueia antes do fetch |\n| Faixas 0-17 … 65+, Desconhecido | ✅ `AGE_RANGES`, sempre as 8 |\n| Auth Bearer + RBAC (403 tratado) | ✅ via `metricsApi` compartilhado |\n| Falha em um painel não derruba os outros | ✅ um `useDistribution` por painel |\n| Loading / erro / vazio / sessão expirada por painel | ✅ `DistributionPanel` + 401→`sessionExpired` |\n| pt-BR; percentuais locale pt-BR | ✅ `formatPercent` (`\"26,2%\"`) |\n| Gráficos sem fetch (dados via props) | ✅ ADR-0004 |\n| Acessibilidade (aria-label/legenda/título) | ✅ `role=\"img\"` + legenda + `section` rotulada |\n| Remote ADR-0005 exposto + navegação | ✅ `./DemographicsPage` + rota `/demografia` |\n| `tsc` / `eslint` / `prettier` / `vitest` | ✅ 118/118 verdes |\n\n**Observação (não é erro, é decisão consciente já registrada no `.ai_log`):** a mensagem de 403 usa o texto compartilhado da camada de serviço (\"Você não tem permissão para ver estas métricas\") em vez de um texto específico por distribuição — mantém consistência com US-02/04. Se quiser o texto literal do enunciado (\"Sem permissão para visualizar esta distribuição\"), é uma troca localizada — me avise.\n\nNada commitado. Quer que eu prepare o commit com `/commit`?"
+  },
+  {
+    "timestamp": "2026-07-06T20:49:56.552Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "revise e corrija\nnpm run build (tsc -b + build) sem erros de tipo.\nnpm run lint limpo (ESLint).\nnpm run format:check limpo (Prettier).\nTestes (vitest) verdes, com casos de erro/limite cobertos.\nRobustez verificada: loading, erro, vazio, sessão expirada."
+  },
+  {
+    "timestamp": "2026-07-06T20:50:06.026Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vou rodar exatamente os gates que você listou e corrigir o que aparecer."
+  },
+  {
+    "timestamp": "2026-07-06T20:50:38.378Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Build, lint e format:check limpos. Agora os testes com cobertura (casos de erro/limite) e a verificação de robustez:"
+  },
+  {
+    "timestamp": "2026-07-06T20:51:23.245Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Todos verdes. Deixe-me ver a cobertura detalhada dos arquivos da US-03 para identificar lacunas (especialmente robustez em componentes ainda não testados diretamente: `useDistribution`, `EventSelector`, charts de cidade/perfil/tipo):"
+  },
+  {
+    "timestamp": "2026-07-06T20:52:14.963Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Cobertura em 99% de linhas e todos os arquivos da US-03 bem cobertos. Revisando a **matriz de robustez** que você pediu, encontrei uma lacuna: loading, erro e sessão expirada têm teste de ponta a ponta, mas o estado **vazio** só está testado no nível do `DistributionPanel` (apresentacional) — falta um teste de integração exercitando a *detecção* de vazio no `useDistribution` (resposta 200 sem dados → `EmptyState`). Vou adicionar esse caso."
+  },
+  {
+    "timestamp": "2026-07-06T20:52:46.528Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "O novo teste de estado vazio passa. Agora a rodada final completa dos gates exatamente como você listou:"
+  },
+  {
+    "timestamp": "2026-07-06T20:54:29.694Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Revisão e correção concluídas. Todos os gates que você pediu estão verdes:\n\n| Gate | Resultado |\n|---|---|\n| `npm run build` (tsc -b + vite build) | ✅ sem erros de tipo; remote `__federation_expose_DemographicsPage` emitido |\n| `npm run lint` (ESLint) | ✅ limpo |\n| `npm run format:check` (Prettier) | ✅ limpo |\n| `npm test` (vitest) | ✅ **119/119** (22 arquivos) |\n\n**Correção aplicada nesta revisão:** adicionei um teste de integração para o estado **vazio** de ponta a ponta — resposta 200 com contagem zero → o painel cai no `EmptyState` (\"Sem dados para esta categoria no período selecionado.\") sem afetar os outros. Antes, o \"vazio\" só era exercitado no nível apresentacional do `DistributionPanel`; agora a *detecção* de vazio no `useDistribution` também está coberta.\n\n**Matriz de robustez — agora toda com teste automatizado:**\n- **loading** → `DistributionPanel` (skeleton, `aria-busy`) + página loading→dados\n- **erro** → falha isolada em `/by-city` (500) com retry, sem derrubar os demais painéis\n- **vazio** → 200 com contagem zero → `EmptyState` da categoria *(novo)*\n- **sessão expirada (401)** → dispara `mfeAuth:sessionExpired` (host redireciona)\n- **403** → mensagem de permissão no painel, demais seguem funcionando\n- **intervalo inválido** → erro inline no toolbar, sem disparar fetch (evita 422)\n\nCobertura dos arquivos da US-03 acima de 97% de linhas (charts 100%). Nada foi commitado — pronto para o `/commit` quando quiser."
+  },
+  {
+    "timestamp": "2026-07-06T20:55:36.721Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "user",
+    "content": "crie os commits com a divisão já conhecida"
+  },
+  {
+    "timestamp": "2026-07-06T20:55:50.666Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Vou seguir a mesma divisão da US-04 (feat → test → docs ai-log). Primeiro, o estado atual do repositório:"
+  },
+  {
+    "timestamp": "2026-07-06T20:56:18.653Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Preciso separar o que é da US-03 do que é ruído. Deixe-me inspecionar os arquivos ambíguos (package-lock, node_modules, log automático da raiz) antes de fazer o stage:"
+  },
+  {
+    "timestamp": "2026-07-06T20:56:57.489Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Claro. `node_modules/` e o `package-lock.json` da raiz são ruído (não versionados/gitignore) e o `eloo-metrics-mfe/package-lock.json` já estava modificado antes desta sessão — vou deixá-los de fora. A divisão espelha a US-04: **feat → test → docs(ai-log) prompts → docs(ai-log) revisão crítica**.\n\nCommit 1 — implementação (feat):"
+  },
+  {
+    "timestamp": "2026-07-06T20:58:09.982Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Staging correto (implementação + wiring de navegação/remote; testes e logs ficam de fora). Criando o commit 1:"
+  },
+  {
+    "timestamp": "2026-07-06T20:58:23.948Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Commit 2 — testes (unit + integração MSW, incluindo os handlers do MSW):"
+  },
+  {
+    "timestamp": "2026-07-06T20:59:54.098Z",
+    "source": "claude",
+    "git_branch": "feature/us-03-distribuicoes-demograficas",
+    "git_user_name": "Carlos Mascarello",
+    "call_context": {
+      "cwd": "/home/carlosmascarello/Documentos/PUCRS/2026_1/Construcao/0x_t3"
+    },
+    "role": "assistant",
+    "content": "Commits 3 e 4 — os logs de IA (raiz = prompts automáticos da sessão; `eloo-metrics-mfe/.ai_log` = revisão crítica curada):"
   }
 ]
