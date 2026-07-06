@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../test/msw/server";
-import { listEventMetrics } from "./metricsApi";
+import { listEventMetrics, getEngagement, USING_MOCK_DATA } from "./metricsApi";
 import { SESSION_EXPIRED_EVENT } from "./authApi";
 
 const PERIOD = { startDate: "2026-01-01", endDate: "2026-12-31" };
 const EVENTS = "*/api/metrics/events";
+const ENGAGEMENT = "*/api/metrics/engagement";
 
 beforeEach(() => {
   localStorage.clear();
@@ -114,5 +115,54 @@ describe("listEventMetrics", () => {
     });
     expect(page.total).toBe(1);
     expect(page.page).toBe(1);
+  });
+});
+
+describe("getEngagement", () => {
+  it("mapeia checked_in/registered e usa o rate do backend quando presente", async () => {
+    let sentQuery: string | null = null;
+    server.use(
+      http.get(ENGAGEMENT, ({ request }) => {
+        sentQuery = new URL(request.url).search;
+        return HttpResponse.json({ registered: 200, checked_in: 136, rate: 0.68 });
+      }),
+    );
+
+    const result = await getEngagement(PERIOD);
+
+    expect(result).toEqual({ registered: 200, checkedIn: 136, rate: 0.68 });
+    // Período sempre enviado (ADR-0009).
+    expect(sentQuery).toContain("start_date=2026-01-01");
+    expect(sentQuery).toContain("end_date=2026-12-31");
+  });
+
+  it("deriva o rate quando o backend não o envia", async () => {
+    server.use(http.get(ENGAGEMENT, () => HttpResponse.json({ registered: 200, checked_in: 50 })));
+
+    const result = await getEngagement(PERIOD);
+
+    expect(result.rate).toBeCloseTo(0.25);
+  });
+
+  it("valor-limite: registrados = 0 não divide por zero (rate 0)", async () => {
+    server.use(http.get(ENGAGEMENT, () => HttpResponse.json({ registered: 0, checked_in: 0 })));
+
+    const result = await getEngagement(PERIOD);
+
+    expect(result).toEqual({ registered: 0, checkedIn: 0, rate: 0 });
+  });
+
+  it("propaga o mapeamento de erro da camada (401 → sessão expirada)", async () => {
+    server.use(http.get(ENGAGEMENT, () => new HttpResponse(null, { status: 401 })));
+
+    await expect(getEngagement(PERIOD)).rejects.toThrow(/sessão expirou/i);
+  });
+});
+
+// Nos testes (mode "test" não carrega .env.development) o modo demonstração fica
+// desligado, então as chamadas batem no contrato via MSW (ADR-0009/0011).
+describe("modo demonstração", () => {
+  it("desligado nos testes", () => {
+    expect(USING_MOCK_DATA).toBe(false);
   });
 });
