@@ -1,4 +1,13 @@
-import type { EventMetrics, EventMetricsPage, EngagementResponse } from "./metricsApi";
+import type {
+  EventMetrics,
+  EventMetricsPage,
+  EngagementResponse,
+  AgeDistribution,
+  GenderDistribution,
+  CityDistribution,
+  ProfileDistribution,
+  TypeDistribution,
+} from "./metricsApi";
 
 // Dados mockados para desenvolvimento/demonstração (VITE_USE_MOCKS=true). NÃO são
 // usados em testes (o vitest roda em mode "test", que não carrega
@@ -125,3 +134,53 @@ export const MOCK_ENGAGEMENT: EngagementResponse = {
 // Tendência do card de inscritos (referência: "+12% vs. período anterior").
 // Mock: o T2 ainda não expõe comparativo entre janelas.
 export const MOCK_REGISTERED_TREND = { label: "+12%", positive: true } as const;
+
+// US-03 — Distribuições demográficas (modo demonstração). Já em camelCase e com
+// rótulos pt-BR, como saem da camada de serviço (getByAge/Gender/City/...).
+
+// Faixa etária: sempre as 8 canônicas, com "Desconhecido" incluído.
+export const MOCK_BY_AGE: AgeDistribution[] = [
+  { range: "0-17", label: "0-17", count: 12 },
+  { range: "18-24", label: "18-24", count: 250 },
+  { range: "25-34", label: "25-34", count: 450 },
+  { range: "35-44", label: "35-44", count: 200 },
+  { range: "45-54", label: "45-54", count: 80 },
+  { range: "55-64", label: "55-64", count: 30 },
+  { range: "65+", label: "65+", count: 10 },
+  { range: "Desconhecido", label: "Desconhecido", count: 18 },
+];
+
+export const MOCK_BY_GENDER: GenderDistribution[] = [
+  { gender: "Feminino", label: "Feminino", count: 540 },
+  { gender: "Masculino", label: "Masculino", count: 430 },
+  { gender: "Outro", label: "Outro", count: 55 },
+  { gender: "Desconhecido", label: "Desconhecido", count: 25 },
+];
+
+export const MOCK_BY_CITY: CityDistribution[] = [
+  { city: "São Paulo", count: 450 },
+  { city: "Rio de Janeiro", count: 310 },
+  { city: "Belo Horizonte", count: 240 },
+  { city: "Curitiba", count: 180 },
+  { city: "Porto Alegre", count: 150 },
+  { city: "Salvador", count: 120 },
+  { city: "Recife", count: 95 },
+  { city: "Brasília", count: 70 },
+  { city: "Fortaleza", count: 60 },
+  { city: "Manaus", count: 45 },
+];
+
+export const MOCK_BY_PROFILE: ProfileDistribution[] = [
+  { profile: "Profissional", label: "Profissional", count: 420 },
+  { profile: "Especialista/Técnico", label: "Especialista/Técnico", count: 280 },
+  { profile: "Estudante", label: "Estudante", count: 180 },
+  { profile: "Executivo/C-Level", label: "Executivo/C-Level", count: 120 },
+];
+
+export const MOCK_BY_TYPE: TypeDistribution[] = [
+  { type: "Workshop", label: "Workshop", count: 320 },
+  { type: "Palestra", label: "Palestra", count: 260 },
+  { type: "Curso", label: "Curso", count: 190 },
+  { type: "Conferência", label: "Conferência", count: 140 },
+  { type: "Hackathon", label: "Hackathon", count: 90 },
+];

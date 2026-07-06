@@ -9,6 +9,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
@@ -20,6 +21,7 @@ import logoUrl from "../../assets/logo.png";
 const ROUTE_ICONS: Record<string, ReactNode> = {
   "/": <DashboardOutlinedIcon />,
   "/catalogo": <EventOutlinedIcon />,
+  "/demografia": <GroupsOutlinedIcon />,
 };
 
 const itemSx = {

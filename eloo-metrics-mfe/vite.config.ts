@@ -32,6 +32,7 @@ export default defineConfig({
       exposes: {
         "./DashboardPage": "./src/pages/DashboardPage.tsx",
         "./EventCatalogPage": "./src/pages/EventCatalogPage.tsx",
+        "./DemographicsPage": "./src/pages/DemographicsPage.tsx",
       },
       shared: [
         "react",
