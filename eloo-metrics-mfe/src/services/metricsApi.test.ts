@@ -22,6 +22,9 @@ describe("listEventMetrics", () => {
             {
               event_id: "evt_9",
               event_name: "Congresso",
+              status: "ACTIVE",
+              start_date: "2026-03-01",
+              end_date: "2026-03-03",
               registered: 200,
               checked_in: 150,
               certified: 90,
@@ -40,6 +43,9 @@ describe("listEventMetrics", () => {
     expect(page.items[0]).toEqual({
       eventId: "evt_9",
       eventName: "Congresso",
+      status: "active",
+      startDate: "2026-03-01",
+      endDate: "2026-03-03",
       registered: 200,
       checkedIn: 150,
       certified: 90,
@@ -109,6 +115,9 @@ describe("listEventMetrics", () => {
     expect(page.items[0]).toEqual({
       eventId: "evt_x",
       eventName: null,
+      status: "unknown",
+      startDate: null,
+      endDate: null,
       registered: 0,
       checkedIn: 0,
       certified: 0,

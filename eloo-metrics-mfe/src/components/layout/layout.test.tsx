@@ -1,60 +1,66 @@
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { describe, it, expect, vi } from "vitest";
 import { SideNavBar } from "./SideNavBar";
 import { TopNavBar } from "./TopNavBar";
 import { theme } from "../../theme";
 
-// Chrome do shell standalone: presentacional. Smoke test garante que renderiza e
-// espelha os rótulos da referência (pt-BR).
-describe("chrome do shell standalone", () => {
-  it("SideNavBar renderiza os itens de navegação", () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <SideNavBar />
-      </ThemeProvider>,
-    );
+// Chrome do shell standalone: liga a navegação real (Dashboard / Catálogo) às
+// rotas. Precisa de um Router porque agora usa NavLink/useLocation.
+function renderWithRouter(ui: ReactNode, initialPath = "/") {
+  return render(
+    <ThemeProvider theme={theme}>
+      <MemoryRouter initialEntries={[initialPath]}>{ui}</MemoryRouter>
+    </ThemeProvider>,
+  );
+}
 
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Participantes")).toBeInTheDocument();
+describe("chrome do shell standalone", () => {
+  it("SideNavBar liga os itens às rotas de Dashboard e Catálogo", () => {
+    renderWithRouter(<SideNavBar />);
+
+    const dashboard = screen.getByRole("link", { name: /dashboard/i });
+    const catalogo = screen.getByRole("link", { name: /catálogo de eventos/i });
+    expect(dashboard).toHaveAttribute("href", "/");
+    expect(catalogo).toHaveAttribute("href", "/catalogo");
     expect(screen.getByRole("button", { name: /novo evento/i })).toBeInTheDocument();
     // Logo da Eloo no topo da sidebar.
     expect(screen.getByRole("img", { name: /eloo/i })).toBeInTheDocument();
   });
 
-  it("SideNavBar com tabs (mobile) inclui as abas do topo no mesmo painel", () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <SideNavBar tabs={["Visão Geral", "Relatórios"]} />
-      </ThemeProvider>,
-    );
+  it("SideNavBar marca a rota ativa (aria-current) conforme a URL", () => {
+    renderWithRouter(<SideNavBar />, "/catalogo");
 
-    // Seção "Navegação" com as abas + a navegação lateral, tudo junto.
-    expect(screen.getByText("Navegação")).toBeInTheDocument();
-    expect(screen.getByText("Visão Geral")).toBeInTheDocument();
-    expect(screen.getByText("Relatórios")).toBeInTheDocument();
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /catálogo de eventos/i })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
-  it("TopNavBar renderiza as abas e a busca", () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <TopNavBar />
-      </ThemeProvider>,
-    );
+  it("navegar pela SideNavBar dispara onNavigate (fecha o drawer no mobile)", async () => {
+    const onNavigate = vi.fn();
+    renderWithRouter(<SideNavBar onNavigate={onNavigate} />);
 
-    expect(screen.getByText("Visão Geral")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("link", { name: /catálogo de eventos/i }));
+
+    expect(onNavigate).toHaveBeenCalledTimes(1);
+  });
+
+  it("TopNavBar não duplica a navegação (fonte única é a SideNavBar) e mantém a busca", () => {
+    renderWithRouter(<TopNavBar />);
+
+    // A navegação vive só na SideNavBar; o topo não repete Dashboard/Catálogo.
+    expect(screen.queryByRole("link", { name: /dashboard/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /catálogo de eventos/i })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText("Buscar...")).toBeInTheDocument();
   });
 
   it("o botão de menu (mobile) dispara onMenuClick", async () => {
     const onMenuClick = vi.fn();
-    render(
-      <ThemeProvider theme={theme}>
-        <TopNavBar onMenuClick={onMenuClick} />
-      </ThemeProvider>,
-    );
+    renderWithRouter(<TopNavBar onMenuClick={onMenuClick} />);
 
     await userEvent.click(screen.getByRole("button", { name: /abrir menu/i }));
 
