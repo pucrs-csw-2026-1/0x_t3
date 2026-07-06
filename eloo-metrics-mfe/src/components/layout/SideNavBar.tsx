@@ -1,46 +1,25 @@
 import type { ReactNode } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import ListSubheader from "@mui/material/ListSubheader";
 import Divider from "@mui/material/Divider";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
-import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
-import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
-import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
-import GridViewOutlinedIcon from "@mui/icons-material/GridViewOutlined";
-import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
-import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
+import { NAV_ROUTES } from "./navTabs";
 import logoUrl from "../../assets/logo.png";
 
-interface NavItem {
-  label: string;
-  icon: ReactNode;
-  active?: boolean;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", icon: <DashboardOutlinedIcon />, active: true },
-  { label: "Participantes", icon: <GroupsOutlinedIcon /> },
-  { label: "Certificações", icon: <VerifiedOutlinedIcon /> },
-  { label: "Engajamento", icon: <AnalyticsOutlinedIcon /> },
-  { label: "Administração", icon: <AdminPanelSettingsOutlinedIcon /> },
-];
-
-// Ícones das abas do topo, para o menu mobile ficar coeso com a navegação lateral.
-const TAB_ICONS: Record<string, ReactNode> = {
-  "Visão Geral": <GridViewOutlinedIcon />,
-  Relatórios: <AssessmentOutlinedIcon />,
-  Eventos: <EventOutlinedIcon />,
-  Configurações: <SettingsOutlinedIcon />,
+// Ícone por rota (o data-model em navTabs.ts fica sem JSX para não quebrar o
+// fast-refresh). Rotas sem ícone dedicado caem num chevron neutro.
+const ROUTE_ICONS: Record<string, ReactNode> = {
+  "/": <DashboardOutlinedIcon />,
+  "/catalogo": <EventOutlinedIcon />,
 };
 
 const itemSx = {
@@ -55,16 +34,17 @@ const itemSx = {
 } as const;
 
 export interface SideNavBarProps {
-  // Abas do topo, injetadas só no menu mobile (drawer) — no desktop elas ficam no
-  // TopNavBar. Quando presentes, aparecem como uma seção "Navegação" no topo,
-  // dentro do mesmo painel (visual coeso).
-  tabs?: string[];
+  // Fecha o drawer ao navegar (mobile). No desktop a barra é permanente e não
+  // precisa fechar nada.
+  onNavigate?: () => void;
 }
 
 // Barra lateral do shell standalone. No runtime real como remote, a navegação é
-// do eloo-shell (ADR-0005/0010); aqui existe só para a visão standalone/demo
-// espelhar a referência visual. Puramente apresentacional.
-export function SideNavBar({ tabs }: SideNavBarProps) {
+// do eloo-shell (ADR-0005/0010); aqui liga cada item a uma rota real (Dashboard
+// e Catálogo), destacando a página ativa. Suporte/Sair seguem decorativos.
+export function SideNavBar({ onNavigate }: SideNavBarProps) {
+  const { pathname } = useLocation();
+
   return (
     <Box
       component="aside"
@@ -92,57 +72,29 @@ export function SideNavBar({ tabs }: SideNavBarProps) {
         />
       </Box>
 
-      {tabs && tabs.length > 0 && (
-        <>
-          <List
-            component="nav"
-            aria-label="Navegação principal"
-            subheader={
-              <ListSubheader
-                disableSticky
-                sx={{ bgcolor: "transparent", color: "text.secondary", lineHeight: "32px" }}
-              >
-                Navegação
-              </ListSubheader>
-            }
-          >
-            {tabs.map((tab) => (
-              <ListItemButton key={tab} sx={itemSx}>
-                <ListItemIcon sx={{ minWidth: 40, color: "inherit" }}>
-                  {TAB_ICONS[tab] ?? <ChevronRightOutlinedIcon />}
-                </ListItemIcon>
-                <ListItemText primary={tab} slotProps={{ primary: { fontWeight: 500 } }} />
-              </ListItemButton>
-            ))}
-          </List>
-          <Divider sx={{ mx: 2, my: 1 }} />
-        </>
-      )}
-
-      <List
-        component="nav"
-        aria-label="Seções do painel"
-        sx={{ flex: 1 }}
-        subheader={
-          tabs && tabs.length > 0 ? (
-            <ListSubheader
-              disableSticky
-              sx={{ bgcolor: "transparent", color: "text.secondary", lineHeight: "32px" }}
+      <List component="nav" aria-label="Navegação principal" sx={{ flex: 1 }}>
+        {NAV_ROUTES.map((route) => {
+          // "/" só casa exato; as demais casam o prefixo (para futuras subrotas).
+          const selected = route.path === "/" ? pathname === "/" : pathname.startsWith(route.path);
+          return (
+            <ListItemButton
+              key={route.path}
+              component={NavLink}
+              to={route.path}
+              selected={selected}
+              onClick={onNavigate}
+              sx={itemSx}
             >
-              Painel
-            </ListSubheader>
-          ) : undefined
-        }
-      >
-        {NAV_ITEMS.map((item) => (
-          <ListItemButton key={item.label} selected={item.active} sx={itemSx}>
-            <ListItemIcon sx={{ minWidth: 40, color: "inherit" }}>{item.icon}</ListItemIcon>
-            <ListItemText
-              primary={item.label}
-              slotProps={{ primary: { fontWeight: item.active ? 700 : 500 } }}
-            />
-          </ListItemButton>
-        ))}
+              <ListItemIcon sx={{ minWidth: 40, color: "inherit" }}>
+                {ROUTE_ICONS[route.path] ?? <ChevronRightOutlinedIcon />}
+              </ListItemIcon>
+              <ListItemText
+                primary={route.label}
+                slotProps={{ primary: { fontWeight: selected ? 700 : 500 } }}
+              />
+            </ListItemButton>
+          );
+        })}
       </List>
 
       <Button variant="contained" color="primary" sx={{ my: 2, mx: 1 }}>

@@ -21,9 +21,19 @@ function withMockLatency<T>(value: T): Promise<T> {
 const importOrigin = new URL(import.meta.url).origin;
 const API_BASE = `${importOrigin && importOrigin !== "null" ? importOrigin : "http://localhost"}/api`;
 
+// Situação do evento no catálogo (US-04). O backend pode enviar rótulos em
+// inglês ou português; normalizamos para um conjunto fechado e caímos em
+// "unknown" quando o valor não é reconhecido (tolerância à evolução do T2).
+export type EventStatus = "active" | "ended" | "draft" | "unknown";
+
 export interface EventMetrics {
   eventId: string;
   eventName: string | null;
+  // Situação e janela do evento (US-04, catálogo). A janela do evento é distinta
+  // do período consultado; pode vir nula (ex.: rascunho sem datas definidas).
+  status: EventStatus;
+  startDate: string | null; // YYYY-MM-DD
+  endDate: string | null; // YYYY-MM-DD
   registered: number;
   checkedIn: number;
   certified: number;
@@ -96,10 +106,32 @@ async function authedGet(path: string, query: URLSearchParams): Promise<unknown>
   return response.json();
 }
 
+// Normaliza o rótulo de situação do backend (case-insensitive, PT/EN) para o
+// conjunto fechado de EventStatus. Valor ausente/desconhecido → "unknown".
+function toEventStatus(raw: unknown): EventStatus {
+  const value = String(raw ?? "")
+    .trim()
+    .toLowerCase();
+  if (["active", "ativo", "ongoing", "published", "open"].includes(value)) return "active";
+  if (["ended", "encerrado", "finished", "closed", "completed", "past"].includes(value))
+    return "ended";
+  if (["draft", "rascunho", "pending"].includes(value)) return "draft";
+  return "unknown";
+}
+
+function toIsoDateOrNull(raw: unknown): string | null {
+  if (raw == null) return null;
+  const value = String(raw).trim();
+  return value === "" ? null : value;
+}
+
 function toEventMetrics(raw: Record<string, unknown>): EventMetrics {
   return {
     eventId: String(raw.event_id ?? raw.id ?? ""),
     eventName: (raw.event_name ?? raw.name ?? null) as string | null,
+    status: toEventStatus(raw.status),
+    startDate: toIsoDateOrNull(raw.start_date ?? raw.starts_at),
+    endDate: toIsoDateOrNull(raw.end_date ?? raw.ends_at),
     registered: Number(raw.registered ?? 0),
     checkedIn: Number(raw.checked_in ?? 0),
     certified: Number(raw.certified ?? 0),
