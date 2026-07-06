@@ -11,7 +11,7 @@
 - **O metrics já roda standalone** (`:5177`) com **modo mock** (`.env.development` tem `VITE_USE_MOCKS=true`) e com **T2 real** (`VITE_USE_MOCKS=false`). Validado rodando real (mostrou 50 eventos do seed).
 - **O `vite.config.ts` do metrics já EXPÕE as 4 páginas** (federation `exposes`), prontas para o shell consumir:
   - `./DashboardPage`, `./EventCatalogPage`, `./DemographicsPage`, `./EventMetricsPage`.
-- **O `eloo-shell` AINDA NÃO tem o metrics registrado** — `src/shell/remotes.ts` só tem `login`. O git do shell está em "functional shell" (landing + auth funcionando). **Essa é a lacuna que a US-06 preenche.**
+- **O `eloo-shell` AINDA NÃO tem o metrics registrado** — `src/shell/remotes.ts` só tem `login`. O git do shell está em "functional shell" (landing + auth funcionando). **Essa é a lacuna que a US-07 preenche** (depois de a US-06 validar o back).
 - Board #14 "0x Metrics MFE T3": US-00..US-05 = Done; pendentes: **US-06 (validação real), US-07 (shell), US-08 (refatoração forks), US-09 (docs).**
 
 ## 2. US-06 (validação real) primeiro, depois US-07 (shell)
@@ -66,7 +66,7 @@ Para testar a US-06 integrada: subir **auth remote (:5174)** + **metrics remote 
 - **Terraform do T2 falha com "timeout while waiting for plugin to start":** é **cache de provider antigo**. `rm -rf 0x_t2/infra/terraform/.terraform 0x_t2/infra/terraform/.terraform.lock.hcl` e re-rodar. O timeout é intermitente — se voltar, tentar de novo.
 - **Não deixe o `docker compose up seed`/`up backend` re-disparar o terraform** (ele derruba o backend ao falhar). Depois que as tabelas existem: seed com `docker compose run --rm --no-deps seed`; backend com `docker compose up -d --no-deps backend`.
 - **uBlock Origin / ad blockers bloqueiam `/api/metrics/...`** (a palavra "metrics" é tratada como analytics) → **NetworkError**. Desativar para localhost. (O tratamento de erro do app lida bem: mostra "Tentar novamente".)
-- **Standalone: cada MFE tem localStorage por origem.** Logar no auth `:5175` NÃO autentica o metrics `:5177`. Só o **shell** unifica a sessão (mesma origem). Para ver o metrics real standalone, injetar o token na origem do `:5177` (ou usar `public/dev-login.html`, atalho de dev — não commitar).
+- **Standalone: cada MFE tem localStorage por origem.** Logar no auth `:5175` NÃO autentica o metrics `:5177`. Só o **shell** unifica a sessão (mesma origem). Para ver o metrics real standalone, injetar o token na origem do `:5177` via console do browser (no Firefox, digitar `allow pasting` antes de colar).
 - **Seed sem participantes:** o pool de usuários do Auth pode estar vazio → counters (inscritos/check-ins) vêm 0, mas os eventos são reais. Rodar o seed-users do Auth (US-17 do T1) para números não-zerados.
 
 ## 5. Credenciais (seed local)
@@ -76,7 +76,7 @@ Para testar a US-06 integrada: subir **auth remote (:5174)** + **metrics remote 
 
 ## 6. Processo (não esquecer)
 
-- **GitFlow:** `main ← dev ← feature/*`. `main` e `dev` **protegidas** (5 checks de CI verdes + PR obrigatórios). Trabalhar em `feature/us-06-integracao-shell` a partir de `dev`.
+- **GitFlow:** `main ← dev ← feature/*`. `main` e `dev` **protegidas** (5 checks de CI verdes + PR obrigatórios). A US-06 (validação) trabalha em `feature/us-06-validacao-integracao-real`; a US-07 (shell) em `feature/us-07-integracao-shell` — ambas a partir de `dev`.
 - **CI** (`.github/workflows/ci.yml`): lint → format → typecheck → vitest (cobertura ≥80%) → e2e (Playwright, mock) → build. **A US-06 mexe no `eloo-shell`, que é outro repo** — verificar/ajustar o CI de lá se necessário.
 - **sync-dev:** workflow mantém `dev` alinhada com `main` pós-release, via secret **`SYNC_TOKEN`** (PAT clássico; o fine-grained travou por precisar de aprovação da org).
 - **Commits:** usar a skill **`/commit`** — Conventional Commits com **corpo descritivo** + `Refs #NN`, separar concerns, commitar `.ai_log` da sessão, **nunca** `Co-Authored-By: Claude`.
