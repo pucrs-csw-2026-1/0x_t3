@@ -1,4 +1,16 @@
 import { getStoredAccessToken, notifySessionExpired } from "./authApi";
+import { MOCK_ENGAGEMENT, MOCK_EVENTS_PAGE } from "./mockData";
+
+// Modo demonstração: quando VITE_USE_MOCKS=true (só em .env.development), a
+// camada devolve dados mockados sem tocar a rede — útil para rodar o dashboard
+// standalone sem o T2 no ar. Nunca ligado em teste (mode "test") nem em produção.
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
+
+// Pequeno atraso para o modo mock exercitar os estados de loading (skeleton).
+const MOCK_LATENCY_MS = 400;
+function withMockLatency<T>(value: T): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), MOCK_LATENCY_MS));
+}
 
 // Único ponto que fala com o Metrics Service (T2) — ADR-0003/0009. As chamadas
 // vão para `/api` na própria origem (resolvida via import.meta.url, para manter
@@ -31,6 +43,19 @@ export interface ListEventMetricsParams {
   pageSize?: number;
 }
 
+export interface EngagementParams {
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
+
+// Engajamento agregado no período (checked_in/registered) — ADR-0009. O `rate`
+// é a taxa de adesão (0..1); quando o backend não envia, é derivado.
+export interface EngagementResponse {
+  registered: number;
+  checkedIn: number;
+  rate: number;
+}
+
 async function readErrorMessage(response: Response): Promise<string> {
   try {
     const body = await response.json();
@@ -60,6 +85,17 @@ async function handleErrorResponse(response: Response): Promise<never> {
   throw new Error(await readErrorMessage(response));
 }
 
+// Único ponto de rede da camada: injeta o Bearer do storage compartilhado
+// (mfeAuth.*) e centraliza o mapeamento de erros → pt-BR (ADR-0009).
+async function authedGet(path: string, query: URLSearchParams): Promise<unknown> {
+  const token = getStoredAccessToken();
+  const response = await fetch(`${API_BASE}${path}?${query.toString()}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) await handleErrorResponse(response);
+  return response.json();
+}
+
 function toEventMetrics(raw: Record<string, unknown>): EventMetrics {
   return {
     eventId: String(raw.event_id ?? raw.id ?? ""),
@@ -73,7 +109,8 @@ function toEventMetrics(raw: Record<string, unknown>): EventMetrics {
 // GET /metrics/events — counters por evento no período, paginado. O backend
 // escopa por RBAC (admin: todos; manager: escopo). Ver ADR-0009.
 export async function listEventMetrics(params: ListEventMetricsParams): Promise<EventMetricsPage> {
-  const token = getStoredAccessToken();
+  if (USE_MOCKS) return withMockLatency(MOCK_EVENTS_PAGE);
+
   const query = new URLSearchParams({
     start_date: params.startDate,
     end_date: params.endDate,
@@ -81,13 +118,7 @@ export async function listEventMetrics(params: ListEventMetricsParams): Promise<
     page_size: String(params.pageSize ?? 20),
   });
 
-  const response = await fetch(`${API_BASE}/metrics/events?${query.toString()}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-
-  if (!response.ok) await handleErrorResponse(response);
-
-  const data = await response.json();
+  const data = (await authedGet("/metrics/events", query)) as Record<string, unknown>;
   const items: Record<string, unknown>[] = Array.isArray(data.items) ? data.items : [];
   return {
     items: items.map(toEventMetrics),
@@ -96,3 +127,30 @@ export async function listEventMetrics(params: ListEventMetricsParams): Promise<
     total: Number(data.total ?? items.length),
   };
 }
+
+function toEngagement(raw: Record<string, unknown>): EngagementResponse {
+  const registered = Number(raw.registered ?? 0);
+  const checkedIn = Number(raw.checked_in ?? 0);
+  const rawRate = raw.rate ?? raw.engagement_rate;
+  const rate = rawRate != null ? Number(rawRate) : registered > 0 ? checkedIn / registered : 0;
+  return { registered, checkedIn, rate };
+}
+
+// GET /metrics/engagement — engajamento agregado no período. O período é sempre
+// enviado (ADR-0009). O backend escopa por RBAC (admin: global; manager:
+// escopo). Alimenta o indicador de taxa global do dashboard.
+export async function getEngagement(params: EngagementParams): Promise<EngagementResponse> {
+  if (USE_MOCKS) return withMockLatency(MOCK_ENGAGEMENT);
+
+  const query = new URLSearchParams({
+    start_date: params.startDate,
+    end_date: params.endDate,
+  });
+
+  const data = (await authedGet("/metrics/engagement", query)) as Record<string, unknown>;
+  return toEngagement(data);
+}
+
+// Sinaliza à UI que estamos em modo demonstração (ex.: exibir a tendência mock
+// "+12%" que ainda não tem origem real no T2).
+export const USING_MOCK_DATA = USE_MOCKS;
