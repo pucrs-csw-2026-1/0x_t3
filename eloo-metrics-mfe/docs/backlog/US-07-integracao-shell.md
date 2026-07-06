@@ -1,4 +1,4 @@
-# US-06 — Integração do remote mfeMetrics no eloo-shell
+# US-07 — Integração do remote mfeMetrics no eloo-shell
 
 ## História
 
@@ -34,7 +34,7 @@ Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do 
 
 ## Dependências / bloqueadores
 
-- Depende de **US-02** (ao menos o `DashboardPage` exposto). Alterações no `eloo-shell` são versionadas no repo do shell.
+- Depende da **US-06** (validação da integração real) e de **US-02** (ao menos o `DashboardPage` exposto). Alterações no `eloo-shell` são versionadas no repo do shell.
 
 ## Metadados do board
 
@@ -42,4 +42,4 @@ Como **usuário da plataforma Eloo**, quero **acessar as métricas pelo menu do 
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07
 - **Labels sugeridas:** `tipo:feature`, `area:dashboard`, `prioridade:alta`
-- **Branch:** `feature/us-06-integracao-shell`
+- **Branch:** `feature/us-07-integracao-shell`
