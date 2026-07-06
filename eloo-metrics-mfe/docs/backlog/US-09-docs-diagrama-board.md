@@ -1,4 +1,4 @@
-# US-08 — Documentação: README, diagrama arquitetural e board
+# US-09 — Documentação: README, diagrama arquitetural e board
 
 ## História
 
@@ -40,4 +40,4 @@ Como **avaliador/novo integrante**, quero **documentação completa e um board o
 - **Responsável:** Grupo 0x
 - **Entrega alvo:** 2026-07-07
 - **Labels sugeridas:** `tipo:docs`, `prioridade:media`
-- **Branch:** `feature/us-08-docs-diagrama-board`
+- **Branch:** `feature/us-09-docs-diagrama-board`
