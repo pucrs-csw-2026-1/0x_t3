@@ -70,4 +70,39 @@ export const handlers = [
       { event_type: "lecture", count: 50 },
     ]),
   ),
+
+  // US-05 — detalhe de evento + séries históricas (ADR-0009). Shape snake_case
+  // do T2; testes específicos sobrescrevem via server.use(...) para 403/404,
+  // vazio e demais caminhos de erro. As rotas de taxa são mais específicas que
+  // `/events/:eventId`, então ficam antes na ordem de resolução do MSW.
+  http.get("*/api/metrics/events/:eventId/checkin-rate", () =>
+    HttpResponse.json({ rate: 0.68, checked_in: 850, registered: 1250 }),
+  ),
+  http.get("*/api/metrics/events/:eventId/certification-rate", () =>
+    HttpResponse.json({ rate: 0.336, certified: 420, registered: 1250 }),
+  ),
+  http.get("*/api/metrics/events/:eventId", ({ params }) =>
+    HttpResponse.json({
+      event_id: params.eventId,
+      event_name: "AI for Business 2026",
+      status: "active",
+      start_date: "2026-01-15",
+      end_date: "2026-06-30",
+      registered: 1250,
+      checked_in: 850,
+      certified: 420,
+    }),
+  ),
+  http.get("*/api/metrics/timeseries", () =>
+    HttpResponse.json([
+      { bucket: "2026-05", registered: 1080, checked_in: 720 },
+      { bucket: "2026-06", registered: 1250, checked_in: 850 },
+    ]),
+  ),
+  http.get("*/api/metrics/series", () =>
+    HttpResponse.json([
+      { bucket: "2026-05", registered: 1080, checked_in: 720 },
+      { bucket: "2026-06", registered: 1250, checked_in: 850 },
+    ]),
+  ),
 ];
