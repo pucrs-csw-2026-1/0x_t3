@@ -7,6 +7,10 @@ import {
   MOCK_BY_CITY,
   MOCK_BY_PROFILE,
   MOCK_BY_TYPE,
+  MOCK_EVENT_DETAIL,
+  MOCK_CHECKIN_RATE,
+  MOCK_CERTIFICATION_RATE,
+  MOCK_TIMESERIES,
 } from "./mockData";
 import {
   AGE_RANGES,
@@ -81,6 +85,19 @@ export interface EngagementResponse {
   rate: number;
 }
 
+// Erro tipado da camada: preserva o status HTTP para que as telas diferenciem
+// 403/404 (estados dedicados de página) de erros genéricos, sem parsear a
+// mensagem. A `message` continua traduzida em pt-BR (ADR-0009), então quem só
+// olha o texto (testes/painéis) segue funcionando.
+export class MetricsApiError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "MetricsApiError";
+    this.status = status;
+  }
+}
+
 async function readErrorMessage(response: Response): Promise<string> {
   try {
     const body = await response.json();
@@ -96,18 +113,18 @@ async function readErrorMessage(response: Response): Promise<string> {
 async function handleErrorResponse(response: Response): Promise<never> {
   if (response.status === 401) {
     notifySessionExpired();
-    throw new Error("Sua sessão expirou. Entre novamente.");
+    throw new MetricsApiError("Sua sessão expirou. Entre novamente.", 401);
   }
   if (response.status === 403) {
-    throw new Error("Você não tem permissão para ver estas métricas.");
+    throw new MetricsApiError("Você não tem permissão para ver estas métricas.", 403);
   }
   if (response.status === 404) {
-    throw new Error("Recurso não encontrado.");
+    throw new MetricsApiError("Recurso não encontrado.", 404);
   }
   if (response.status === 422) {
-    throw new Error("Filtro inválido. Verifique o período informado.");
+    throw new MetricsApiError("Filtro inválido. Verifique o período informado.", 422);
   }
-  throw new Error(await readErrorMessage(response));
+  throw new MetricsApiError(await readErrorMessage(response), response.status);
 }
 
 // Único ponto de rede da camada: injeta o Bearer do storage compartilhado
@@ -343,6 +360,135 @@ export async function getByType(params: DistributionParams): Promise<TypeDistrib
     (raw) => typeLabel(raw.event_type ?? raw.type ?? raw.key),
     (raw) => typeLabel(raw.event_type ?? raw.type ?? raw.key),
   ).map(({ label, count }) => ({ type: label, label, count }));
+}
+
+// ---------------------------------------------------------------------------
+// US-05 — Detalhe de evento + séries históricas
+// GET /metrics/events/{id}, /events/{id}/checkin-rate, /certification-rate,
+// /timeseries e /series (ADR-0009). Todas as respostas saem daqui já em
+// camelCase e normalizadas; os componentes (cabeçalho, cards e o gráfico de
+// linha MUI X) só recebem dados por props e nunca fazem fetch (ADR-0004/0005).
+// A janela (start_date/end_date) segue a convenção dos demais endpoints do
+// contrato (events/engagement) — não o par mensal from/to das distribuições.
+// ---------------------------------------------------------------------------
+
+// Detalhe de um evento reaproveita o mesmo DTO da listagem (US-04): mesmos
+// counters e situação, agora para um único evento.
+export type EventDetail = EventMetrics;
+
+// Taxa (check-in ou certificação) já normalizada: `rate` é a razão 0..1 (a UI
+// formata com formatPercent), com numerador/denominador preservados para exibir
+// o "x de y" quando o backend os envia.
+export interface RateMetric {
+  rate: number; // 0..1
+  numerator: number;
+  denominator: number;
+}
+
+// Granularidade da série histórica (ADR-0009). Os rótulos pt-BR
+// (Mensal/Trimestral/Anual) vivem no GranularitySelector.
+export type Granularity = "month" | "quarter" | "year";
+
+// Ponto normalizado da série histórica: o bucket cru do backend, a data já
+// parseada (para o eixo X e formatação pt-BR) e os counters do período.
+export interface TimeSeriesPoint {
+  bucket: string; // chave crua do backend (ex.: "2026-01")
+  date: Date;
+  registered: number;
+  checkedIn: number;
+}
+
+export interface TimeSeriesParams {
+  eventId: string;
+  granularity: Granularity;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
+
+// GET /metrics/events/{id} — dados gerais do evento. 403 (fora do escopo do
+// manager) e 404 (inexistente) sobem como MetricsApiError tipado, para a página
+// escolher ForbiddenState/NotFoundState em vez de um erro genérico.
+export async function getEventById(eventId: string): Promise<EventDetail> {
+  if (USE_MOCKS) return withMockLatency(MOCK_EVENT_DETAIL);
+  const data = (await authedGet(
+    `/metrics/events/${encodeURIComponent(eventId)}`,
+    new URLSearchParams(),
+  )) as Record<string, unknown>;
+  return toEventMetrics(data);
+}
+
+function toRate(raw: Record<string, unknown>): RateMetric {
+  const numerator = Number(raw.checked_in ?? raw.certified ?? raw.numerator ?? raw.count ?? 0);
+  const denominator = Number(raw.registered ?? raw.total ?? raw.denominator ?? 0);
+  const rawRate = raw.rate ?? raw.checkin_rate ?? raw.certification_rate;
+  const rate = rawRate != null ? Number(rawRate) : denominator > 0 ? numerator / denominator : 0;
+  return { rate, numerator, denominator };
+}
+
+// GET /metrics/events/{id}/checkin-rate — taxa de check-in do evento.
+export async function getCheckinRate(eventId: string): Promise<RateMetric> {
+  if (USE_MOCKS) return withMockLatency(MOCK_CHECKIN_RATE);
+  const data = (await authedGet(
+    `/metrics/events/${encodeURIComponent(eventId)}/checkin-rate`,
+    new URLSearchParams(),
+  )) as Record<string, unknown>;
+  return toRate(data);
+}
+
+// GET /metrics/events/{id}/certification-rate — taxa de certificação do evento.
+export async function getCertificationRate(eventId: string): Promise<RateMetric> {
+  if (USE_MOCKS) return withMockLatency(MOCK_CERTIFICATION_RATE);
+  const data = (await authedGet(
+    `/metrics/events/${encodeURIComponent(eventId)}/certification-rate`,
+    new URLSearchParams(),
+  )) as Record<string, unknown>;
+  return toRate(data);
+}
+
+// Deriva um Date a partir do bucket do backend, tolerando "YYYY-MM",
+// "YYYY-MM-DD" e "YYYY". Bucket irreconhecível vira Date inválido (o gráfico
+// cai no rótulo cru).
+function parseBucketDate(bucket: string): Date {
+  const monthMatch = /^(\d{4})-(\d{2})/.exec(bucket);
+  if (monthMatch) return new Date(Number(monthMatch[1]), Number(monthMatch[2]) - 1, 1);
+  const yearMatch = /^(\d{4})$/.exec(bucket);
+  if (yearMatch) return new Date(Number(yearMatch[1]), 0, 1);
+  return new Date(bucket);
+}
+
+function toTimeSeriesPoint(raw: Record<string, unknown>): TimeSeriesPoint {
+  const bucket = String(raw.bucket ?? raw.period ?? raw.date ?? raw.month ?? "");
+  return {
+    bucket,
+    date: parseBucketDate(bucket),
+    registered: Number(raw.registered ?? 0),
+    checkedIn: Number(raw.checked_in ?? raw.checkedIn ?? 0),
+  };
+}
+
+function timeSeriesQuery(params: TimeSeriesParams): URLSearchParams {
+  return new URLSearchParams({
+    event_id: params.eventId,
+    granularity: params.granularity,
+    start_date: params.startDate,
+    end_date: params.endDate,
+  });
+}
+
+// GET /metrics/timeseries — série histórica (inscrições x check-ins por bucket).
+export async function getTimeSeries(params: TimeSeriesParams): Promise<TimeSeriesPoint[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_TIMESERIES);
+  const data = await authedGet("/metrics/timeseries", timeSeriesQuery(params));
+  return asBuckets(data).map(toTimeSeriesPoint);
+}
+
+// GET /metrics/series — série agregada por bucket. Mesmo shape normalizado do
+// timeseries; a EventMetricsPage a usa como fallback quando o timeseries volta
+// vazio.
+export async function getSeries(params: TimeSeriesParams): Promise<TimeSeriesPoint[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_TIMESERIES);
+  const data = await authedGet("/metrics/series", timeSeriesQuery(params));
+  return asBuckets(data).map(toTimeSeriesPoint);
 }
 
 // Sinaliza à UI que estamos em modo demonstração (ex.: exibir a tendência mock

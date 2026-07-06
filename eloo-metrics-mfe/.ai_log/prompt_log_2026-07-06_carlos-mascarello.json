@@ -169,5 +169,41 @@
     "resposta_resumo": "A IA extraiu um hook useDistribution(fetcher, params) por painel: os 5 disparam em paralelo na mesma renderização (independentes por construção), com guarda de resposta obsoleta (requestId) e params=null quando o período é inválido — nesse caso não busca e mantém os últimos dados, exibindo o erro inline no toolbar (não alert global).",
     "decisao": "aceito",
     "avaliacao_critica": "Optou-se por independência real via um hook por painel (a falha de um não afeta os outros) em vez de um Promise.allSettled central — o efeito paralelo emerge naturalmente e o retry por painel fica trivial (reload do próprio hook). Diferente da limitação registrada na US-02/04, AQUI foi adicionada a guarda de stale-response, pois a troca rápida de evento/período é esperada nesta tela. Validação coberta por unit (validatePeriod) e por integração (inverter o intervalo não gera novo fetch)."
+  },
+  {
+    "timestamp": "2026-07-06T22:05:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — 403/404 em events/{id} precisam bloquear a página inteira; a camada de serviço lançava Error genérico só com mensagem.",
+    "prompt": "Diferenciar 403 (ForbiddenState) de 404 (NotFoundState) na EventMetricsPage sem parsear a string de erro.",
+    "resposta_resumo": "A IA propôs uma classe MetricsApiError extends Error com campo `status`, substituindo os `new Error(...)` do handleErrorResponse. As mensagens pt-BR (ADR-0009) permanecem idênticas, então testes existentes que checam por regex de mensagem seguem passando; a página passa a decidir por err.status.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Validado que nenhum teste pré-existente quebra (a message não mudou) e que a mudança é aditiva a TODOS os endpoints (não só os da US-05). Rejeitada a alternativa de inspecionar o texto do erro na página — frágil e acoplado a i18n. Cobertura nova em metricsApi.test (getEventById 403→status 403, 404→status 404)."
+  },
+  {
+    "timestamp": "2026-07-06T22:20:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — divergência de contrato: o prompt da US lista /checkin-rate?event_id=… (query) e /timeseries com from/to; o ADR-0009 lista /events/{id}/checkin-rate (path) e /series com start_date/end_date.",
+    "prompt": "Definir as URLs e parâmetros dos endpoints de taxa e de série histórica.",
+    "resposta_resumo": "A IA apontou o descasamento entre o enunciado e o ADR-0009 (fonte de verdade citada no CLAUDE.md) e, como não há backend real e o MSW/serviço são definidos de forma autoconsistente, seguiu o ADR: taxas em path (/events/{id}/checkin-rate, /certification-rate) e série com janela start_date/end_date + granularity, mesma convenção de events/engagement.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Preferiu-se o contrato fixado (ADR-0009) ao enunciado da US para não introduzir uma 3ª convenção de janela (o par mensal from/to é das distribuições/US-03). Decisão documentada em comentário no metricsApi.ts; caso o OpenAPI real do T2 divirja, só a camada de serviço muda (telas intactas)."
+  },
+  {
+    "timestamp": "2026-07-06T22:40:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — 'trocar granularidade refaz apenas o fetch de timeseries' sem re-buscar as taxas.",
+    "prompt": "Orquestrar fetches independentes na EventMetricsPage respeitando que só a série reage à granularidade.",
+    "resposta_resumo": "A IA separou os loaders em useCallbacks com dependências distintas: loadCheckin/loadCertification dependem só de eventId; loadTimeseries depende de eventId+granularity+period. Dois effects gated em eventStatus==='ready' — o de taxas não lista granularity, então não re-dispara ao trocar o preset; o de série sim.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Validado por integração (spy em getTimeSeries e getCheckinRate): trocar para 'Trimestral' incrementa só as chamadas de timeseries. Rejeitado um Promise.allSettled central único, que re-buscaria tudo a cada troca de granularidade. O gating em 'ready' garante o requisito de não disparar fetches secundários quando o evento dá 403/404."
+  },
+  {
+    "timestamp": "2026-07-06T22:55:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — legenda do TimeSeriesChart (MUI X LineChart) precisa ser testável e acessível.",
+    "prompt": "Gráfico de linha com legenda e título; testes devem conseguir ler as séries.",
+    "resposta_resumo": "A IA escondeu a legenda nativa do MUI (slotProps.legend.hidden) e renderizou uma legenda própria em <dl> (nome+cor+total), além de título visível <h2> e um wrapper role='img' com aria-label. Assim os rótulos não dependem dos <text> do SVG, que são frágeis em jsdom.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Mesmo padrão já adotado nos gráficos da US-03 (DistributionLegend): a legenda acessível complementa o SVG e sustenta os testes por texto ('Inscrições'/'Check-ins'). O gráfico não faz fetch — recebe TimeSeriesPoint[] por props (ADR-0004). Fallback de /series só quando /timeseries volta vazio, evitando duplo 401."
   }
 ]

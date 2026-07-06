@@ -1,7 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../test/msw/server";
-import { listEventMetrics, getEngagement, USING_MOCK_DATA } from "./metricsApi";
+import {
+  listEventMetrics,
+  getEngagement,
+  getEventById,
+  getCheckinRate,
+  getCertificationRate,
+  getTimeSeries,
+  MetricsApiError,
+  USING_MOCK_DATA,
+} from "./metricsApi";
 import { SESSION_EXPIRED_EVENT } from "./authApi";
 
 const PERIOD = { startDate: "2026-01-01", endDate: "2026-12-31" };
@@ -165,6 +174,131 @@ describe("getEngagement", () => {
     server.use(http.get(ENGAGEMENT, () => new HttpResponse(null, { status: 401 })));
 
     await expect(getEngagement(PERIOD)).rejects.toThrow(/sessão expirou/i);
+  });
+});
+
+// US-05 — detalhe de evento + séries históricas (ADR-0009).
+describe("getEventById", () => {
+  const EVENT = "*/api/metrics/events/:eventId";
+
+  it("mapeia snake_case → camelCase do detalhe", async () => {
+    server.use(
+      http.get(EVENT, ({ params }) =>
+        HttpResponse.json({
+          event_id: params.eventId,
+          event_name: "Congresso",
+          status: "ACTIVE",
+          start_date: "2026-01-15",
+          end_date: "2026-06-30",
+          registered: 1250,
+          checked_in: 850,
+          certified: 420,
+        }),
+      ),
+    );
+
+    const detail = await getEventById("evt_9");
+
+    expect(detail).toEqual({
+      eventId: "evt_9",
+      eventName: "Congresso",
+      status: "active",
+      startDate: "2026-01-15",
+      endDate: "2026-06-30",
+      registered: 1250,
+      checkedIn: 850,
+      certified: 420,
+    });
+  });
+
+  it("403 → MetricsApiError com status 403 (fora do escopo do manager)", async () => {
+    server.use(http.get(EVENT, () => new HttpResponse(null, { status: 403 })));
+
+    await expect(getEventById("evt_x")).rejects.toBeInstanceOf(MetricsApiError);
+    await expect(getEventById("evt_x")).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("404 → MetricsApiError com status 404 (evento inexistente)", async () => {
+    server.use(http.get(EVENT, () => new HttpResponse(null, { status: 404 })));
+
+    await expect(getEventById("evt_zzz")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("taxas do evento", () => {
+  const CHECKIN = "*/api/metrics/events/:eventId/checkin-rate";
+  const CERT = "*/api/metrics/events/:eventId/certification-rate";
+
+  it("usa o rate do backend quando presente (check-in)", async () => {
+    server.use(
+      http.get(CHECKIN, () => HttpResponse.json({ rate: 0.68, checked_in: 850, registered: 1250 })),
+    );
+
+    const result = await getCheckinRate("evt_1");
+
+    expect(result).toEqual({ rate: 0.68, numerator: 850, denominator: 1250 });
+  });
+
+  it("deriva o rate quando o backend não o envia (certificação)", async () => {
+    server.use(http.get(CERT, () => HttpResponse.json({ certified: 40, registered: 200 })));
+
+    const result = await getCertificationRate("evt_1");
+
+    expect(result.rate).toBeCloseTo(0.2);
+  });
+
+  it("valor-limite: denominador 0 não divide por zero (rate 0)", async () => {
+    server.use(http.get(CHECKIN, () => HttpResponse.json({ checked_in: 0, registered: 0 })));
+
+    const result = await getCheckinRate("evt_1");
+
+    expect(result).toEqual({ rate: 0, numerator: 0, denominator: 0 });
+  });
+});
+
+describe("getTimeSeries", () => {
+  const TIMESERIES = "*/api/metrics/timeseries";
+
+  it("normaliza buckets e envia event_id + granularidade + janela", async () => {
+    let sentQuery: string | null = null;
+    server.use(
+      http.get(TIMESERIES, ({ request }) => {
+        sentQuery = new URL(request.url).search;
+        return HttpResponse.json([{ bucket: "2026-06", registered: 1250, checked_in: 850 }]);
+      }),
+    );
+
+    const points = await getTimeSeries({
+      eventId: "evt_1",
+      granularity: "month",
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+    });
+
+    expect(points).toHaveLength(1);
+    expect(points[0]).toMatchObject({ bucket: "2026-06", registered: 1250, checkedIn: 850 });
+    expect(points[0].date.getFullYear()).toBe(2026);
+    expect(sentQuery).toContain("event_id=evt_1");
+    expect(sentQuery).toContain("granularity=month");
+    expect(sentQuery).toContain("start_date=2026-01-01");
+  });
+
+  it("tolera envelope { items: [...] }", async () => {
+    server.use(
+      http.get(TIMESERIES, () =>
+        HttpResponse.json({ items: [{ bucket: "2026-05", registered: 10, checked_in: 5 }] }),
+      ),
+    );
+
+    const points = await getTimeSeries({
+      eventId: "evt_1",
+      granularity: "month",
+      startDate: "2026-01-01",
+      endDate: "2026-06-30",
+    });
+
+    expect(points).toHaveLength(1);
+    expect(points[0].checkedIn).toBe(5);
   });
 });
 

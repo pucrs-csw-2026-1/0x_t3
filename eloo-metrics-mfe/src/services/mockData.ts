@@ -7,6 +7,9 @@ import type {
   CityDistribution,
   ProfileDistribution,
   TypeDistribution,
+  EventDetail,
+  RateMetric,
+  TimeSeriesPoint,
 } from "./metricsApi";
 
 // Dados mockados para desenvolvimento/demonstração (VITE_USE_MOCKS=true). NÃO são
@@ -183,4 +186,37 @@ export const MOCK_BY_TYPE: TypeDistribution[] = [
   { type: "Curso", label: "Curso", count: 190 },
   { type: "Conferência", label: "Conferência", count: 140 },
   { type: "Hackathon", label: "Hackathon", count: 90 },
+];
+
+// US-05 — Detalhe de evento + séries históricas (modo demonstração). Espelham a
+// referência visual (AI for Business 2026: 1.250 inscritos, 850 check-ins, 420
+// certificados), já em camelCase como saem da camada de serviço.
+
+export const MOCK_EVENT_DETAIL: EventDetail = {
+  eventId: "evt_ai_business",
+  eventName: "AI for Business 2026",
+  status: "active",
+  startDate: "2026-01-15",
+  endDate: "2026-06-30",
+  registered: 1250,
+  checkedIn: 850,
+  certified: 420,
+};
+
+export const MOCK_CHECKIN_RATE: RateMetric = { rate: 0.68, numerator: 850, denominator: 1250 };
+
+export const MOCK_CERTIFICATION_RATE: RateMetric = {
+  rate: 0.336,
+  numerator: 420,
+  denominator: 1250,
+};
+
+// Seis buckets mensais (jan–jun 2026): inscrições acumuladas x check-ins.
+export const MOCK_TIMESERIES: TimeSeriesPoint[] = [
+  { bucket: "2026-01", date: new Date(2026, 0, 1), registered: 180, checkedIn: 90 },
+  { bucket: "2026-02", date: new Date(2026, 1, 1), registered: 420, checkedIn: 260 },
+  { bucket: "2026-03", date: new Date(2026, 2, 1), registered: 640, checkedIn: 430 },
+  { bucket: "2026-04", date: new Date(2026, 3, 1), registered: 880, checkedIn: 580 },
+  { bucket: "2026-05", date: new Date(2026, 4, 1), registered: 1080, checkedIn: 720 },
+  { bucket: "2026-06", date: new Date(2026, 5, 1), registered: 1250, checkedIn: 850 },
 ];

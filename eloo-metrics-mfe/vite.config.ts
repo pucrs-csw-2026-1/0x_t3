@@ -33,6 +33,7 @@ export default defineConfig({
         "./DashboardPage": "./src/pages/DashboardPage.tsx",
         "./EventCatalogPage": "./src/pages/EventCatalogPage.tsx",
         "./DemographicsPage": "./src/pages/DemographicsPage.tsx",
+        "./EventMetricsPage": "./src/pages/EventMetricsPage.tsx",
       },
       shared: [
         "react",
