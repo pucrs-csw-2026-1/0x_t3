@@ -97,5 +97,50 @@
     "resposta_resumo": "logo.png (raiz do repo) foi copiado para src/assets e importado (Vite empacota com hash — resolve certo standalone e como remote). Primeiro exibido no topbar; depois movido para o topo da SideNavBar (onde ficava a marca 'Admin Global', removida) e ampliado de 36px para 56px.",
     "decisao": "aceito",
     "avaliacao_critica": "Asset importado de src/assets (não de public/): como o mfe é montado no shell, um caminho absoluto /logo.png resolveria contra a origem do host e quebraria; o import gera URL do próprio remote. Removido só o rótulo 'Admin Global' da sidebar (chrome standalone); MANTIDO o indicador de escopo do H1 do DashboardPage, que é critério de aceite da US-02 (admin global x manager escopo)."
+  },
+  {
+    "timestamp": "2026-07-06T11:40:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — o EventCard precisa exibir situação (ativo/encerrado/rascunho) e período do evento, mas o DTO EventMetrics da US-01/02 só tinha counters.",
+    "prompt": "Implementar o catálogo de eventos reaproveitando a camada de serviço; o card mostra nome, período, status e counters.",
+    "resposta_resumo": "A IA optou por ESTENDER o EventMetrics existente (campos status/startDate/endDate opcionais, mapeados de snake_case com tolerância) em vez de criar um endpoint/serviço novo — GET /metrics/events já é paginado e o ADR-0009 lista 'status' como parâmetro do mesmo recurso. Adicionou normalização de status (PT/EN → conjunto fechado, fallback 'unknown').",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Reaproveitou listEventMetrics (sem duplicar rede) em vez de assumir shape novo, fiel ao ADR-0009 (§2 do contrato: ignorar campos desconhecidos, pinar só o consumido). Como o toEqual de 2 testes de metricsApi.test fixava a forma antiga, foram atualizados honestamente para incluir os novos campos — não afrouxados. mockData e o handler base do MSW ganharam status/datas para o modo demo e a integração continuarem realistas."
+  },
+  {
+    "timestamp": "2026-07-06T11:55:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — dois estados vazios pedidos (sem eventos no período x manager sem eventos no escopo) sem reimplementar RBAC no frontend.",
+    "prompt": "EmptyState com mensagem diferente por contexto: período sem dados vs. escopo sem eventos atribuídos.",
+    "resposta_resumo": "A IA distinguiu a MENSAGEM pelo papel lido do storage compartilhado (manager → texto de escopo; admin/outros → texto de período), reaproveitando o EmptyState da US-02 por props. A filtragem em si continua no backend; o frontend só escolhe o texto.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Ponto sensível: escolher o texto por papel é APRESENTAÇÃO (mesmo padrão do resolveScope/título da US-02), não é filtragem de RBAC — que permaneceu no T2 (ADR-0009). Reconhecida a limitação: um manager COM eventos mas nenhum no período veria a mensagem de escopo; aceitável sem uma 2ª chamada só para desambiguar. Coberto por dois testes de integração MSW (admin→período, manager→escopo)."
+  },
+  {
+    "timestamp": "2026-07-06T12:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — a US dá exemplo de data '07 jul. 2026', mas também manda reaproveitar o helper formatDate da US-02, que produz 'dd/mm/aaaa'.",
+    "prompt": "Datas formatadas com locale pt-BR; reaproveite formatDate da US-02.",
+    "resposta_resumo": "A IA identificou o conflito entre o exemplo ('07 jul. 2026') e a diretriz de reaproveitar formatDate ('07/07/2026') e priorizou o REUSO explícito, formatando o período como 'dd/mm/aaaa – dd/mm/aaaa' (data única quando início=fim; 'Data a definir' quando nulo).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Prevaleceu a diretriz forte de reaproveitar helpers (DoD + CLAUDE.md §5) sobre o formato ilustrativo do enunciado — evita um segundo formatador divergente. Caso o formato 'jul.' seja mesmo requisito, é uma mudança localizada no format.ts (afetaria toda a app), que é decisão do usuário. Navegação 100% via onSelectEvent: nenhum useNavigate no remote; o wrapper CatalogRoute no App (host standalone) é quem navega (ADR-0005)."
+  },
+  {
+    "timestamp": "2026-07-06T12:35:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — os botões de navegação (SideNavBar/TopNavBar) eram decorativos (href='#'); faltava caminho real para Dashboard e Catálogo.",
+    "prompt": "Arrume os botões e crie os caminhos para ter acesso a dashboard e ao catálogo.",
+    "resposta_resumo": "A IA centralizou as rotas reais em navTabs.ts (NAV_ROUTES = Dashboard '/' + Catálogo '/catalogo') e ligou as duas superfícies ao react-router: SideNavBar e TopNavBar viraram NavLink com destaque da rota ativa (useLocation/aria-current). No mobile, a mesma sidebar vira drawer e fecha ao navegar (onNavigate). Removeu os itens sem página (Participantes, Certificações…), que eram os 'botões quebrados'.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "É chrome do shell STANDALONE — usar useNavigate/NavLink aqui não viola o ADR-0005 (o remote EventCatalogPage continua sem router, navegando só por onSelectEvent). Removi os placeholders sem destino em vez de deixá-los inertes (honestidade de UI). Suporte/Sair/Novo Evento seguem decorativos por não terem feature nesta fase — registrado explicitamente. Testes de layout reescritos sob MemoryRouter (links, aria-current, onNavigate); smoke E2E revalidado."
+  },
+  {
+    "timestamp": "2026-07-06T12:50:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — verificação final de V&V contra a DoD do ADR-0007 e os gates de PR.",
+    "prompt": "Verifique e corrija com base no ADR-0007 e no backlog US-04; depois confirme os gates de PR (build, lint, format:check, vitest com erro/limite, robustez: loading/erro/vazio/sessão).",
+    "resposta_resumo": "A IA rodou os gates reais: npm run build (tsc -b + vite build, com os dois remotes expostos) OK; eslint e prettier limpos; vitest 93/93 verde; cobertura 98,95% (thresholds 80% atendidos); smoke Playwright verde. Mapeou cada item da robustez a código+teste (loading→skeletons N=page_size; erro→ErrorAlert+retry; vazio→EmptyState período/escopo + busca; 401→sessionExpired do host, sem redirect local).",
+    "decisao": "aceito",
+    "avaliacao_critica": "Nenhuma correção de código foi necessária nesta passada — a US-04 já satisfazia a DoD e os critérios do backlog. Registrada uma limitação conhecida e aceita: não há guarda de resposta obsoleta (stale-response) em cliques rápidos, o mesmo padrão da US-02 (DashboardPage) — adicioná-la só aqui divergiria do irmão sem defeito observável no uso normal. A única ação corretiva foi documental: esta entrada de log (item 5 do ADR-0007)."
   }
 ]

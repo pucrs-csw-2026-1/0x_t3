@@ -31,6 +31,7 @@ export default defineConfig({
       filename: "remoteEntry.js",
       exposes: {
         "./DashboardPage": "./src/pages/DashboardPage.tsx",
+        "./EventCatalogPage": "./src/pages/EventCatalogPage.tsx",
       },
       shared: [
         "react",

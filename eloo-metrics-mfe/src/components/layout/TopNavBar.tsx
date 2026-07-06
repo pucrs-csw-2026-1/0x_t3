@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
 import Avatar from "@mui/material/Avatar";
@@ -7,7 +6,6 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
-import { TABS } from "./navTabs";
 
 export interface TopNavBarProps {
   // Abre o menu lateral em telas pequenas (drawer controlado pelo App).
@@ -16,7 +14,8 @@ export interface TopNavBarProps {
 
 // Cabeçalho do shell standalone. Como remote, o topo é do eloo-shell
 // (ADR-0005/0010); aqui espelha a referência só na visão standalone/demo.
-// Puramente apresentacional.
+// A navegação (Dashboard / Catálogo) vive só na SideNavBar — fonte única —,
+// então o topo fica com o botão de menu (mobile), busca e ações utilitárias.
 export function TopNavBar({ onMenuClick }: TopNavBarProps) {
   return (
     <Box
@@ -41,38 +40,11 @@ export function TopNavBar({ onMenuClick }: TopNavBarProps) {
           justifyContent: "space-between",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-          <IconButton
-            sx={{ display: { md: "none" } }}
-            aria-label="Abrir menu"
-            onClick={onMenuClick}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Box component="nav" sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
-            {TABS.map((tab, index) => (
-              <Typography
-                key={tab}
-                component="a"
-                href="#"
-                variant="body1"
-                sx={{
-                  textDecoration: "none",
-                  py: 0.5,
-                  fontWeight: index === 0 ? 700 : 500,
-                  color: index === 0 ? "secondary.main" : "text.secondary",
-                  borderBottom: index === 0 ? 2 : 0,
-                  borderColor: "secondary.main",
-                  "&:hover": { color: "secondary.main" },
-                }}
-              >
-                {tab}
-              </Typography>
-            ))}
-          </Box>
-        </Box>
+        <IconButton sx={{ display: { md: "none" } }} aria-label="Abrir menu" onClick={onMenuClick}>
+          <MenuIcon />
+        </IconButton>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, ml: "auto" }}>
           <Box
             sx={{
               display: { xs: "none", lg: "flex" },

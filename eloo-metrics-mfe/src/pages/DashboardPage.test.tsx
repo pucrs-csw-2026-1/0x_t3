@@ -20,9 +20,22 @@ function page(items: EventMetrics[]): EventMetricsPage {
   return { items, page: 1, pageSize: 200, total: items.length };
 }
 
+function evt(partial: Partial<EventMetrics> & Pick<EventMetrics, "eventId">): EventMetrics {
+  return {
+    eventName: null,
+    status: "active",
+    startDate: null,
+    endDate: null,
+    registered: 0,
+    checkedIn: 0,
+    certified: 0,
+    ...partial,
+  };
+}
+
 const SAMPLE: EventMetrics[] = [
-  { eventId: "evt_1", eventName: "Evento A", registered: 120, checkedIn: 80, certified: 40 },
-  { eventId: "evt_2", eventName: "Evento B", registered: 90, checkedIn: 55, certified: 30 },
+  evt({ eventId: "evt_1", eventName: "Evento A", registered: 120, checkedIn: 80, certified: 40 }),
+  evt({ eventId: "evt_2", eventName: "Evento B", registered: 90, checkedIn: 55, certified: 30 }),
 ];
 
 beforeEach(() => {
@@ -118,13 +131,17 @@ describe("DashboardPage", () => {
   });
 
   it("período sempre enviado; troca de período refaz o fetch sem vazar dados antigos", async () => {
-    mockedList
-      .mockResolvedValueOnce(page(SAMPLE))
-      .mockResolvedValueOnce(
-        page([
-          { eventId: "evt_x", eventName: "Evento X", registered: 999, checkedIn: 5, certified: 1 },
-        ]),
-      );
+    mockedList.mockResolvedValueOnce(page(SAMPLE)).mockResolvedValueOnce(
+      page([
+        evt({
+          eventId: "evt_x",
+          eventName: "Evento X",
+          registered: 999,
+          checkedIn: 5,
+          certified: 1,
+        }),
+      ]),
+    );
 
     render(<DashboardPage />);
 
@@ -150,8 +167,20 @@ describe("DashboardPage", () => {
     mockedList.mockResolvedValue(
       page([
         // Melhor adesão: 80/100 = 80%. Pior: 20/100 = 20%.
-        { eventId: "top", eventName: "Evento Top", registered: 100, checkedIn: 80, certified: 10 },
-        { eventId: "low", eventName: "Evento Fraco", registered: 100, checkedIn: 20, certified: 5 },
+        evt({
+          eventId: "top",
+          eventName: "Evento Top",
+          registered: 100,
+          checkedIn: 80,
+          certified: 10,
+        }),
+        evt({
+          eventId: "low",
+          eventName: "Evento Fraco",
+          registered: 100,
+          checkedIn: 20,
+          certified: 5,
+        }),
       ]),
     );
 

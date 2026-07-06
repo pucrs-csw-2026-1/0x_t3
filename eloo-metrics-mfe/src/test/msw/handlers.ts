@@ -10,6 +10,9 @@ export const handlers = [
         {
           event_id: "evt_1",
           event_name: "Evento A",
+          status: "active",
+          start_date: "2026-07-10",
+          end_date: "2026-07-12",
           registered: 120,
           checked_in: 80,
           certified: 40,
@@ -17,6 +20,9 @@ export const handlers = [
         {
           event_id: "evt_2",
           event_name: "Evento B",
+          status: "ended",
+          start_date: "2026-06-01",
+          end_date: "2026-06-02",
           registered: 90,
           checked_in: 55,
           certified: 30,

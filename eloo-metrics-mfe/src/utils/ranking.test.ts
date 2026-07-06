@@ -3,7 +3,16 @@ import { rankEventsByAdhesion } from "./ranking";
 import type { EventMetrics } from "../services/metricsApi";
 
 function evt(id: string, registered: number, checkedIn: number): EventMetrics {
-  return { eventId: id, eventName: id.toUpperCase(), registered, checkedIn, certified: 0 };
+  return {
+    eventId: id,
+    eventName: id.toUpperCase(),
+    status: "active",
+    startDate: null,
+    endDate: null,
+    registered,
+    checkedIn,
+    certified: 0,
+  };
 }
 
 // A: 90/100 = 0.90 | B: 20/100 = 0.20 | C: 75/100 = 0.75 | D: 50/100 = 0.50
@@ -37,7 +46,18 @@ describe("rankEventsByAdhesion", () => {
 
   it("usa o eventId como nome quando não há nome", () => {
     const { best } = rankEventsByAdhesion(
-      [{ eventId: "sem_nome", eventName: null, registered: 10, checkedIn: 5, certified: 0 }],
+      [
+        {
+          eventId: "sem_nome",
+          eventName: null,
+          status: "active",
+          startDate: null,
+          endDate: null,
+          registered: 10,
+          checkedIn: 5,
+          certified: 0,
+        },
+      ],
       1,
     );
     expect(best[0].eventName).toBe("sem_nome");
