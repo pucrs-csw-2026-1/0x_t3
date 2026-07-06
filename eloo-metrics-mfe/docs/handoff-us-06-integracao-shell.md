@@ -24,7 +24,7 @@
 2. **Registrar o remote no shell** — `eloo-shell/src/shell/remotes.ts`:
    ```ts
    export const remotes: Record<string, string> = {
-     login:   "http://localhost:5174/assets/remoteEntry.js",
+     login: "http://localhost:5174/assets/remoteEntry.js",
      metrics: "http://localhost:5176/assets/remoteEntry.js",
    };
    ```
@@ -45,17 +45,18 @@
 
 ## 3. Como rodar tudo (portas)
 
-| Serviço | Comando (na pasta) | Porta |
-| --- | --- | --- |
-| **metrics standalone (mock)** | `eloo-metrics-mfe` → `npm run dev` | `:5177` |
+| Serviço                            | Comando (na pasta)                          | Porta   |
+| ---------------------------------- | ------------------------------------------- | ------- |
+| **metrics standalone (mock)**      | `eloo-metrics-mfe` → `npm run dev`          | `:5177` |
 | **metrics como remote** (p/ shell) | `eloo-metrics-mfe` → `npm run serve:remote` | `:5176` |
-| **auth como remote** (p/ shell) | `eloo-auth-mfe` → `npm run serve:remote` | `:5174` |
-| **shell** | `eloo-shell` → `npm run dev` | `:5173` |
-| **auth standalone** (só visual) | `eloo-auth-mfe` → `npm run dev` | `:5175` |
+| **auth como remote** (p/ shell)    | `eloo-auth-mfe` → `npm run serve:remote`    | `:5174` |
+| **shell**                          | `eloo-shell` → `npm run dev`                | `:5173` |
+| **auth standalone** (só visual)    | `eloo-auth-mfe` → `npm run dev`             | `:5175` |
 
 Para testar a US-06 integrada: subir **auth remote (:5174)** + **metrics remote (:5176)** + **shell (:5173)**, logar no shell e navegar até Métricas.
 
 ### Ver o metrics com dados REAIS (T2)
+
 1. Em `eloo-metrics-mfe/.env.development`, trocar para `VITE_USE_MOCKS=false`.
 2. Subir T1 (`0x_t1`) e T2 (`0x_t2`) — ver gotchas abaixo.
 3. Logar (token no storage) e **desativar o uBlock para localhost**.
