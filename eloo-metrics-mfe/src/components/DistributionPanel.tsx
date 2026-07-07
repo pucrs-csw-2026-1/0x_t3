@@ -74,7 +74,12 @@ export function DistributionPanel({
         ) : empty ? (
           <EmptyState title="Nenhum dado encontrado" description={EMPTY_DESCRIPTION} />
         ) : (
-          children
+          // Conteúdo curto centraliza no espaço do card (o grid estica os cards
+          // à altura da linha — sem isso, painéis baixos como o de gênero ficam
+          // com um vão embaixo).
+          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            {children}
+          </Box>
         )}
       </CardContent>
     </Card>

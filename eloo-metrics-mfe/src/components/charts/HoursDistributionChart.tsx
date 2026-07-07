@@ -1,24 +1,26 @@
 import Box from "@mui/material/Box";
 import { PieChart } from "@mui/x-charts/PieChart";
-import type { GenderDistribution } from "../../services/metricsApi";
+import type { HoursBandDistribution } from "../../services/metricsApi";
 import { DistributionLegend } from "./DistributionLegend";
 
-export interface GenderDistributionChartProps {
-  // Categorias de gênero conforme o backend, já em pt-BR (camada de serviço).
-  // O gráfico NUNCA faz fetch (ADR-0004).
-  data: GenderDistribution[];
+export interface HoursDistributionChartProps {
+  // Faixas de horas já normalizadas pela camada de serviço (4 faixas canônicas
+  // do T2, zeradas quando ausentes). O gráfico NUNCA faz fetch (ADR-0004).
+  data: HoursBandDistribution[];
   size?: number;
 }
 
-// Paleta alinhada aos tokens do tema (primary/secondary/tertiary/outline).
-const SLICE_COLORS = ["#7b4d88", "#981652", "#215470", "#8a7177", "#3d6c8a"];
+// Paleta alinhada aos tokens do tema (mesma família do gráfico de gênero).
+const SLICE_COLORS = ["#215470", "#7b4d88", "#981652", "#3d6c8a", "#8a7177"];
 
-// Distribuição por gênero (US-03): gráfico de pizza (MUI X PieChart). A legenda
-// acessível lista cada categoria com percentual pt-BR (critério de aceite).
-export function GenderDistributionChart({ data, size = 200 }: GenderDistributionChartProps) {
+// Distribuição de horas de participação (US-06): rosca (MUI X PieChart) com os
+// participantes por faixa de horas de engajamento, espelhando o layout do
+// gráfico de gênero. A tabela ao lado lista cada faixa com valor + percentual
+// pt-BR (acessibilidade).
+export function HoursDistributionChart({ data, size = 200 }: HoursDistributionChartProps) {
   const total = data.reduce((acc, item) => acc + item.count, 0);
   const slices = data.map((item, index) => ({
-    id: item.label,
+    id: item.band,
     value: item.count,
     label: item.label,
     color: SLICE_COLORS[index % SLICE_COLORS.length],
@@ -36,7 +38,7 @@ export function GenderDistributionChart({ data, size = 200 }: GenderDistribution
     >
       <Box
         role="img"
-        aria-label={`Gráfico de pizza da distribuição por gênero (${data.length} categorias).`}
+        aria-label={`Gráfico de rosca das horas de participação (${data.length} faixas).`}
       >
         <PieChart
           // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação

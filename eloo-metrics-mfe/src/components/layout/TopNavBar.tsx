@@ -6,10 +6,20 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
+import { getStoredProfile } from "../../services/authApi";
 
 export interface TopNavBarProps {
   // Abre o menu lateral em telas pequenas (drawer controlado pelo App).
   onMenuClick?: () => void;
+}
+
+// Iniciais do usuário logado para o avatar (US-06: substitui o "AG" estático do
+// mockup). Sem sessão, cai num "?" neutro.
+function profileInitials(): string {
+  const profile = getStoredProfile();
+  if (!profile) return "?";
+  const initials = `${profile.firstName?.[0] ?? ""}${profile.lastName?.[0] ?? ""}`.toUpperCase();
+  return initials || (profile.username?.[0] ?? "?").toUpperCase();
 }
 
 // Cabeçalho do shell standalone. Como remote, o topo é do eloo-shell
@@ -67,7 +77,12 @@ export function TopNavBar({ onMenuClick }: TopNavBarProps) {
           <IconButton aria-label="Ajuda">
             <HelpOutlineOutlinedIcon />
           </IconButton>
-          <Avatar sx={{ width: 32, height: 32, bgcolor: "secondary.light" }}>AG</Avatar>
+          <Avatar
+            aria-label="Usuário logado"
+            sx={{ width: 32, height: 32, bgcolor: "secondary.light" }}
+          >
+            {profileInitials()}
+          </Avatar>
         </Box>
       </Box>
     </Box>

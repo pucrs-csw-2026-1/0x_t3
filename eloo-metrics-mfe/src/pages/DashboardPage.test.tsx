@@ -23,13 +23,14 @@ function page(items: EventMetrics[]): EventMetricsPage {
 function evt(partial: Partial<EventMetrics> & Pick<EventMetrics, "eventId">): EventMetrics {
   return {
     eventName: null,
-    status: "active",
+    status: "ativo",
     startDate: null,
     endDate: null,
     registered: 0,
     checkedIn: 0,
     certified: 0,
     ...partial,
+    eventType: partial.eventType ?? null,
   };
 }
 

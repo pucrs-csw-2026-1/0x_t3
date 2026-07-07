@@ -30,8 +30,10 @@ describe("DemographicsPage (integração MSW)", () => {
     // Gênero (legenda da pizza), cidade, perfil e tipo.
     expect(screen.getByText("Feminino")).toBeInTheDocument();
     expect(screen.getAllByText("São Paulo").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Profissional").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Professor").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Workshop").length).toBeGreaterThan(0);
+    // Horas de participação (US-06): faixas fixas do T2 na tabela.
+    expect(screen.getByText("1-4h")).toBeInTheDocument();
   });
 
   it("falha em um endpoint não bloqueia os outros painéis", async () => {
@@ -83,6 +85,38 @@ describe("DemographicsPage (integração MSW)", () => {
     expect(await screen.findByText(/não tem permissão/i)).toBeInTheDocument();
     // Outros painéis seguem funcionando.
     expect(screen.getAllByText("Workshop").length).toBeGreaterThan(0);
+  });
+
+  it("manager: distribuição é POR evento — auto-seleciona o 1º do escopo e envia event_id", async () => {
+    localStorage.setItem(
+      "mfeAuth.profile",
+      JSON.stringify({
+        id: "m1",
+        firstName: "Gestora",
+        lastName: "Local",
+        username: "gestora",
+        email: "manager@local.dev",
+        accessLevel: "MANAGER",
+      }),
+    );
+    const sentEventIds: (string | null)[] = [];
+    server.use(
+      http.get("*/api/metrics/by-age", ({ request }) => {
+        sentEventIds.push(new URL(request.url).searchParams.get("event_id"));
+        return HttpResponse.json({ dimension: "age", distribution: { "18-24": 40 } });
+      }),
+    );
+
+    render(<DemographicsPage />);
+
+    // Auto-seleção do primeiro evento do escopo (handler base: evt_1).
+    await screen.findAllByText("18-24");
+    expect(sentEventIds).not.toContain(null); // nenhum fetch agregado (sem event_id)
+    expect(sentEventIds).toContain("evt_1");
+
+    // Sem a opção "Todos os eventos" no seletor.
+    await userEvent.click(screen.getByRole("combobox", { name: /evento/i }));
+    expect(screen.queryByRole("option", { name: /todos os eventos/i })).not.toBeInTheDocument();
   });
 
   it("intervalo inválido (from > to) exibe erro inline e não dispara fetch", async () => {

@@ -7,6 +7,7 @@ import type {
   CityDistribution,
   ProfileDistribution,
   TypeDistribution,
+  HoursBandDistribution,
   EventDetail,
   RateMetric,
   TimeSeriesPoint,
@@ -22,7 +23,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_cloud",
     eventName: "Cloud Bootcamp",
-    status: "active",
+    eventType: "bootcamp",
+    status: "ativo",
     startDate: "2026-08-10",
     endDate: "2026-08-12",
     registered: 140,
@@ -32,7 +34,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_hack",
     eventName: "Hackathon 0x",
-    status: "draft",
+    eventType: "hackathon",
+    status: "planejado",
     startDate: null,
     endDate: null,
     registered: 170,
@@ -42,7 +45,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_ux",
     eventName: "UX Masterclass",
-    status: "active",
+    eventType: "workshop",
+    status: "ativo",
     startDate: "2026-09-15",
     endDate: "2026-09-15",
     registered: 220,
@@ -52,7 +56,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_ai",
     eventName: "AI Workshop",
-    status: "active",
+    eventType: "workshop",
+    status: "ativo",
     startDate: "2026-07-20",
     endDate: "2026-07-22",
     registered: 350,
@@ -62,7 +67,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_lead",
     eventName: "Leadership Summit",
-    status: "ended",
+    eventType: "conferencia",
+    status: "concluido",
     startDate: "2026-07-01",
     endDate: "2026-07-03",
     registered: 300,
@@ -72,7 +78,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_tech",
     eventName: "Tech Talk",
-    status: "ended",
+    eventType: "palestra",
+    status: "concluido",
     startDate: "2026-06-18",
     endDate: "2026-06-18",
     registered: 250,
@@ -82,7 +89,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_prod",
     eventName: "Product Talk",
-    status: "ended",
+    eventType: "palestra",
+    status: "concluido",
     startDate: "2026-06-05",
     endDate: "2026-06-05",
     registered: 200,
@@ -92,7 +100,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_data",
     eventName: "Data Summit",
-    status: "active",
+    eventType: "conferencia",
+    status: "ativo",
     startDate: "2026-07-25",
     endDate: "2026-07-26",
     registered: 280,
@@ -102,7 +111,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_net",
     eventName: "Networking",
-    status: "ended",
+    eventType: "meetup",
+    status: "concluido",
     startDate: "2026-05-30",
     endDate: "2026-05-30",
     registered: 180,
@@ -112,7 +122,8 @@ export const MOCK_EVENTS: EventMetrics[] = [
   {
     eventId: "evt_sprint",
     eventName: "Design Sprint",
-    status: "draft",
+    eventType: "workshop",
+    status: "planejado",
     startDate: null,
     endDate: null,
     registered: 160,
@@ -180,6 +191,14 @@ export const MOCK_BY_PROFILE: ProfileDistribution[] = [
   { profile: "Executivo/C-Level", label: "Executivo/C-Level", count: 120 },
 ];
 
+// Participantes por faixa de horas de engajamento (US-06; faixas do T2).
+export const MOCK_HOURS_DISTRIBUTION: HoursBandDistribution[] = [
+  { band: "0-1h", label: "0-1h", count: 120 },
+  { band: "1-4h", label: "1-4h", count: 340 },
+  { band: "4-8h", label: "4-8h", count: 210 },
+  { band: "8h+", label: "8h+", count: 75 },
+];
+
 export const MOCK_BY_TYPE: TypeDistribution[] = [
   { type: "Workshop", label: "Workshop", count: 320 },
   { type: "Palestra", label: "Palestra", count: 260 },
@@ -195,7 +214,8 @@ export const MOCK_BY_TYPE: TypeDistribution[] = [
 export const MOCK_EVENT_DETAIL: EventDetail = {
   eventId: "evt_ai_business",
   eventName: "AI for Business 2026",
-  status: "active",
+  eventType: "conferencia",
+  status: "ativo",
   startDate: "2026-01-15",
   endDate: "2026-06-30",
   registered: 1250,

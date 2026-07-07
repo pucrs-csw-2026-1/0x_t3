@@ -12,6 +12,9 @@ export interface TimeSeriesChartProps {
   // (ADR-0004).
   data: TimeSeriesPoint[];
   granularity: Granularity;
+  // Contexto exibido sob o título (ex.: escopo real da série — US-06). Cai num
+  // texto genérico quando ausente.
+  subtitle?: string;
   loading?: boolean;
   error?: string | null;
   empty?: boolean;
@@ -88,6 +91,7 @@ function SeriesLegend({ registered, checkedIn }: { registered: number; checkedIn
 export function TimeSeriesChart({
   data,
   granularity,
+  subtitle = "Evolução ao longo do período selecionado.",
   loading = false,
   error = null,
   empty = false,
@@ -117,7 +121,7 @@ export function TimeSeriesChart({
           Série Histórica: Inscrições vs Check-ins
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Evolução ao longo do período do evento.
+          {subtitle}
         </Typography>
       </Box>
 
@@ -139,6 +143,9 @@ export function TimeSeriesChart({
           >
             <Box sx={{ minWidth: Math.max(labels.length * 72, 320) }}>
               <LineChart
+                // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+                // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+                skipAnimation
                 height={height}
                 xAxis={[
                   {

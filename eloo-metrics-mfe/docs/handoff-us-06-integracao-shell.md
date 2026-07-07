@@ -39,7 +39,7 @@
      <Route path="/metrics/distribuicoes" element={<DemographicsPage />} />
    </Route>
    ```
-6. **Navegação** — adicionar entrada "Métricas" no `Header`/menu do shell para ADMIN/MANAGER.
+6. **Navegação** — adicionar entrada "Métricas" no `Header`/menu do shell para ADMIN/MANAGER. **Roteamento por papel (decisão da US-06):** o **manager NÃO tem dashboard** — ao entrar em Métricas ele aterrissa no catálogo (`/metrics/eventos`) e a rota do dashboard deve redirecioná-lo para lá (ele trabalha com eventos individuais e distribuições); o admin aterrissa no dashboard (`/metrics`). O standalone já implementa essa regra (`HomeRoute`/`DashboardRoute` em `src/App.tsx` + filtro na `SideNavBar`); o shell deve espelhá-la.
 7. **Shared deps** — a lista `shared` do metrics já bate com a do shell (`react`, `react-dom`, `react-router-dom`, `@mui/material`, `@emotion/react`, `@emotion/styled`). **`@mui/x-charts` NÃO é shared** (fica no bundle do metrics). Qualquer nova dep shared muda nos dois lados.
 8. **Sessão/token** — no shell, tudo é a **mesma origem** (`:5173`), então o token que o remote de auth grava (`mfeAuth.accessToken`) é lido pelo remote de metrics automaticamente. O `DashboardPage` usa `getStoredProfile()` para escopo (admin global / manager escopo). Não precisa de gambiarra de token como no standalone.
 

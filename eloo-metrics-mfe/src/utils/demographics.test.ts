@@ -3,6 +3,7 @@ import {
   toMonthBucket,
   periodToMonthRange,
   validatePeriod,
+  monthBucketsInRange,
   toAgeRange,
   genderLabel,
   profileLabel,
@@ -69,6 +70,37 @@ describe("toAgeRange (faixas canônicas)", () => {
       "65+",
       "Desconhecido",
     ]);
+  });
+});
+
+// Partição de equivalência + valor-limite do enumerador de buckets mensais
+// (US-06: o by-type real exige uma chamada por mês do período).
+describe("monthBucketsInRange", () => {
+  it("valor-limite: mês único (from == to) devolve um bucket", () => {
+    expect(monthBucketsInRange("2026-06", "2026-06")).toEqual(["2026-06"]);
+  });
+
+  it("enumera o intervalo fechado dentro do mesmo ano", () => {
+    expect(monthBucketsInRange("2026-04", "2026-06")).toEqual(["2026-04", "2026-05", "2026-06"]);
+  });
+
+  it("valor-limite: virada de ano (dez → jan) preserva a sequência", () => {
+    expect(monthBucketsInRange("2025-11", "2026-02")).toEqual([
+      "2025-11",
+      "2025-12",
+      "2026-01",
+      "2026-02",
+    ]);
+  });
+
+  it("intervalo invertido (from > to) devolve lista vazia", () => {
+    expect(monthBucketsInRange("2026-06", "2026-01")).toEqual([]);
+  });
+
+  it("formato inválido devolve lista vazia", () => {
+    expect(monthBucketsInRange("2026-13", "2026-06")).toEqual([]);
+    expect(monthBucketsInRange("", "2026-06")).toEqual([]);
+    expect(monthBucketsInRange("2026-06", "junho")).toEqual([]);
   });
 });
 

@@ -22,12 +22,13 @@ interface StatusMeta {
   color: ChipProps["color"];
 }
 
-// Situação → rótulo pt-BR + cor do chip (mesma semântica do EventCard da US-04:
-// Ativo/Encerrado/Rascunho). "unknown" cai num rótulo neutro.
+// Situação → rótulo pt-BR + cor do chip (mesma semântica do EventCard da US-04,
+// chaves do enum real do T2 — US-06). "unknown" cai num rótulo neutro.
 const STATUS_META: Record<EventStatus, StatusMeta> = {
-  active: { label: "Ativo", color: "success" },
-  ended: { label: "Encerrado", color: "default" },
-  draft: { label: "Rascunho", color: "warning" },
+  ativo: { label: "Ativo", color: "success" },
+  concluido: { label: "Concluído", color: "default" },
+  planejado: { label: "Planejado", color: "warning" },
+  cancelado: { label: "Cancelado", color: "error" },
   unknown: { label: "Indefinido", color: "default" },
 };
 

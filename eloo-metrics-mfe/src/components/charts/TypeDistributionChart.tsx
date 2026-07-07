@@ -26,6 +26,9 @@ export function TypeDistributionChart({ data, height = 260 }: TypeDistributionCh
           sx={{ minWidth: Math.max(labels.length * 72, 320) }}
         >
           <BarChart
+            // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+            // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+            skipAnimation
             height={height}
             xAxis={[{ scaleType: "band", data: labels, tickLabelStyle: { fontSize: 11 } }]}
             // Sem rótulo no eixo Y: o MUI X o posiciona colado aos números das

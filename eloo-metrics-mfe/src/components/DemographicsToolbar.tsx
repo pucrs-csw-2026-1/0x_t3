@@ -11,10 +11,11 @@ export interface DemographicsToolbarProps {
   periodKey: PeriodKey;
   customPeriod: Period;
   onPeriodChange: (key: PeriodKey, period: Period) => void;
-  // Filtro opcional de evento.
+  // Filtro de evento (opcional para admin; obrigatório para manager — US-06).
   eventId: string | undefined;
   eventOptions: EventOption[];
   onEventChange: (eventId: string | undefined) => void;
+  allowAllEvents?: boolean;
   // Mensagem de validação inline (from > to / formato inválido). Bloqueia o
   // fetch a montante; aqui é só a apresentação do erro (não é alert global).
   validationError?: string | null;
@@ -31,6 +32,7 @@ export function DemographicsToolbar({
   eventId,
   eventOptions,
   onEventChange,
+  allowAllEvents = true,
   validationError = null,
 }: DemographicsToolbarProps) {
   return (
@@ -46,7 +48,12 @@ export function DemographicsToolbar({
           justifyContent: { xs: "stretch", md: "flex-end" },
         }}
       >
-        <EventSelector value={eventId} options={eventOptions} onChange={onEventChange} />
+        <EventSelector
+          value={eventId}
+          options={eventOptions}
+          onChange={onEventChange}
+          allowAll={allowAllEvents}
+        />
         <PeriodSelector value={periodKey} customPeriod={customPeriod} onChange={onPeriodChange} />
       </Box>
       {validationError && (

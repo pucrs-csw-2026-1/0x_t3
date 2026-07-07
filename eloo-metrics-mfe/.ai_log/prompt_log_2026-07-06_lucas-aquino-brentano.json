@@ -1,0 +1,83 @@
+[
+  {
+    "timestamp": "2026-07-06T21:00:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — levantamento do contrato real do T2 (ADR-0009)",
+    "prompt": "Ler CLAUDE.md, skills, agents e o handoff da US-06; extrair o contrato REAL dos endpoints de métricas do código do T2 e comparar com o que o metricsApi.ts/mocks assumiam.",
+    "resposta_resumo": "A IA varreu os routers/schemas FastAPI do T2 e encontrou divergências em TODOS os endpoints das US-02..05: engagement devolve {items:[{...ratio}]} (não objeto plano com rate); by-age/gender/city devolvem mapa {distribution:{chave:contagem}} (não array); by-profile usa envelope by_profile; by-type exige bucket ÚNICO YYYY-MM (sem from/to/event_id); rates não têm numerador e rate vem null com registered=0; timeseries embrulha em points e usa type/from/to (SEM event_id — não existe série por evento); events não envia event_name/datas e o status real é planejado|ativo|concluido|cancelado.",
+    "decisao": "aceito",
+    "avaliacao_critica": "As duas afirmações mais impactantes (by-type só com bucket único; timeseries sem event_id) foram re-verificadas manualmente no código do T2 (distribution.py, timeseries.py, queries.py) antes de qualquer decisão — confirmadas. O risco previsto na própria US (mock esconde divergência) se materializou em todos os endpoints não validados."
+  },
+  {
+    "timestamp": "2026-07-06T21:15:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — decisões de contrato (lacunas que mudam o que a tela exibe)",
+    "prompt": "A IA apresentou as lacunas e pediu decisão: (1) série do detalhe sem event_id no T2; (2) by-type com bucket único vs período da tela; (3) enum de status; (4) nome do evento ausente.",
+    "resposta_resumo": "Decisões do usuário: série do detalhe aproxima filtrando por event_type (rotulada honestamente no subtítulo); by-type agrega N buckets mensais na camada de serviço (contagem = registered, máx. 24 meses); EventStatus do front adota o enum real pt-BR do T2; nome do evento NÃO vem de integração direta com a Events API do fork — como o SQS é simulado hoje e o T2 já persiste title no Dynamo, o usuário aprovou expor event_name (+ start_date/end_date) nos endpoints de leitura do próprio T2.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "A IA propôs inicialmente integrar a Events API do fork (id→title); o usuário corrigiu o rumo lembrando que a US-08 (SNS no fork) entregará o dado completo e que o title já chega ao T2 — a exposição no T2 é aditiva e elimina uma integração nova no T3. A limitação de o by-type ignorar o filtro de evento ficou explícita na UI (description do painel)."
+  },
+  {
+    "timestamp": "2026-07-06T22:00:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — correção do mapeamento (metricsApi.ts) + MSW/testes no contrato real",
+    "prompt": "Corrigir a camada de serviço para o contrato real (sem gambiarra nas telas), atualizar handlers MSW e testes de unidade/integração.",
+    "resposta_resumo": "toEngagement agrega items e deriva taxa PONDERADA pelas somas (não média simples dos ratios); toBucketRecords converte os mapas de distribuição em registros {key,count}; getByType dispara 1 chamada/mês e soma registered por tipo (>24 meses vira erro 422 de validação, não truncamento silencioso); toRate deriva numerador de rate×registered e trata rate null; getTimeSeries/getSeries com os params reais distintos (type+from/to vs event_type+start/end_date); enum de status pt-BR propagado a cards/chips; busca do catálogo passou a cobrir eventId/eventType. MSW reescrito espelhando os shapes reais.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Revisões durante a implementação: o primeiro rascunho do getByType usaria bucketCount (campo count) — as entries reais trazem registered/checked_in/certified, corrigido antes de commitar; genderLabel ganhou a chave real NAO_INFORMADO. Vitest 159/159, cobertura 98,79% (gate ≥80%)."
+  },
+  {
+    "timestamp": "2026-07-06T22:30:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — exposição de event_name/start_date/end_date no T2 (branch feature/expose-event-name-dates)",
+    "prompt": "Com aprovação do usuário, expor nome e janela do evento nos endpoints /metrics/events e /metrics/events/{id} do T2, preenchidos com title/starts_at/ends_at da row #META já persistida.",
+    "resposta_resumo": "Campos opcionais aditivos nos schemas Pydantic (EventMetricsListItem/EventMetrics), preenchidos nos use cases (list_event_metrics/get_event_metrics) a partir da entidade Event que os repositórios já carregam. Testes do T2 estendidos (asserções de nome/janela em use case e router); 38 testes afetados verdes + ruff limpo no container.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Mudança mínima e aditiva (não quebra consumidores). Falhas pré-existentes de tests/sim/* no container foram diagnosticadas como ambientais (FileNotFoundError de infra/sim não montada), não relacionadas. Pendência anotada para o time T2: certified é hardcoded 0 na LISTAGEM (list_event_metrics.py) enquanto o detalhe calcula real — o card Certificados do dashboard soma zeros."
+  },
+  {
+    "timestamp": "2026-07-06T23:00:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — validação real (T1+T2 no ar) e suíte test:e2e:real",
+    "prompt": "Subir T1+T2, seedar participantes, validar todas as telas com dados reais (admin e manager) e implementar o e2e real documentado.",
+    "resposta_resumo": "seed-users do T1 (23.933 usuários) + re-seed do T2 com METRICS_SEED_FORCE=1 (~24k participantes, 17,9k certificados). Validação por API: RBAC admin=50/manager=10 eventos, 403 fora do escopo, 404, 401, 422, mapas de distribuição populados, timeseries por tipo. Playwright real: config passa a separar alvos (mock ignora *.real.spec.ts; real sobe :5178 com VITE_USE_MOCKS=false para nunca reaproveitar dev server mock) e e2e/integracao.real.spec.ts cobre 10 fluxos (dashboard/catálogo/detalhe/distribuições, RBAC, 403/404, sessão expirada, vazio real). README documenta como rodar.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Primeira rodada do e2e real: 6/10 falharam porque o SPEC assumiu que a janela padrão (Últimos 30 dias) cobria os 50 eventos do seed (só 7 caem nela) e usou títulos de card errados — o app estava correto; os testes foram corrigidos para selecionar período personalizado de ano cheio (o que de quebra exercita o filtro real de datas). Segunda rodada: 10/10. Também confirmado que 'palestra' não existe no seed (tipos: curso/congresso/seminario/feira) — a série zerada com type=palestra era comportamento correto, não bug."
+  },
+  {
+    "timestamp": "2026-07-06T23:45:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — feedback do usuário inspecionando o app real (avatar AG, página inicial do manager, race no catálogo)",
+    "prompt": "Usuário apontou: dados vazios, 'todos eventos com o mesmo nome + ID aparecendo', falta de série para eventos curtos, avatar 'AG' estático; e pediu que o manager aterrisse no catálogo (não no dashboard).",
+    "resposta_resumo": "Diagnóstico com screenshots: (1) 'vazios' = certified hardcoded 0 na LISTAGEM do T2 e chip Indefinido no detalhe (T2 devolve status null no detalhe mas força 'ativo' na lista) — pendências do T2, anotadas; (2) nomes 'iguais' são o padrão sintético do seed ('Evento N — Semana Acadêmica', N distinto); (3) série mínima do T2 é MENSAL (month|quarter|year) — evento de um fim de semana vira 1 ponto; granularidade diária/semanal é evolução de contrato do T2 (candidata a issue); (4) avatar era hardcoded do mockup Stitch → passou a derivar as iniciais do perfil logado; (5) rota '/' passou a decidir por papel: manager → /catalogo, demais → /dashboard (rota nova dedicada), regra registrada no handoff para o shell espelhar na US-07.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "A investigação também expôs um bug real de concorrência que o e2e denunciou de forma intermitente: EventCatalogPage e DashboardPage não descartavam resposta obsoleta ao trocar período rápido (o guard já existia no useDistribution/loadTimeseries mas faltava nessas duas) — corrigido com o mesmo padrão de reqId. vv-check apontou ainda: MSW/comentários desatualizados após a exposição do nome no T2 (corrigidos), testes diretos de monthBucketsInRange e do status 'cancelado' (adicionados). Gates finais: vitest 171/171 (cobertura 98,9%), e2e real 10/10, smoke mock ok (a falha inicial do smoke era um vite órfão na porta, não código)."
+  },
+  {
+    "timestamp": "2026-07-07T00:30:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — gráficos quebrados no browser do usuário + painel de horas de participação",
+    "prompt": "Usuário reportou: barras de idade em branco, rótulo cortado, vão abaixo do gênero, falta de respiro no fim das telas; pediu tabela com os dados, um painel de horas de participação por faixa (endpoint do T2) abaixo do gênero e um pie chart para ele.",
+    "resposta_resumo": "(1) skipAnimation em todos os gráficos MUI X — a animação de entrada (width/arc a partir de 0) deixava o gráfico em branco quando não rodava (efeitos de movimento reduzidos no SO); (2) rótulo 'Desconhecido' cortado → margem esquerda do BarChart 72→96px; (3) rosca de gênero espremida → o PieChart reserva 100px à direita para a legenda interna escondida; margem zerada e raios explícitos; (4) DistributionLegend promovida a <table> semântica com cabeçalho; (5) pb extra nas 4 páginas; (6) novo painel 'Horas de Participação' (GET /metrics/hours/distribution, envelope bands com 4 faixas fixas) empilhado abaixo do gênero, com rosca + tabela, faixas canônicas zeradas quando ausentes e extras preservadas.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Diagnóstico guiado por screenshot + inspeção dos <rect> via Playwright (as barras tinham largura real — descartou bug de dados e apontou para animação). Dois flakes do e2e real tinham causas distintas e reais: vite órfão em porta reutilizada (processo não morre em árvore no Windows) e contenção do T2 com 8 workers paralelos (limitado a 2 no alvo real). Estabilidade confirmada com duas rodadas 10/10 seguidas. Vitest 173/173."
+  },
+  {
+    "timestamp": "2026-07-07T01:30:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — seed verossímil e determinístico no T2 + certified real na listagem + manager sem dashboard",
+    "prompt": "Usuário pediu: seed com dados mais verossímeis (sem nome repetido, números variados, com certificados — usando os exemplos do mock original como referência de títulos) e sempre igual entre execuções; e que o manager não acesse o dashboard (só catálogo e dados específicos).",
+    "resposta_resumo": "T2 seed: títulos no estilo do mock (Cloud Bootcamp, Tech Talk, Hackathon 0x...) sem repetição por categoria; público por evento = fração variável do pool (25–588 inscritos); presença 35%–95% e certificação 0%–95% por evento (~25% dos eventos sem certificado); issued_at ancorado em data fixa — com o rng de semente 42, o dataset é byte-a-byte idêntico entre execuções (provado: duas rodadas com contagens exatas 13.558/23.143/4.650); METRICS_SEED_FORCE agora LIMPA as 3 tabelas antes (certificados têm id aleatório e o público é subconjunto — sem limpar, sobras do seed anterior inflavam counters, ex. 120% de certificados). T2 listagem: certified real contado do certificate_repo por página em paralelo (era 0 hardcoded — dois bugs de seed/T2 achados: taxa de certificado 0.10*10=1.0 e o hardcode). T3: manager sem dashboard — '/' e '/dashboard' redirecionam ao catálogo, item some da sidebar, handoff da US-07 atualizado.",
+    "decisao": "aceito",
+    "avaliacao_critica": "O usuário refinou duas vezes o rumo (dados 'sempre iguais' → explicado que o rng já é determinístico com semente fixa, faltava só ancorar o issued_at; títulos → trocados para o estilo do mock original). A validação visual pegou o bug de resíduo do reseed (certificados 120% dos inscritos) antes de qualquer commit. Testes do T2 estendidos (certified por evento via fake repo); e2e real 10/10 com o seed novo; smoke mock ok; vitest 174/174."
+  },
+  {
+    "timestamp": "2026-07-07T02:15:00-03:00",
+    "autor": "lucas-aquino-brentano",
+    "contexto": "US-06 — status real do evento (Indefinido no detalhe) + demografia por evento para manager",
+    "prompt": "Usuário reportou: detalhe do evento mostra 'Indefinido' mesmo o catálogo dizendo 'Ativo'; faltam variedades de status (cancelado etc.); e para manager a distribuição demográfica deve ser POR evento, não global.",
+    "resposta_resumo": "Causa do Indefinido: o seed não gravava `status` na #META — a LISTAGEM do T2 aplica default 'ativo' (mascarando) e o detalhe devolve null (honesto). Fix na raiz: seed agora grava status derivado das datas contra uma âncora fixa (terminou→concluido; começa em ≤30d→ativo; distante→planejado; ~10% cancelado) — determinístico e coerente com a janela do evento; o repo do T2 já persistia/lia o campo. Demografia do manager: seletor sem 'Todos os eventos' (prop allowAll no EventSelector), auto-seleção do 1º evento do escopo e NENHUM fetch agregado antes disso (params nulos até a seleção).",
+    "decisao": "aceito",
+    "avaliacao_critica": "A inconsistência Ativo×Indefinido era um bug de mascaramento no router de listagem do T2 (default silencioso) — corrigido nos DADOS; o default do router permanece e está anotado como possível follow-up do T2 (devolver null também na listagem). Verificação visual: detalhe agora mostra 'Concluído' real; demografia do manager abre em 'Python Masterclass' com números do evento específico. Vitest 175/175; e2e real 11/11 (novo teste da demografia por evento)."
+  }
+]

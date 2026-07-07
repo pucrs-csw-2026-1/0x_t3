@@ -26,7 +26,7 @@ describe("EventMetricsPage (integração MSW)", () => {
   it("loading → renderiza detalhe, taxas, counters e série histórica", async () => {
     render(<EventMetricsPage eventId="evt_1" onBack={vi.fn()} />);
 
-    // Cabeçalho + counters do evento.
+    // Cabeçalho + counters do evento (nome real exposto pelo T2 desde a US-06).
     expect(
       await screen.findByRole("heading", { name: "AI for Business 2026" }),
     ).toBeInTheDocument();

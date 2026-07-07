@@ -6,7 +6,8 @@ function evt(id: string, registered: number, checkedIn: number): EventMetrics {
   return {
     eventId: id,
     eventName: id.toUpperCase(),
-    status: "active",
+    eventType: null,
+    status: "ativo",
     startDate: null,
     endDate: null,
     registered,
@@ -50,7 +51,8 @@ describe("rankEventsByAdhesion", () => {
         {
           eventId: "sem_nome",
           eventName: null,
-          status: "active",
+          eventType: null,
+          status: "ativo",
           startDate: null,
           endDate: null,
           registered: 10,

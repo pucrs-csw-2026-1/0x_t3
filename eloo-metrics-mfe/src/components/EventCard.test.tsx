@@ -8,7 +8,7 @@ function renderCard(overrides: Partial<EventCardProps> = {}) {
     eventId: "evt_1",
     name: "AI for Business 2026",
     period: { startDate: "2026-08-10", endDate: "2026-08-12" },
-    status: "active",
+    status: "ativo",
     counters: { registered: 1250, checkedIn: 850, certified: 420 },
     onSelectEvent: vi.fn(),
     ...overrides,
@@ -49,12 +49,12 @@ describe("EventCard", () => {
   it("evento sem inscritos: não divide por zero, omite as proporções", () => {
     renderCard({
       name: "Hackathon 0x",
-      status: "draft",
+      status: "planejado",
       period: { startDate: null, endDate: null },
       counters: { registered: 0, checkedIn: 0, certified: 0 },
     });
 
-    expect(screen.getByText("Rascunho")).toBeInTheDocument();
+    expect(screen.getByText("Planejado")).toBeInTheDocument();
     expect(screen.getByText("Data a definir")).toBeInTheDocument();
     // Sem inscritos não há proporção; nenhum "(...%)" é renderizado.
     expect(screen.queryByText(/\(\d/)).not.toBeInTheDocument();
@@ -66,7 +66,12 @@ describe("EventCard", () => {
   });
 
   it("situação encerrada é rotulada em pt-BR", () => {
-    renderCard({ status: "ended" });
-    expect(screen.getByText("Encerrado")).toBeInTheDocument();
+    renderCard({ status: "concluido" });
+    expect(screen.getByText("Concluído")).toBeInTheDocument();
+  });
+
+  it("situação cancelada é rotulada em pt-BR", () => {
+    renderCard({ status: "cancelado" });
+    expect(screen.getByText("Cancelado")).toBeInTheDocument();
   });
 });

@@ -7,6 +7,7 @@ import {
   MOCK_BY_CITY,
   MOCK_BY_PROFILE,
   MOCK_BY_TYPE,
+  MOCK_HOURS_DISTRIBUTION,
   MOCK_EVENT_DETAIL,
   MOCK_CHECKIN_RATE,
   MOCK_CERTIFICATION_RATE,
@@ -14,6 +15,7 @@ import {
 } from "./mockData";
 import {
   AGE_RANGES,
+  monthBucketsInRange,
   toAgeRange,
   genderLabel,
   profileLabel,
@@ -40,16 +42,19 @@ function withMockLatency<T>(value: T): Promise<T> {
 const importOrigin = new URL(import.meta.url).origin;
 const API_BASE = `${importOrigin && importOrigin !== "null" ? importOrigin : "http://localhost"}/api`;
 
-// Situação do evento no catálogo (US-04). O backend pode enviar rótulos em
-// inglês ou português; normalizamos para um conjunto fechado e caímos em
-// "unknown" quando o valor não é reconhecido (tolerância à evolução do T2).
-export type EventStatus = "active" | "ended" | "draft" | "unknown";
+// Situação do evento (US-04/US-06). O conjunto espelha o enum real do T2
+// (`EventStatus` em schemas/common.py: planejado|ativo|concluido|cancelado);
+// valores desconhecidos caem em "unknown" (tolerância à evolução do T2).
+export type EventStatus = "planejado" | "ativo" | "concluido" | "cancelado" | "unknown";
 
 export interface EventMetrics {
   eventId: string;
+  // Nome e janela do evento: o T2 os expõe desde a US-06 (title/starts_at/
+  // ends_at da row #META). Opcionais no contrato — eventos sem meta completa
+  // vêm nulos e a UI cai no eventId / "Data a definir".
   eventName: string | null;
-  // Situação e janela do evento (US-04, catálogo). A janela do evento é distinta
-  // do período consultado; pode vir nula (ex.: rascunho sem datas definidas).
+  // Tipo do evento (ex.: "palestra") — vem em `event_type` no contrato real.
+  eventType: string | null;
   status: EventStatus;
   startDate: string | null; // YYYY-MM-DD
   endDate: string | null; // YYYY-MM-DD
@@ -77,8 +82,10 @@ export interface EngagementParams {
   endDate: string; // YYYY-MM-DD
 }
 
-// Engajamento agregado no período (checked_in/registered) — ADR-0009. O `rate`
-// é a taxa de adesão (0..1); quando o backend não envia, é derivado.
+// Engajamento agregado no período (checked_in/registered) — ADR-0009. O T2
+// devolve um item POR EVENTO ({items: [{event_id, registered, checked_in,
+// ratio}]}); a camada agrega os totais e deriva a taxa ponderada (0..1) que o
+// dashboard exibe. Validado contra o contrato real na US-06.
 export interface EngagementResponse {
   registered: number;
   checkedIn: number;
@@ -138,16 +145,22 @@ async function authedGet(path: string, query: URLSearchParams): Promise<unknown>
   return response.json();
 }
 
-// Normaliza o rótulo de situação do backend (case-insensitive, PT/EN) para o
-// conjunto fechado de EventStatus. Valor ausente/desconhecido → "unknown".
+// Normaliza o rótulo de situação do backend para o enum real do T2
+// (case-insensitive; tolera sinônimos EN de versões anteriores do mock).
+// Valor ausente/desconhecido → "unknown".
 function toEventStatus(raw: unknown): EventStatus {
   const value = String(raw ?? "")
     .trim()
     .toLowerCase();
-  if (["active", "ativo", "ongoing", "published", "open"].includes(value)) return "active";
-  if (["ended", "encerrado", "finished", "closed", "completed", "past"].includes(value))
-    return "ended";
-  if (["draft", "rascunho", "pending"].includes(value)) return "draft";
+  if (["ativo", "active", "ongoing", "published", "open"].includes(value)) return "ativo";
+  if (
+    ["concluido", "concluído", "ended", "encerrado", "finished", "closed", "completed"].includes(
+      value,
+    )
+  )
+    return "concluido";
+  if (["planejado", "draft", "rascunho", "pending", "planned"].includes(value)) return "planejado";
+  if (["cancelado", "cancelled", "canceled"].includes(value)) return "cancelado";
   return "unknown";
 }
 
@@ -158,9 +171,11 @@ function toIsoDateOrNull(raw: unknown): string | null {
 }
 
 function toEventMetrics(raw: Record<string, unknown>): EventMetrics {
+  const eventType = String(raw.event_type ?? "").trim();
   return {
     eventId: String(raw.event_id ?? raw.id ?? ""),
     eventName: (raw.event_name ?? raw.name ?? null) as string | null,
+    eventType: eventType && eventType.toLowerCase() !== "unknown" ? eventType : null,
     status: toEventStatus(raw.status),
     startDate: toIsoDateOrNull(raw.start_date ?? raw.starts_at),
     endDate: toIsoDateOrNull(raw.end_date ?? raw.ends_at),
@@ -192,17 +207,22 @@ export async function listEventMetrics(params: ListEventMetricsParams): Promise<
   };
 }
 
+// Contrato real (US-06): {items: [{event_id, registered, checked_in, ratio}]},
+// um item por evento. Agrega os totais e deriva a taxa PONDERADA a partir das
+// somas (média simples dos ratios distorceria eventos de tamanhos diferentes).
+// Tolera também o shape plano {registered, checked_in, rate|ratio} (mock antigo).
 function toEngagement(raw: Record<string, unknown>): EngagementResponse {
-  const registered = Number(raw.registered ?? 0);
-  const checkedIn = Number(raw.checked_in ?? 0);
-  const rawRate = raw.rate ?? raw.engagement_rate;
-  const rate = rawRate != null ? Number(rawRate) : registered > 0 ? checkedIn / registered : 0;
-  return { registered, checkedIn, rate };
+  const items: Record<string, unknown>[] = Array.isArray(raw.items)
+    ? (raw.items as Record<string, unknown>[])
+    : [raw];
+  const registered = items.reduce((acc, item) => acc + Number(item.registered ?? 0), 0);
+  const checkedIn = items.reduce((acc, item) => acc + Number(item.checked_in ?? 0), 0);
+  return { registered, checkedIn, rate: registered > 0 ? checkedIn / registered : 0 };
 }
 
-// GET /metrics/engagement — engajamento agregado no período. O período é sempre
-// enviado (ADR-0009). O backend escopa por RBAC (admin: global; manager:
-// escopo). Alimenta o indicador de taxa global do dashboard.
+// GET /metrics/engagement — engajamento por evento no período, agregado aqui. O
+// período é sempre enviado (ADR-0009). O backend escopa por RBAC (admin: global;
+// manager: escopo). Alimenta o indicador de taxa global do dashboard.
 export async function getEngagement(params: EngagementParams): Promise<EngagementResponse> {
   if (USE_MOCKS) return withMockLatency(MOCK_ENGAGEMENT);
 
@@ -264,14 +284,29 @@ export interface TypeDistribution {
 // Top de cidades exibido pela US-03 (critério de aceite: "top 10 cidades").
 const CITY_TOP_N = 10;
 
-// O contrato exato do corpo destes endpoints ainda não está fixado no OpenAPI do
-// T2 (ADR-0009 lista os caminhos, não o shape). Toleramos array puro ou envelope
-// (`items`/`buckets`/`data`), ignorando o resto (evolução aditiva).
+// Toleramos array puro ou envelope (`points` da série real, `items`/`buckets`/
+// `data`), ignorando o resto (evolução aditiva — ADR-0009).
 function asBuckets(data: unknown): Record<string, unknown>[] {
   if (Array.isArray(data)) return data as Record<string, unknown>[];
   const envelope = data as Record<string, unknown> | null;
-  const list = envelope?.items ?? envelope?.buckets ?? envelope?.data;
+  const list = envelope?.points ?? envelope?.items ?? envelope?.buckets ?? envelope?.data;
   return Array.isArray(list) ? (list as Record<string, unknown>[]) : [];
+}
+
+// Contrato real das distribuições (US-06): um MAPA chave→contagem dentro do
+// envelope (`distribution` nos by-age/gender/city; `by_profile` no by-profile),
+// não um array de buckets. Converte o mapa em registros {key, count} — o mesmo
+// shape que os normalizadores já leem — e cai no array cru como tolerância.
+function toBucketRecords(data: unknown, mapField: string): Record<string, unknown>[] {
+  const envelope = data as Record<string, unknown> | null;
+  const map = envelope?.[mapField];
+  if (map && typeof map === "object" && !Array.isArray(map)) {
+    return Object.entries(map as Record<string, unknown>).map(([key, count]) => ({
+      key,
+      count,
+    }));
+  }
+  return asBuckets(data);
 }
 
 // Contagem do bucket, tolerando os nomes de campo mais prováveis do backend.
@@ -320,14 +355,14 @@ function normalizeAge(buckets: Record<string, unknown>[]): AgeDistribution[] {
 export async function getByAge(params: DistributionParams): Promise<AgeDistribution[]> {
   if (USE_MOCKS) return withMockLatency(MOCK_BY_AGE);
   const data = await authedGet("/metrics/by-age", distributionQuery(params));
-  return normalizeAge(asBuckets(data));
+  return normalizeAge(toBucketRecords(data, "distribution"));
 }
 
 export async function getByGender(params: DistributionParams): Promise<GenderDistribution[]> {
   if (USE_MOCKS) return withMockLatency(MOCK_BY_GENDER);
   const data = await authedGet("/metrics/by-gender", distributionQuery(params));
   return aggregateByLabel(
-    asBuckets(data),
+    toBucketRecords(data, "distribution"),
     (raw) => genderLabel(raw.gender ?? raw.key),
     (raw) => genderLabel(raw.gender ?? raw.key),
   ).map(({ label, count }) => ({ gender: label, label, count }));
@@ -336,7 +371,7 @@ export async function getByGender(params: DistributionParams): Promise<GenderDis
 export async function getByCity(params: DistributionParams): Promise<CityDistribution[]> {
   if (USE_MOCKS) return withMockLatency(MOCK_BY_CITY);
   const data = await authedGet("/metrics/by-city", distributionQuery(params));
-  return asBuckets(data)
+  return toBucketRecords(data, "distribution")
     .map((raw) => ({ city: String(raw.city ?? raw.key ?? "—"), count: bucketCount(raw) }))
     .sort((a, b) => b.count - a.count)
     .slice(0, CITY_TOP_N);
@@ -346,17 +381,86 @@ export async function getByProfile(params: DistributionParams): Promise<ProfileD
   if (USE_MOCKS) return withMockLatency(MOCK_BY_PROFILE);
   const data = await authedGet("/metrics/by-profile", distributionQuery(params));
   return aggregateByLabel(
-    asBuckets(data),
+    toBucketRecords(data, "by_profile"),
     (raw) => profileLabel(raw.profile ?? raw.key),
     (raw) => profileLabel(raw.profile ?? raw.key),
   ).map(({ label, count }) => ({ profile: label, label, count }));
 }
 
+// Faixas canônicas de horas de engajamento do T2 (US-15 deles): disjuntas,
+// inferior inclusivo/superior exclusivo. A UI sempre mostra as 4, mesmo zeradas.
+const HOURS_BANDS = ["0-1h", "1-4h", "4-8h", "8h+"] as const;
+
+export interface HoursBandDistribution {
+  band: string;
+  label: string;
+  count: number;
+}
+
+// GET /metrics/hours/distribution — participantes por faixa de horas de
+// engajamento (contrato real: envelope {bands: {faixa: contagem}}). Aceita
+// event_id e janela mensal from/to como as demais distribuições. Faixas fora do
+// conjunto canônico são preservadas ao final (evolução aditiva do T2).
+export async function getHoursDistribution(
+  params: DistributionParams,
+): Promise<HoursBandDistribution[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_HOURS_DISTRIBUTION);
+  const data = await authedGet("/metrics/hours/distribution", distributionQuery(params));
+  const counts = new Map(
+    toBucketRecords(data, "bands").map((raw) => [
+      String(raw.key ?? raw.band ?? ""),
+      bucketCount(raw),
+    ]),
+  );
+  const known: HoursBandDistribution[] = HOURS_BANDS.map((band) => ({
+    band,
+    label: band,
+    count: counts.get(band) ?? 0,
+  }));
+  const extras = [...counts.entries()]
+    .filter(([band]) => !HOURS_BANDS.includes(band as (typeof HOURS_BANDS)[number]))
+    .map(([band, count]) => ({ band, label: band, count }));
+  return [...known, ...extras];
+}
+
+// Limite de chamadas mensais do by-type (uma por bucket). Períodos maiores viram
+// erro de validação — mesmo tratamento de um 422 do backend.
+const BY_TYPE_MAX_MONTHS = 24;
+
+// GET /metrics/by-type — contrato real (US-06): aceita SÓ um bucket mensal
+// obrigatório (`bucket=YYYY-MM`) e devolve {bucket, entries: [{event_type,
+// registered, checked_in, certified}]}. Para cobrir o período from/to da tela, a
+// camada dispara uma chamada por mês e soma `registered` por tipo. O endpoint
+// não filtra por evento — `eventId` é ignorado (limitação do contrato T2).
 export async function getByType(params: DistributionParams): Promise<TypeDistribution[]> {
   if (USE_MOCKS) return withMockLatency(MOCK_BY_TYPE);
-  const data = await authedGet("/metrics/by-type", distributionQuery(params));
+
+  const months = monthBucketsInRange(params.from, params.to);
+  if (months.length === 0) {
+    throw new MetricsApiError("Filtro inválido. Verifique o período informado.", 422);
+  }
+  if (months.length > BY_TYPE_MAX_MONTHS) {
+    throw new MetricsApiError(
+      `Período muito longo para a distribuição por tipo (máximo de ${BY_TYPE_MAX_MONTHS} meses).`,
+      422,
+    );
+  }
+
+  const responses = await Promise.all(
+    months.map((bucket) => authedGet("/metrics/by-type", new URLSearchParams({ bucket }))),
+  );
+  // A "contagem" do gráfico por tipo são os INSCRITOS do bucket (entries trazem
+  // registered/checked_in/certified, sem um campo `count`).
+  const entries = responses
+    .flatMap((data) => {
+      const envelope = data as Record<string, unknown> | null;
+      return Array.isArray(envelope?.entries)
+        ? (envelope.entries as Record<string, unknown>[])
+        : asBuckets(data);
+    })
+    .map((raw) => ({ ...raw, count: raw.count ?? raw.registered ?? 0 }));
   return aggregateByLabel(
-    asBuckets(data),
+    entries,
     (raw) => typeLabel(raw.event_type ?? raw.type ?? raw.key),
     (raw) => typeLabel(raw.event_type ?? raw.type ?? raw.key),
   ).map(({ label, count }) => ({ type: label, label, count }));
@@ -368,8 +472,10 @@ export async function getByType(params: DistributionParams): Promise<TypeDistrib
 // /timeseries e /series (ADR-0009). Todas as respostas saem daqui já em
 // camelCase e normalizadas; os componentes (cabeçalho, cards e o gráfico de
 // linha MUI X) só recebem dados por props e nunca fazem fetch (ADR-0004/0005).
-// A janela (start_date/end_date) segue a convenção dos demais endpoints do
-// contrato (events/engagement) — não o par mensal from/to das distribuições.
+// Contrato real (US-06): o T2 NÃO tem série por evento — /timeseries filtra por
+// `type` (alias de event_type) com janela mensal from/to, e /series por
+// `event_type` com start_date/end_date. A tela de detalhe aproxima a série
+// filtrando pelo TIPO do evento (decisão do usuário na US-06).
 // ---------------------------------------------------------------------------
 
 // Detalhe de um evento reaproveita o mesmo DTO da listagem (US-04): mesmos
@@ -399,7 +505,9 @@ export interface TimeSeriesPoint {
 }
 
 export interface TimeSeriesParams {
-  eventId: string;
+  // Filtro por TIPO de evento (não por evento — o T2 não tem série por evento).
+  // Ausente/null = série global de todos os eventos do escopo.
+  eventType?: string | null;
   granularity: Granularity;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
@@ -417,11 +525,21 @@ export async function getEventById(eventId: string): Promise<EventDetail> {
   return toEventMetrics(data);
 }
 
+// Contrato real (US-06): {event_id, rate: float|null, registered, generated_at}
+// — sem numerador; `rate` vem null quando registered == 0. O numerador é
+// derivado (rate × registered) para o "x de y"; shapes antigos com
+// checked_in/certified continuam aceitos como tolerância.
 function toRate(raw: Record<string, unknown>): RateMetric {
-  const numerator = Number(raw.checked_in ?? raw.certified ?? raw.numerator ?? raw.count ?? 0);
   const denominator = Number(raw.registered ?? raw.total ?? raw.denominator ?? 0);
+  const rawNumerator = raw.checked_in ?? raw.certified ?? raw.numerator ?? raw.count;
   const rawRate = raw.rate ?? raw.checkin_rate ?? raw.certification_rate;
-  const rate = rawRate != null ? Number(rawRate) : denominator > 0 ? numerator / denominator : 0;
+  const rate =
+    rawRate != null
+      ? Number(rawRate)
+      : denominator > 0 && rawNumerator != null
+        ? Number(rawNumerator) / denominator
+        : 0;
+  const numerator = rawNumerator != null ? Number(rawNumerator) : Math.round(rate * denominator);
   return { rate, numerator, denominator };
 }
 
@@ -466,28 +584,34 @@ function toTimeSeriesPoint(raw: Record<string, unknown>): TimeSeriesPoint {
   };
 }
 
-function timeSeriesQuery(params: TimeSeriesParams): URLSearchParams {
-  return new URLSearchParams({
-    event_id: params.eventId,
+// GET /metrics/timeseries — série histórica (inscrições x check-ins por bucket).
+// Contrato real (US-06): janela em buckets mensais `from`/`to` (YYYY-MM) e
+// filtro de tipo no alias `type`; resposta {granularity, points: [...]}.
+export async function getTimeSeries(params: TimeSeriesParams): Promise<TimeSeriesPoint[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_TIMESERIES);
+  const query = new URLSearchParams({
+    granularity: params.granularity,
+    from: params.startDate.slice(0, 7),
+    to: params.endDate.slice(0, 7),
+  });
+  if (params.eventType) query.set("type", params.eventType);
+  const data = await authedGet("/metrics/timeseries", query);
+  return asBuckets(data).map(toTimeSeriesPoint);
+}
+
+// GET /metrics/series — série agregada por bucket, mesmo shape de resposta do
+// timeseries mas com janela em datas (start_date/end_date) e filtro de tipo em
+// `event_type` (sem alias). A EventMetricsPage a usa como fallback quando o
+// timeseries volta vazio.
+export async function getSeries(params: TimeSeriesParams): Promise<TimeSeriesPoint[]> {
+  if (USE_MOCKS) return withMockLatency(MOCK_TIMESERIES);
+  const query = new URLSearchParams({
     granularity: params.granularity,
     start_date: params.startDate,
     end_date: params.endDate,
   });
-}
-
-// GET /metrics/timeseries — série histórica (inscrições x check-ins por bucket).
-export async function getTimeSeries(params: TimeSeriesParams): Promise<TimeSeriesPoint[]> {
-  if (USE_MOCKS) return withMockLatency(MOCK_TIMESERIES);
-  const data = await authedGet("/metrics/timeseries", timeSeriesQuery(params));
-  return asBuckets(data).map(toTimeSeriesPoint);
-}
-
-// GET /metrics/series — série agregada por bucket. Mesmo shape normalizado do
-// timeseries; a EventMetricsPage a usa como fallback quando o timeseries volta
-// vazio.
-export async function getSeries(params: TimeSeriesParams): Promise<TimeSeriesPoint[]> {
-  if (USE_MOCKS) return withMockLatency(MOCK_TIMESERIES);
-  const data = await authedGet("/metrics/series", timeSeriesQuery(params));
+  if (params.eventType) query.set("event_type", params.eventType);
+  const data = await authedGet("/metrics/series", query);
   return asBuckets(data).map(toTimeSeriesPoint);
 }
 

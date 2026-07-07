@@ -25,6 +25,9 @@ export function ProfileDistributionChart({ data, height = 240 }: ProfileDistribu
         aria-label={`Gráfico de barras da distribuição por perfil do participante (${labels.length} perfis).`}
       >
         <BarChart
+          // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+          // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+          skipAnimation
           layout="horizontal"
           height={height}
           yAxis={[{ scaleType: "band", data: labels, tickLabelStyle: { fontSize: 11 } }]}
