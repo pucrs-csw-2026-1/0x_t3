@@ -19,6 +19,7 @@ Registro das decisões arquiteturais do **microfrontend de métricas** (T3) da p
 | [0009](0009-contrato-api-metrics.md) | Contrato da API de métricas (T2 → T3): endpoints, DTOs, RBAC, erros | Aceito |
 | [0010](0010-contrato-remote-shell.md) | Contrato de integração do remote mfeMetrics com o eloo-shell | Aceito |
 | [0011](0011-estrategia-de-testes.md) | Estratégia de testes: unit (Vitest), integração (MSW), E2E (Playwright) | Aceito |
+| [0012](0012-deploy-docker-compose.md) | Empacotamento Docker, docker-compose e pipeline de deploy (CD) do T3 | Aceito |
 
 ## Status possíveis
 

@@ -1,4 +1,17 @@
-// Abas de navegação do topo (referência visual). Em módulo próprio para que o
-// TopNavBar (desktop) e o menu mobile (drawer no App) compartilhem a mesma lista
+// Rotas de navegação do shell standalone. Cada entrada aponta para uma página
+// exposta como remote (ADR-0005): Dashboard (US-02), Catálogo de Eventos
+// (US-04) e Distribuições Demográficas (US-03). Em módulo próprio para que o
+// TopNavBar, a SideNavBar e o menu mobile (drawer) compartilhem a MESMA lista
 // sem quebrar o fast-refresh (arquivos de componente só exportam componentes).
-export const TABS = ["Visão Geral", "Relatórios", "Eventos", "Configurações"];
+// No runtime real como remote, quem navega é o eloo-shell; aqui as rotas
+// existem só para a visão standalone/demo.
+export interface NavRoute {
+  label: string;
+  path: string;
+}
+
+export const NAV_ROUTES: NavRoute[] = [
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Catálogo de Eventos", path: "/catalogo" },
+  { label: "Distribuições Demográficas", path: "/demografia" },
+];

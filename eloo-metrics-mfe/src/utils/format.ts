@@ -13,7 +13,9 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
 // Formata inteiros/decimais com separador de milhar pt-BR (1.250). Valores não
 // numéricos (undefined/NaN) caem num traço, evitando "NaN" na tela.
 export function formatNumber(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return "—";
+  // !Number.isFinite cobre NaN E ±Infinity (uma divisão por zero a montante
+  // vazaria "∞" com o antigo Number.isNaN).
+  if (value == null || !Number.isFinite(value)) return "—";
   return numberFormatter.format(value);
 }
 
@@ -29,7 +31,7 @@ export function formatDate(value: Date | string | null | undefined): string {
 // Formata uma razão (0..1) como percentual pt-BR (0.68 → "68%"). `fractionDigits`
 // controla as casas decimais (padrão 0). Valores inválidos caem num traço.
 export function formatPercent(ratio: number | null | undefined, fractionDigits = 0): string {
-  if (ratio == null || Number.isNaN(ratio)) return "—";
+  if (ratio == null || !Number.isFinite(ratio)) return "—";
   return new Intl.NumberFormat("pt-BR", {
     style: "percent",
     minimumFractionDigits: fractionDigits,
@@ -43,7 +45,17 @@ function parseIsoDate(value: string): Date | null {
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (dateOnly) {
     const [, year, month, day] = dateOnly;
-    return new Date(Number(year), Number(month) - 1, Number(day));
+    const y = Number(year);
+    const m = Number(month);
+    const d = Number(day);
+    const date = new Date(y, m - 1, d);
+    // Rejeita rollover silencioso do Date (ex.: "2024-02-30" viraria 01/03/2024,
+    // "2024-13-01" viraria jan/2025): a data construída precisa bater com os
+    // componentes informados; caso contrário é inválida.
+    if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
+      return null;
+    }
+    return date;
   }
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;

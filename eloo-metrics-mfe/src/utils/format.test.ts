@@ -60,3 +60,26 @@ describe("formatPercent", () => {
     expect(formatPercent(Number.NaN)).toBe("—");
   });
 });
+
+// Auditoria de edge cases: valores não-finitos e rollover de data.
+describe("robustez de formatação", () => {
+  it("formatNumber trata ±Infinity como traço (não '∞')", () => {
+    expect(formatNumber(Infinity)).toBe("—");
+    expect(formatNumber(-Infinity)).toBe("—");
+  });
+
+  it("formatPercent trata ±Infinity como traço", () => {
+    expect(formatPercent(Infinity)).toBe("—");
+    expect(formatPercent(-Infinity)).toBe("—");
+  });
+
+  it("formatDate rejeita rollover silencioso (dia/mês fora de faixa)", () => {
+    expect(formatDate("2024-02-30")).toBe("—");
+    expect(formatDate("2024-13-01")).toBe("—");
+    expect(formatDate("2024-00-10")).toBe("—");
+  });
+
+  it("formatDate ainda formata datas válidas", () => {
+    expect(formatDate("2026-03-01")).toBe("01/03/2026");
+  });
+});

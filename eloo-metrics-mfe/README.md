@@ -34,6 +34,28 @@ npm run serve:remote      # vite build && vite preview --port 5176
 | `npm run test:e2e`              | Playwright (E2E, mock)                     |
 | `npm run test:e2e:real`         | Playwright contra T1/T2 reais (local)      |
 
+### E2E real (`test:e2e:real`)
+
+Valida **todas as telas contra o backend real** (US-06): dashboard, catálogo, distribuições e detalhe, com RBAC (admin/manager), 403/404, sessão expirada e estado vazio. Roda só os specs `e2e/*.real.spec.ts`, subindo o dev server em `:5178` com `VITE_USE_MOCKS=false` (nunca reaproveita um dev server em modo mock).
+
+Pré-requisitos (uma vez por ambiente):
+
+```bash
+# 1. T1 (Auth) no ar + pool de participantes (necessário para counters não-zerados)
+cd 0x_t1 && docker compose up -d
+docker compose --profile seed run --rm seed-users
+
+# 2. T2 (Metrics) no ar + seed de eventos (50 eventos; escopo do manager = evt_0000..evt_0009)
+cd ../0x_t2 && docker compose up -d
+# se o T1 foi seedado DEPOIS do T2 subir, re-seede com participantes:
+docker compose run --rm --no-deps -e METRICS_SEED_FORCE=1 seed
+
+# 3. Rodar a suíte real
+cd ../eloo-metrics-mfe && npm run test:e2e:real
+```
+
+Credenciais do seed: `admin@local.dev`/`Admin@123` (visão global) e `manager@local.dev`/`Manager@123` (escopo de 10 eventos). Gotchas conhecidos (terraform, ad blockers) estão no [handoff](docs/handoff-us-06-integracao-shell.md).
+
 ## Arquitetura
 
 ```
@@ -57,4 +79,4 @@ e2e/                testes Playwright
 
 ## Estado
 
-**US-00 (scaffold)** — esqueleto executável (standalone + remote), sem integração de API. A primeira integração real (login → métrica do T2) chega na US-01.
+**US-00..US-05 entregues** (scaffold, esqueleto ambulante, dashboard, catálogo, distribuições, detalhe + séries). **US-06** — integração real validada contra T1+T2: camada de serviço alinhada ao contrato real do T2 (ADR-0009) e suíte `test:e2e:real` cobrindo os fluxos principais. O modo mock (`VITE_USE_MOCKS=true`) é um _dev-aid_ explícito do `.env.development`, nunca o default de produção. Próximo: US-07 (integração no shell).

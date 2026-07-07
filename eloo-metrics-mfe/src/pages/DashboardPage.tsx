@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ThemeProvider, type Theme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -80,12 +80,18 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [engagementError, setEngagementError] = useState<string | null>(null);
 
+  // Geração da última busca: trocas rápidas de período disparam fetches
+  // concorrentes e uma resposta antiga não pode sobrescrever a mais nova (mesmo
+  // cuidado do useDistribution da US-03 — corrigido na validação real da US-06).
+  const loadReqId = useRef(0);
+
   // O período é SEMPRE enviado (ADR-0009). counters e engajamento são buscados em
   // paralelo; a falha do engajamento é não-fatal (banner de aviso), a dos
   // counters é fatal (estado de erro com retry). Um 401 é sinalizado pela camada
   // de serviço (mfeAuth:sessionExpired) e tratado pelo host — a página não
   // redireciona sozinha (ADR-0005).
   const load = useCallback(async (window: Period) => {
+    const reqId = ++loadReqId.current;
     setStatus("loading");
     setError(null);
     setEngagementError(null);
@@ -94,6 +100,7 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
       listEventMetrics({ ...window, page: 1, pageSize: PAGE_SIZE }),
       getEngagement(window),
     ]);
+    if (reqId !== loadReqId.current) return;
 
     if (eventsResult.status === "rejected") {
       const reason = eventsResult.reason;
@@ -131,7 +138,12 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
     <ThemeProvider theme={theme ?? defaultTheme}>
       <Box
         component="section"
-        sx={{ bgcolor: "background.default", minHeight: "100%", p: { xs: 2, lg: 4 } }}
+        sx={{
+          bgcolor: "background.default",
+          minHeight: "100%",
+          p: { xs: 2, lg: 4 },
+          pb: { xs: 6, lg: 8 },
+        }}
       >
         <Box sx={{ maxWidth: 1440, mx: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
           {/* Cabeçalho dinâmico + seletor de período */}

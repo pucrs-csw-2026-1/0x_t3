@@ -47,6 +47,9 @@ export function EngagementBarChart({
           sx={{ minWidth: Math.max(labels.length * 64, 320) }}
         >
           <BarChart
+            // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+            // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+            skipAnimation
             height={height}
             xAxis={[{ scaleType: "band", data: labels, tickLabelStyle: { fontSize: 11 } }]}
             series={[

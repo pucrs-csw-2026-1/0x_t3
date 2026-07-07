@@ -3,7 +3,17 @@ import { rankEventsByAdhesion } from "./ranking";
 import type { EventMetrics } from "../services/metricsApi";
 
 function evt(id: string, registered: number, checkedIn: number): EventMetrics {
-  return { eventId: id, eventName: id.toUpperCase(), registered, checkedIn, certified: 0 };
+  return {
+    eventId: id,
+    eventName: id.toUpperCase(),
+    eventType: null,
+    status: "ativo",
+    startDate: null,
+    endDate: null,
+    registered,
+    checkedIn,
+    certified: 0,
+  };
 }
 
 // A: 90/100 = 0.90 | B: 20/100 = 0.20 | C: 75/100 = 0.75 | D: 50/100 = 0.50
@@ -37,7 +47,19 @@ describe("rankEventsByAdhesion", () => {
 
   it("usa o eventId como nome quando não há nome", () => {
     const { best } = rankEventsByAdhesion(
-      [{ eventId: "sem_nome", eventName: null, registered: 10, checkedIn: 5, certified: 0 }],
+      [
+        {
+          eventId: "sem_nome",
+          eventName: null,
+          eventType: null,
+          status: "ativo",
+          startDate: null,
+          endDate: null,
+          registered: 10,
+          checkedIn: 5,
+          certified: 0,
+        },
+      ],
       1,
     );
     expect(best[0].eventName).toBe("sem_nome");
@@ -45,5 +67,20 @@ describe("rankEventsByAdhesion", () => {
 
   it("lista vazia devolve recortes vazios", () => {
     expect(rankEventsByAdhesion([], 5)).toEqual({ best: [], worst: [] });
+  });
+});
+
+// Auditoria: sanitização de dados inconsistentes do T2.
+describe("rankEventsByAdhesion — sanitização", () => {
+  it("clampa a taxa quando check-ins > inscritos (não passa de 100%)", () => {
+    const { best } = rankEventsByAdhesion([evt("x", 100, 120)], 5);
+    expect(best[0].rate).toBe(1);
+  });
+
+  it("check-ins não-finito vira 0 e não polui a ordenação", () => {
+    const { best, worst } = rankEventsByAdhesion([evt("a", 100, Number.NaN), evt("b", 100, 50)], 5);
+    expect(best.every((e) => Number.isFinite(e.rate))).toBe(true);
+    expect(best[0].eventId).toBe("b"); // 0.5 > 0
+    expect(worst[0].eventId).toBe("a"); // NaN → 0
   });
 });

@@ -97,5 +97,113 @@
     "resposta_resumo": "logo.png (raiz do repo) foi copiado para src/assets e importado (Vite empacota com hash — resolve certo standalone e como remote). Primeiro exibido no topbar; depois movido para o topo da SideNavBar (onde ficava a marca 'Admin Global', removida) e ampliado de 36px para 56px.",
     "decisao": "aceito",
     "avaliacao_critica": "Asset importado de src/assets (não de public/): como o mfe é montado no shell, um caminho absoluto /logo.png resolveria contra a origem do host e quebraria; o import gera URL do próprio remote. Removido só o rótulo 'Admin Global' da sidebar (chrome standalone); MANTIDO o indicador de escopo do H1 do DashboardPage, que é critério de aceite da US-02 (admin global x manager escopo)."
+  },
+  {
+    "timestamp": "2026-07-06T11:40:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — o EventCard precisa exibir situação (ativo/encerrado/rascunho) e período do evento, mas o DTO EventMetrics da US-01/02 só tinha counters.",
+    "prompt": "Implementar o catálogo de eventos reaproveitando a camada de serviço; o card mostra nome, período, status e counters.",
+    "resposta_resumo": "A IA optou por ESTENDER o EventMetrics existente (campos status/startDate/endDate opcionais, mapeados de snake_case com tolerância) em vez de criar um endpoint/serviço novo — GET /metrics/events já é paginado e o ADR-0009 lista 'status' como parâmetro do mesmo recurso. Adicionou normalização de status (PT/EN → conjunto fechado, fallback 'unknown').",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Reaproveitou listEventMetrics (sem duplicar rede) em vez de assumir shape novo, fiel ao ADR-0009 (§2 do contrato: ignorar campos desconhecidos, pinar só o consumido). Como o toEqual de 2 testes de metricsApi.test fixava a forma antiga, foram atualizados honestamente para incluir os novos campos — não afrouxados. mockData e o handler base do MSW ganharam status/datas para o modo demo e a integração continuarem realistas."
+  },
+  {
+    "timestamp": "2026-07-06T11:55:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — dois estados vazios pedidos (sem eventos no período x manager sem eventos no escopo) sem reimplementar RBAC no frontend.",
+    "prompt": "EmptyState com mensagem diferente por contexto: período sem dados vs. escopo sem eventos atribuídos.",
+    "resposta_resumo": "A IA distinguiu a MENSAGEM pelo papel lido do storage compartilhado (manager → texto de escopo; admin/outros → texto de período), reaproveitando o EmptyState da US-02 por props. A filtragem em si continua no backend; o frontend só escolhe o texto.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Ponto sensível: escolher o texto por papel é APRESENTAÇÃO (mesmo padrão do resolveScope/título da US-02), não é filtragem de RBAC — que permaneceu no T2 (ADR-0009). Reconhecida a limitação: um manager COM eventos mas nenhum no período veria a mensagem de escopo; aceitável sem uma 2ª chamada só para desambiguar. Coberto por dois testes de integração MSW (admin→período, manager→escopo)."
+  },
+  {
+    "timestamp": "2026-07-06T12:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — a US dá exemplo de data '07 jul. 2026', mas também manda reaproveitar o helper formatDate da US-02, que produz 'dd/mm/aaaa'.",
+    "prompt": "Datas formatadas com locale pt-BR; reaproveite formatDate da US-02.",
+    "resposta_resumo": "A IA identificou o conflito entre o exemplo ('07 jul. 2026') e a diretriz de reaproveitar formatDate ('07/07/2026') e priorizou o REUSO explícito, formatando o período como 'dd/mm/aaaa – dd/mm/aaaa' (data única quando início=fim; 'Data a definir' quando nulo).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Prevaleceu a diretriz forte de reaproveitar helpers (DoD + CLAUDE.md §5) sobre o formato ilustrativo do enunciado — evita um segundo formatador divergente. Caso o formato 'jul.' seja mesmo requisito, é uma mudança localizada no format.ts (afetaria toda a app), que é decisão do usuário. Navegação 100% via onSelectEvent: nenhum useNavigate no remote; o wrapper CatalogRoute no App (host standalone) é quem navega (ADR-0005)."
+  },
+  {
+    "timestamp": "2026-07-06T12:35:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — os botões de navegação (SideNavBar/TopNavBar) eram decorativos (href='#'); faltava caminho real para Dashboard e Catálogo.",
+    "prompt": "Arrume os botões e crie os caminhos para ter acesso a dashboard e ao catálogo.",
+    "resposta_resumo": "A IA centralizou as rotas reais em navTabs.ts (NAV_ROUTES = Dashboard '/' + Catálogo '/catalogo') e ligou as duas superfícies ao react-router: SideNavBar e TopNavBar viraram NavLink com destaque da rota ativa (useLocation/aria-current). No mobile, a mesma sidebar vira drawer e fecha ao navegar (onNavigate). Removeu os itens sem página (Participantes, Certificações…), que eram os 'botões quebrados'.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "É chrome do shell STANDALONE — usar useNavigate/NavLink aqui não viola o ADR-0005 (o remote EventCatalogPage continua sem router, navegando só por onSelectEvent). Removi os placeholders sem destino em vez de deixá-los inertes (honestidade de UI). Suporte/Sair/Novo Evento seguem decorativos por não terem feature nesta fase — registrado explicitamente. Testes de layout reescritos sob MemoryRouter (links, aria-current, onNavigate); smoke E2E revalidado."
+  },
+  {
+    "timestamp": "2026-07-06T12:50:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-04 — verificação final de V&V contra a DoD do ADR-0007 e os gates de PR.",
+    "prompt": "Verifique e corrija com base no ADR-0007 e no backlog US-04; depois confirme os gates de PR (build, lint, format:check, vitest com erro/limite, robustez: loading/erro/vazio/sessão).",
+    "resposta_resumo": "A IA rodou os gates reais: npm run build (tsc -b + vite build, com os dois remotes expostos) OK; eslint e prettier limpos; vitest 93/93 verde; cobertura 98,95% (thresholds 80% atendidos); smoke Playwright verde. Mapeou cada item da robustez a código+teste (loading→skeletons N=page_size; erro→ErrorAlert+retry; vazio→EmptyState período/escopo + busca; 401→sessionExpired do host, sem redirect local).",
+    "decisao": "aceito",
+    "avaliacao_critica": "Nenhuma correção de código foi necessária nesta passada — a US-04 já satisfazia a DoD e os critérios do backlog. Registrada uma limitação conhecida e aceita: não há guarda de resposta obsoleta (stale-response) em cliques rápidos, o mesmo padrão da US-02 (DashboardPage) — adicioná-la só aqui divergiria do irmão sem defeito observável no uso normal. A única ação corretiva foi documental: esta entrada de log (item 5 do ADR-0007)."
+  },
+  {
+    "timestamp": "2026-07-06T21:10:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-03 — conflito entre reaproveitar o PeriodSelector da US-02 (datas YYYY-MM-DD) e os endpoints de distribuição, que usam buckets mensais from/to em YYYY-MM (ADR-0009).",
+    "prompt": "Implementar a US-03 mantendo a componentização, reaproveitando PeriodSelector/ErrorAlert/EmptyState e enviando o período em YYYY-MM.",
+    "resposta_resumo": "A IA apontou que o PeriodSelector emite YYYY-MM-DD e os by-* consomem YYYY-MM, e ofereceu três caminhos (novo seletor mensal; adaptar o PeriodSelector; derivar YYYY-MM das datas na camada de serviço) via AskUserQuestion antes de codar (CLAUDE.md §1).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Decisão do usuário: DERIVAR YYYY-MM das datas. Reusa o PeriodSelector da US-02 sem tocá-lo (não mexe em componente já testado) e concentra a conversão data→mês em util puro (periodToMonthRange) + validação (validatePeriod). Mantém uma única semântica de período na UI e respeita o ADR-0009 no envio."
+  },
+  {
+    "timestamp": "2026-07-06T21:22:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-03 — o ADR-0009 lista os caminhos by-age/gender/city/profile/type, mas não fixa o shape do corpo (o OpenAPI do T2 é a fonte viva e ainda não foi confirmado para estes).",
+    "prompt": "Adicionar getByAge/Gender/City/Profile/Type mapeando snake_case → camelCase, sem gráfico fazendo fetch.",
+    "resposta_resumo": "A IA implementou um parser tolerante (aceita array puro ou envelope items/buckets/data; nomes de contagem count/total/value) e concentrou TODA a normalização na camada de serviço: 8 faixas etárias canônicas sempre completas/ordenadas, tradução pt-BR das categorias, top-10 de cidades por volume. Os gráficos só recebem props (ADR-0004).",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Como o corpo não está fixado no OpenAPI, preferiu-se tolerância a evolução aditiva (ignora campos desconhecidos, cai em 'Desconhecido' fora do conjunto) em vez de acoplar a um shape presumido — mesmo princípio da US-02 (item 2 do contrato ADR-0009). A normalização mora no serviço, não no componente, cumprindo 'gráficos sem fetch/transformação'. Ponto a revisar quando o Swagger do T2 confirmar os campos reais."
+  },
+  {
+    "timestamp": "2026-07-06T21:34:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-03 — 'falha em um painel não derruba os outros' + 'intervalo inválido não dispara fetch' + retry por painel.",
+    "prompt": "Cada distribuição com loading/erro/vazio próprios, fetches paralelos e validação antes do fetch (evitar 422).",
+    "resposta_resumo": "A IA extraiu um hook useDistribution(fetcher, params) por painel: os 5 disparam em paralelo na mesma renderização (independentes por construção), com guarda de resposta obsoleta (requestId) e params=null quando o período é inválido — nesse caso não busca e mantém os últimos dados, exibindo o erro inline no toolbar (não alert global).",
+    "decisao": "aceito",
+    "avaliacao_critica": "Optou-se por independência real via um hook por painel (a falha de um não afeta os outros) em vez de um Promise.allSettled central — o efeito paralelo emerge naturalmente e o retry por painel fica trivial (reload do próprio hook). Diferente da limitação registrada na US-02/04, AQUI foi adicionada a guarda de stale-response, pois a troca rápida de evento/período é esperada nesta tela. Validação coberta por unit (validatePeriod) e por integração (inverter o intervalo não gera novo fetch)."
+  },
+  {
+    "timestamp": "2026-07-06T22:05:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — 403/404 em events/{id} precisam bloquear a página inteira; a camada de serviço lançava Error genérico só com mensagem.",
+    "prompt": "Diferenciar 403 (ForbiddenState) de 404 (NotFoundState) na EventMetricsPage sem parsear a string de erro.",
+    "resposta_resumo": "A IA propôs uma classe MetricsApiError extends Error com campo `status`, substituindo os `new Error(...)` do handleErrorResponse. As mensagens pt-BR (ADR-0009) permanecem idênticas, então testes existentes que checam por regex de mensagem seguem passando; a página passa a decidir por err.status.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Validado que nenhum teste pré-existente quebra (a message não mudou) e que a mudança é aditiva a TODOS os endpoints (não só os da US-05). Rejeitada a alternativa de inspecionar o texto do erro na página — frágil e acoplado a i18n. Cobertura nova em metricsApi.test (getEventById 403→status 403, 404→status 404)."
+  },
+  {
+    "timestamp": "2026-07-06T22:20:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — divergência de contrato: o prompt da US lista /checkin-rate?event_id=… (query) e /timeseries com from/to; o ADR-0009 lista /events/{id}/checkin-rate (path) e /series com start_date/end_date.",
+    "prompt": "Definir as URLs e parâmetros dos endpoints de taxa e de série histórica.",
+    "resposta_resumo": "A IA apontou o descasamento entre o enunciado e o ADR-0009 (fonte de verdade citada no CLAUDE.md) e, como não há backend real e o MSW/serviço são definidos de forma autoconsistente, seguiu o ADR: taxas em path (/events/{id}/checkin-rate, /certification-rate) e série com janela start_date/end_date + granularity, mesma convenção de events/engagement.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Preferiu-se o contrato fixado (ADR-0009) ao enunciado da US para não introduzir uma 3ª convenção de janela (o par mensal from/to é das distribuições/US-03). Decisão documentada em comentário no metricsApi.ts; caso o OpenAPI real do T2 divirja, só a camada de serviço muda (telas intactas)."
+  },
+  {
+    "timestamp": "2026-07-06T22:40:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — 'trocar granularidade refaz apenas o fetch de timeseries' sem re-buscar as taxas.",
+    "prompt": "Orquestrar fetches independentes na EventMetricsPage respeitando que só a série reage à granularidade.",
+    "resposta_resumo": "A IA separou os loaders em useCallbacks com dependências distintas: loadCheckin/loadCertification dependem só de eventId; loadTimeseries depende de eventId+granularity+period. Dois effects gated em eventStatus==='ready' — o de taxas não lista granularity, então não re-dispara ao trocar o preset; o de série sim.",
+    "decisao": "aceito",
+    "avaliacao_critica": "Validado por integração (spy em getTimeSeries e getCheckinRate): trocar para 'Trimestral' incrementa só as chamadas de timeseries. Rejeitado um Promise.allSettled central único, que re-buscaria tudo a cada troca de granularidade. O gating em 'ready' garante o requisito de não disparar fetches secundários quando o evento dá 403/404."
+  },
+  {
+    "timestamp": "2026-07-06T22:55:00-03:00",
+    "autor": "carlos-mascarello",
+    "contexto": "US-05 — legenda do TimeSeriesChart (MUI X LineChart) precisa ser testável e acessível.",
+    "prompt": "Gráfico de linha com legenda e título; testes devem conseguir ler as séries.",
+    "resposta_resumo": "A IA escondeu a legenda nativa do MUI (slotProps.legend.hidden) e renderizou uma legenda própria em <dl> (nome+cor+total), além de título visível <h2> e um wrapper role='img' com aria-label. Assim os rótulos não dependem dos <text> do SVG, que são frágeis em jsdom.",
+    "decisao": "ajustado",
+    "avaliacao_critica": "Mesmo padrão já adotado nos gráficos da US-03 (DistributionLegend): a legenda acessível complementa o SVG e sustenta os testes por texto ('Inscrições'/'Check-ins'). O gráfico não faz fetch — recebe TimeSeriesPoint[] por props (ADR-0004). Fallback de /series só quando /timeseries volta vazio, evitando duplo 401."
   }
 ]

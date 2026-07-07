@@ -1,11 +1,45 @@
 import { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import { SideNavBar } from "./components/layout/SideNavBar";
 import { TopNavBar } from "./components/layout/TopNavBar";
-import { TABS } from "./components/layout/navTabs";
 import DashboardPage from "./pages/DashboardPage";
+import EventCatalogPage from "./pages/EventCatalogPage";
+import DemographicsPage from "./pages/DemographicsPage";
+import EventMetricsPage from "./pages/EventMetricsPage";
+import { getStoredProfile } from "./services/authApi";
+
+// Roteamento por papel (US-06): manager cuida de eventos individuais — entra
+// pelo catálogo e NÃO tem acesso ao dashboard (nem pela rota direta); os demais
+// papéis vão ao dashboard. A mesma regra deve ser reproduzida pelo host nas
+// rotas do shell (US-07).
+function HomeRoute() {
+  const isManager = getStoredProfile()?.accessLevel === "MANAGER";
+  return <Navigate to={isManager ? "/catalogo" : "/dashboard"} replace />;
+}
+
+function DashboardRoute() {
+  const isManager = getStoredProfile()?.accessLevel === "MANAGER";
+  if (isManager) return <Navigate to="/catalogo" replace />;
+  return <DashboardPage />;
+}
+
+// Standalone: aqui o App faz o papel do host (shell). É o host quem navega
+// (ADR-0005) — o EventCatalogPage só reporta a seleção via onSelectEvent; a
+// primitiva de navegação (useNavigate) vive no host, nunca dentro do remote.
+function CatalogRoute() {
+  const navigate = useNavigate();
+  return <EventCatalogPage onSelectEvent={(eventId) => navigate(`/eventos/${eventId}`)} />;
+}
+
+// Detalhe do evento (US-05). O host injeta o eventId da rota e resolve o onBack
+// (voltar ao catálogo) — a página remota nunca navega sozinha (ADR-0005).
+function EventDetailRoute() {
+  const navigate = useNavigate();
+  const { eventId = "" } = useParams();
+  return <EventMetricsPage eventId={eventId} onBack={() => navigate("/catalogo")} />;
+}
 
 // Shell usado APENAS quando o app roda standalone (dev/preview próprios). A
 // sidebar e o cabeçalho vivem aqui — NÃO dentro do remote exposto: como remote
@@ -21,16 +55,16 @@ export default function App() {
       <Box sx={{ display: { xs: "none", md: "block" }, height: "100%" }}>
         <SideNavBar />
       </Box>
-      {/* No mobile o drawer é um painel único e coeso: as abas do topo (que
-          somem no cabeçalho estreito) entram como seção "Navegação" da sidebar. */}
+      {/* No mobile a mesma barra vira drawer; navegar fecha o painel. A sidebar
+          já carrega a navegação real (Dashboard / Catálogo), então não há abas
+          extras a injetar. */}
       <Drawer
         open={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
-        onClick={() => setMobileNavOpen(false)}
         ModalProps={{ keepMounted: true }}
         sx={{ display: { xs: "block", md: "none" } }}
       >
-        <SideNavBar tabs={TABS} />
+        <SideNavBar onNavigate={() => setMobileNavOpen(false)} />
       </Drawer>
 
       <Box
@@ -39,7 +73,11 @@ export default function App() {
       >
         <TopNavBar onMenuClick={() => setMobileNavOpen(true)} />
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/dashboard" element={<DashboardRoute />} />
+          <Route path="/catalogo" element={<CatalogRoute />} />
+          <Route path="/eventos/:eventId" element={<EventDetailRoute />} />
+          <Route path="/demografia" element={<DemographicsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>
