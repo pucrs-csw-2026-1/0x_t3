@@ -27,10 +27,22 @@ export function periodToMonthRange(period: Period): MonthRange {
 
 const MONTH_BUCKET = /^\d{4}-(0[1-9]|1[0-2])$/;
 
+// Teto de buckets mensais que o by-type agrega numa única troca de período
+// (US-06): cada bucket vira UMA chamada à API, então um intervalo longo precisa
+// ser barrado antes do fetch para não disparar centenas de requisições.
+export const MAX_MONTH_SPAN = 24;
+
+// Nº de meses (inclusivo) entre dois buckets YYYY-MM válidos.
+function monthSpan(from: string, to: string): number {
+  const [fromYear, fromMonth] = from.split("-").map(Number);
+  const [toYear, toMonth] = to.split("-").map(Number);
+  return (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1;
+}
+
 // Valida a janela ANTES de qualquer fetch (ADR-0009): mês inicial e final
-// presentes, no formato YYYY-MM, e não invertidos. Retorna a mensagem de erro
-// em pt-BR (inline no toolbar) ou null quando válida. Comparação de string
-// funciona para YYYY-MM (lexicográfica == cronológica).
+// presentes, no formato YYYY-MM, não invertidos e dentro do teto de MAX_MONTH_SPAN
+// meses. Retorna a mensagem de erro em pt-BR (inline no toolbar) ou null quando
+// válida. Comparação de string funciona para YYYY-MM (lexicográfica == cronológica).
 export function validatePeriod(period: Period): string | null {
   const { from, to } = periodToMonthRange(period);
   if (!from || !to) return "Informe o mês inicial e o final do período.";
@@ -38,12 +50,17 @@ export function validatePeriod(period: Period): string | null {
     return "Período inválido. Use meses no formato AAAA-MM.";
   }
   if (from > to) return "O mês inicial não pode ser posterior ao mês final.";
+  if (monthSpan(from, to) > MAX_MONTH_SPAN) {
+    return `O período não pode exceder ${MAX_MONTH_SPAN} meses.`;
+  }
   return null;
 }
 
 // Enumera os buckets mensais (YYYY-MM) do intervalo fechado [from, to] — usado
 // pelo by-type real, que só aceita um bucket por chamada (US-06). Intervalo
 // inválido/invertido devolve lista vazia (quem valida antes é validatePeriod).
+// NÃO trunca: o getByType usa o tamanho real para barrar períodos > 24 meses
+// (BY_TYPE_MAX_MONTHS); truncar aqui esconderia meses silenciosamente.
 export function monthBucketsInRange(from: string, to: string): string[] {
   if (!MONTH_BUCKET.test(from) || !MONTH_BUCKET.test(to) || from > to) return [];
   const buckets: string[] = [];

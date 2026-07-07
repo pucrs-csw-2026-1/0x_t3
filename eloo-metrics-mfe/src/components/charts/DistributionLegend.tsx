@@ -39,8 +39,8 @@ export function DistributionLegend({ items, total }: DistributionLegendProps) {
         </TableRow>
       </TableHead>
       <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.label} sx={{ "&:last-child td": { border: 0 } }}>
+        {items.map((item, index) => (
+          <TableRow key={`${item.label}-${index}`} sx={{ "&:last-child td": { border: 0 } }}>
             <TableCell>
               {item.color && (
                 <Box

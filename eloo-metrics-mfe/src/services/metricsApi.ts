@@ -105,16 +105,6 @@ export class MetricsApiError extends Error {
   }
 }
 
-async function readErrorMessage(response: Response): Promise<string> {
-  try {
-    const body = await response.json();
-    if (typeof body.detail === "string") return body.detail;
-  } catch {
-    // sem corpo JSON
-  }
-  return "Não foi possível carregar as métricas. Tente novamente.";
-}
-
 // Mapa de erros → mensagem em pt-BR (ADR-0009). Um 401 também limpa a sessão e
 // dispara o evento sessionExpired (o host redireciona para o login).
 async function handleErrorResponse(response: Response): Promise<never> {
@@ -131,18 +121,46 @@ async function handleErrorResponse(response: Response): Promise<never> {
   if (response.status === 422) {
     throw new MetricsApiError("Filtro inválido. Verifique o período informado.", 422);
   }
-  throw new MetricsApiError(await readErrorMessage(response), response.status);
+  if (response.status >= 500) {
+    throw new MetricsApiError(
+      "O servidor de métricas está instável no momento. Tente novamente em instantes.",
+      response.status,
+    );
+  }
+  // Demais status (400/409/429/...): mensagem genérica pt-BR — nunca expõe o texto
+  // cru do backend ao usuário (ADR-0009).
+  throw new MetricsApiError(
+    "Não foi possível carregar as métricas. Tente novamente.",
+    response.status,
+  );
 }
 
 // Único ponto de rede da camada: injeta o Bearer do storage compartilhado
 // (mfeAuth.*) e centraliza o mapeamento de erros → pt-BR (ADR-0009).
 async function authedGet(path: string, query: URLSearchParams): Promise<unknown> {
   const token = getStoredAccessToken();
-  const response = await fetch(`${API_BASE}${path}?${query.toString()}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}?${query.toString()}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  } catch {
+    // fetch só rejeita em falha de rede (offline, DNS, CORS, timeout) — nunca é um
+    // status HTTP. Traduz para MetricsApiError pt-BR (status 0) em vez de deixar
+    // subir um TypeError "Failed to fetch" cru (ADR-0009).
+    throw new MetricsApiError(
+      "Sem conexão com o servidor de métricas. Verifique sua rede e tente novamente.",
+      0,
+    );
+  }
   if (!response.ok) await handleErrorResponse(response);
-  return response.json();
+  try {
+    return await response.json();
+  } catch {
+    // 2xx com corpo vazio/HTML/JSON inválido (proxy, 204, página de erro) faria o
+    // json() lançar SyntaxError cru — vira erro tratado em pt-BR.
+    throw new MetricsApiError("Resposta inválida do servidor de métricas.", response.status);
+  }
 }
 
 // Normaliza o rótulo de situação do backend para o enum real do T2
@@ -170,6 +188,14 @@ function toIsoDateOrNull(raw: unknown): string | null {
   return value === "" ? null : value;
 }
 
+// Coage para número FINITO; qualquer coisa não-numérica (string inválida como
+// "N/A", null, objeto) vira 0. Sem isso um campo inesperado do T2 viraria NaN e
+// vazaria para a UI (cards, somatórios, ordenação do ranking).
+function toNumber(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 function toEventMetrics(raw: Record<string, unknown>): EventMetrics {
   const eventType = String(raw.event_type ?? "").trim();
   return {
@@ -179,9 +205,9 @@ function toEventMetrics(raw: Record<string, unknown>): EventMetrics {
     status: toEventStatus(raw.status),
     startDate: toIsoDateOrNull(raw.start_date ?? raw.starts_at),
     endDate: toIsoDateOrNull(raw.end_date ?? raw.ends_at),
-    registered: Number(raw.registered ?? 0),
-    checkedIn: Number(raw.checked_in ?? 0),
-    certified: Number(raw.certified ?? 0),
+    registered: toNumber(raw.registered),
+    checkedIn: toNumber(raw.checked_in),
+    certified: toNumber(raw.certified),
   };
 }
 
@@ -201,9 +227,9 @@ export async function listEventMetrics(params: ListEventMetricsParams): Promise<
   const items: Record<string, unknown>[] = Array.isArray(data.items) ? data.items : [];
   return {
     items: items.map(toEventMetrics),
-    page: Number(data.page ?? params.page ?? 1),
-    pageSize: Number(data.page_size ?? params.pageSize ?? 20),
-    total: Number(data.total ?? items.length),
+    page: toNumber(data.page ?? params.page ?? 1),
+    pageSize: toNumber(data.page_size ?? params.pageSize ?? 20),
+    total: toNumber(data.total ?? items.length),
   };
 }
 
@@ -215,8 +241,8 @@ function toEngagement(raw: Record<string, unknown>): EngagementResponse {
   const items: Record<string, unknown>[] = Array.isArray(raw.items)
     ? (raw.items as Record<string, unknown>[])
     : [raw];
-  const registered = items.reduce((acc, item) => acc + Number(item.registered ?? 0), 0);
-  const checkedIn = items.reduce((acc, item) => acc + Number(item.checked_in ?? 0), 0);
+  const registered = items.reduce((acc, item) => acc + toNumber(item.registered), 0);
+  const checkedIn = items.reduce((acc, item) => acc + toNumber(item.checked_in), 0);
   return { registered, checkedIn, rate: registered > 0 ? checkedIn / registered : 0 };
 }
 
@@ -446,9 +472,22 @@ export async function getByType(params: DistributionParams): Promise<TypeDistrib
     );
   }
 
-  const responses = await Promise.all(
+  // allSettled em vez de Promise.all: a falha de UM bucket (500/429/timeout num
+  // único mês) não pode descartar os buckets que já chegaram. Só falha se TODOS
+  // falharem — e aí propaga o primeiro erro tipado (401/403/etc.) para a página.
+  // (notifySessionExpired é idempotente, então 401s paralelos não duplicam o evento.)
+  const settled = await Promise.allSettled(
     months.map((bucket) => authedGet("/metrics/by-type", new URLSearchParams({ bucket }))),
   );
+  const responses = settled
+    .filter((r): r is PromiseFulfilledResult<unknown> => r.status === "fulfilled")
+    .map((r) => r.value);
+  if (responses.length === 0) {
+    const firstRejected = settled.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    throw firstRejected?.reason instanceof Error
+      ? firstRejected.reason
+      : new MetricsApiError("Não foi possível carregar a distribuição por tipo.", 0);
+  }
   // A "contagem" do gráfico por tipo são os INSCRITOS do bucket (entries trazem
   // registered/checked_in/certified, sem um campo `count`).
   const entries = responses
@@ -530,16 +569,19 @@ export async function getEventById(eventId: string): Promise<EventDetail> {
 // derivado (rate × registered) para o "x de y"; shapes antigos com
 // checked_in/certified continuam aceitos como tolerância.
 function toRate(raw: Record<string, unknown>): RateMetric {
-  const denominator = Number(raw.registered ?? raw.total ?? raw.denominator ?? 0);
+  const denominator = toNumber(raw.registered ?? raw.total ?? raw.denominator ?? 0);
   const rawNumerator = raw.checked_in ?? raw.certified ?? raw.numerator ?? raw.count;
   const rawRate = raw.rate ?? raw.checkin_rate ?? raw.certification_rate;
-  const rate =
+  const computedRate =
     rawRate != null
-      ? Number(rawRate)
+      ? toNumber(rawRate)
       : denominator > 0 && rawNumerator != null
-        ? Number(rawNumerator) / denominator
+        ? toNumber(rawNumerator) / denominator
         : 0;
-  const numerator = rawNumerator != null ? Number(rawNumerator) : Math.round(rate * denominator);
+  // Razão sempre em [0,1]: dado inconsistente do T2 (rate > 1, ou numerador >
+  // denominador) não pode exibir "150%" no card.
+  const rate = Math.min(1, Math.max(0, computedRate));
+  const numerator = rawNumerator != null ? toNumber(rawNumerator) : Math.round(rate * denominator);
   return { rate, numerator, denominator };
 }
 
@@ -568,7 +610,13 @@ export async function getCertificationRate(eventId: string): Promise<RateMetric>
 // cai no rótulo cru).
 function parseBucketDate(bucket: string): Date {
   const monthMatch = /^(\d{4})-(\d{2})/.exec(bucket);
-  if (monthMatch) return new Date(Number(monthMatch[1]), Number(monthMatch[2]) - 1, 1);
+  if (monthMatch) {
+    const month = Number(monthMatch[2]);
+    // Mês fora de 01-12 (ex.: "2026-13") não pode virar rollover silencioso para
+    // outro ano — devolve Date inválido e o gráfico cai no rótulo cru do bucket.
+    if (month >= 1 && month <= 12) return new Date(Number(monthMatch[1]), month - 1, 1);
+    return new Date(NaN);
+  }
   const yearMatch = /^(\d{4})$/.exec(bucket);
   if (yearMatch) return new Date(Number(yearMatch[1]), 0, 1);
   return new Date(bucket);
@@ -579,8 +627,8 @@ function toTimeSeriesPoint(raw: Record<string, unknown>): TimeSeriesPoint {
   return {
     bucket,
     date: parseBucketDate(bucket),
-    registered: Number(raw.registered ?? 0),
-    checkedIn: Number(raw.checked_in ?? raw.checkedIn ?? 0),
+    registered: toNumber(raw.registered),
+    checkedIn: toNumber(raw.checked_in ?? raw.checkedIn),
   };
 }
 

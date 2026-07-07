@@ -66,6 +66,30 @@ describe("DemographicsPage (integração MSW)", () => {
     expect(screen.getAllByText("São Paulo").length).toBeGreaterThan(0);
   });
 
+  it("manager sem eventos no escopo mostra vazio explícito (não trava em skeleton)", async () => {
+    localStorage.setItem(
+      "mfeAuth.profile",
+      JSON.stringify({
+        id: "m1",
+        firstName: "Marcos",
+        lastName: "Gestor",
+        username: "mgr",
+        email: "m@x.com",
+        accessLevel: "MANAGER",
+      }),
+    );
+    // Escopo vazio: a listagem de eventos do manager volta sem itens.
+    server.use(
+      http.get("*/api/metrics/events", () =>
+        HttpResponse.json({ items: [], page: 1, page_size: 200, total: 0 }),
+      ),
+    );
+
+    render(<DemographicsPage />);
+
+    expect(await screen.findByText(/nenhum evento sob sua gestão/i)).toBeInTheDocument();
+  });
+
   it("401 em um endpoint dispara mfeAuth:sessionExpired", async () => {
     server.use(http.get("*/api/metrics/by-age", () => new HttpResponse(null, { status: 401 })));
     const onExpired = vi.fn();

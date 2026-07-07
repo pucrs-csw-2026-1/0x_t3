@@ -32,7 +32,10 @@ export function RateCard({
   onRetry,
   color = "primary",
 }: RateCardProps) {
-  const percent = rate != null && !Number.isNaN(rate) ? Math.min(Math.max(rate, 0), 1) * 100 : 0;
+  // Razão clampada em [0,1] usada TANTO no percentual em destaque QUANTO na barra,
+  // para que não divirjam (ex.: rate 1,5 mostraria "150%" com a barra em 100%).
+  const clampedRate = rate != null && Number.isFinite(rate) ? Math.min(Math.max(rate, 0), 1) : null;
+  const percent = (clampedRate ?? 0) * 100;
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, height: "100%" }}>
@@ -52,17 +55,17 @@ export function RateCard({
             <Skeleton variant="rounded" width="100%" height={8} />
           </>
         ) : error ? (
-          <ErrorAlert message={error} onRetry={onRetry ?? (() => {})} />
+          <ErrorAlert message={error} onRetry={onRetry} />
         ) : (
           <>
             <Typography variant="h4" component="p" color={`${color}.main`} fontWeight={700}>
-              {formatPercent(rate, 1)}
+              {formatPercent(clampedRate, 1)}
             </Typography>
             <LinearProgress
               variant="determinate"
               value={percent}
               color={color}
-              aria-label={`${title}: ${formatPercent(rate, 1)}`}
+              aria-label={`${title}: ${formatPercent(clampedRate, 1)}`}
               sx={{ height: 8, borderRadius: 4 }}
             />
             {caption && (

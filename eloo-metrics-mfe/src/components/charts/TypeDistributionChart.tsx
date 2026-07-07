@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { BarChart } from "@mui/x-charts/BarChart";
 import type { TypeDistribution } from "../../services/metricsApi";
 import { DistributionLegend } from "./DistributionLegend";
+import { EmptyState } from "../EmptyState";
 
 export interface TypeDistributionChartProps {
   // Tipos de evento conforme o backend, já em pt-BR (camada de serviço).
@@ -14,6 +15,15 @@ const BAR_COLOR = "#3d6c8a"; // tertiary-container
 
 // Distribuição por tipo de evento (US-03): barras verticais, uma por tipo.
 export function TypeDistributionChart({ data, height = 260 }: TypeDistributionChartProps) {
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        title="Sem dados de tipo"
+        description="Não há distribuição por tipo de evento para o período selecionado."
+      />
+    );
+  }
+
   const labels = data.map((item) => item.label);
   const counts = data.map((item) => item.count);
 

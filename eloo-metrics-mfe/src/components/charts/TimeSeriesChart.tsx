@@ -128,7 +128,7 @@ export function TimeSeriesChart({
       {loading ? (
         <Skeleton variant="rounded" width="100%" height={height} aria-busy="true" />
       ) : error ? (
-        <ErrorAlert message={error} onRetry={onRetry ?? (() => {})} />
+        <ErrorAlert message={error} onRetry={onRetry} />
       ) : empty || data.length === 0 ? (
         <EmptyState
           title="Sem dados no período"

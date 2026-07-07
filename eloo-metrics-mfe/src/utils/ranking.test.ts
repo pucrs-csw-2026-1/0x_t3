@@ -69,3 +69,18 @@ describe("rankEventsByAdhesion", () => {
     expect(rankEventsByAdhesion([], 5)).toEqual({ best: [], worst: [] });
   });
 });
+
+// Auditoria: sanitização de dados inconsistentes do T2.
+describe("rankEventsByAdhesion — sanitização", () => {
+  it("clampa a taxa quando check-ins > inscritos (não passa de 100%)", () => {
+    const { best } = rankEventsByAdhesion([evt("x", 100, 120)], 5);
+    expect(best[0].rate).toBe(1);
+  });
+
+  it("check-ins não-finito vira 0 e não polui a ordenação", () => {
+    const { best, worst } = rankEventsByAdhesion([evt("a", 100, Number.NaN), evt("b", 100, 50)], 5);
+    expect(best.every((e) => Number.isFinite(e.rate))).toBe(true);
+    expect(best[0].eventId).toBe("b"); // 0.5 > 0
+    expect(worst[0].eventId).toBe("a"); // NaN → 0
+  });
+});

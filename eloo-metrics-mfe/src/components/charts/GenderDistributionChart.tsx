@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { PieChart } from "@mui/x-charts/PieChart";
 import type { GenderDistribution } from "../../services/metricsApi";
 import { DistributionLegend } from "./DistributionLegend";
+import { EmptyState } from "../EmptyState";
 
 export interface GenderDistributionChartProps {
   // Categorias de gênero conforme o backend, já em pt-BR (camada de serviço).
@@ -17,8 +18,20 @@ const SLICE_COLORS = ["#7b4d88", "#981652", "#215470", "#8a7177", "#3d6c8a"];
 // acessível lista cada categoria com percentual pt-BR (critério de aceite).
 export function GenderDistributionChart({ data, size = 200 }: GenderDistributionChartProps) {
   const total = data.reduce((acc, item) => acc + item.count, 0);
+
+  // Guarda de vazio (defesa própria, além do `empty` do DistributionPanel): sem
+  // dados ou com total zero a rosca renderiza arcos NaN. Ver TimeSeriesChart.
+  if (data.length === 0 || total === 0) {
+    return (
+      <EmptyState
+        title="Sem dados de gênero"
+        description="Não há distribuição por gênero para o período selecionado."
+      />
+    );
+  }
+
   const slices = data.map((item, index) => ({
-    id: item.label,
+    id: `${item.label}-${index}`,
     value: item.count,
     label: item.label,
     color: SLICE_COLORS[index % SLICE_COLORS.length],

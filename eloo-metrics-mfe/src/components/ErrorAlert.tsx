@@ -3,7 +3,9 @@ import Button from "@mui/material/Button";
 
 export interface ErrorAlertProps {
   message: string;
-  onRetry: () => void;
+  // Opcional: sem handler, o botão "Tentar novamente" NÃO é renderizado (um botão
+  // que não faz nada é um erro "tratado" só na aparência).
+  onRetry?: () => void;
   retryLabel?: string;
 }
 
@@ -14,9 +16,11 @@ export function ErrorAlert({ message, onRetry, retryLabel = "Tentar novamente" }
     <Alert
       severity="error"
       action={
-        <Button color="inherit" size="small" onClick={onRetry}>
-          {retryLabel}
-        </Button>
+        onRetry ? (
+          <Button color="inherit" size="small" onClick={onRetry}>
+            {retryLabel}
+          </Button>
+        ) : undefined
       }
     >
       {message}

@@ -18,12 +18,17 @@ export interface EventRankingResult {
 }
 
 function toRanked(event: EventMetrics): RankedEvent {
-  const rate = event.registered > 0 ? event.checkedIn / event.registered : 0;
+  // Sanitiza contra dados inconsistentes do T2: valores não-finitos viram 0 e a
+  // taxa é clampada em [0,1]. Sem isso, check-ins > inscritos exibiria "120%" de
+  // adesão e um NaN poluiria o sort (`b.rate - a.rate` → NaN → ordem instável).
+  const registered = Number.isFinite(event.registered) ? event.registered : 0;
+  const checkedIn = Number.isFinite(event.checkedIn) ? event.checkedIn : 0;
+  const rate = registered > 0 ? Math.min(1, Math.max(0, checkedIn / registered)) : 0;
   return {
     eventId: event.eventId,
     eventName: event.eventName ?? event.eventId,
-    registered: event.registered,
-    checkedIn: event.checkedIn,
+    registered,
+    checkedIn,
     rate,
   };
 }

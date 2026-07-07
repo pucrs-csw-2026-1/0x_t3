@@ -28,11 +28,19 @@ export function PaginationControls({
   onPageChange,
   onPageSizeChange,
 }: PaginationControlsProps) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const to = Math.min(page * pageSize, total);
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
+  // Normaliza entradas fora de faixa (o pai pode reduzir `total` sem resetar a
+  // página, ou persistir um pageSize legado): pageSize inválido → menor opção
+  // (evita totalPages Infinity), e page é clampada em [1, totalPages] para o
+  // rótulo "X–Y de Z" e os botões nunca ficarem inconsistentes.
+  const safePageSize = (PAGE_SIZE_OPTIONS as readonly number[]).includes(pageSize)
+    ? pageSize
+    : PAGE_SIZE_OPTIONS[0];
+  const totalPages = Math.max(1, Math.ceil(total / safePageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const from = total === 0 ? 0 : (safePage - 1) * safePageSize + 1;
+  const to = Math.min(safePage * safePageSize, total);
+  const canPrev = safePage > 1;
+  const canNext = safePage < totalPages;
 
   return (
     <Box
@@ -56,7 +64,7 @@ export function PaginationControls({
           select
           size="small"
           label="Por página"
-          value={pageSize}
+          value={safePageSize}
           onChange={(event) => onPageSizeChange(Number(event.target.value))}
           sx={{ minWidth: 120 }}
         >
@@ -72,18 +80,18 @@ export function PaginationControls({
             size="small"
             aria-label="Página anterior"
             disabled={!canPrev}
-            onClick={() => onPageChange(page - 1)}
+            onClick={() => onPageChange(safePage - 1)}
           >
             <ChevronLeftOutlinedIcon />
           </IconButton>
           <Typography variant="body2" color="text.secondary">
-            {formatNumber(page)} / {formatNumber(totalPages)}
+            {formatNumber(safePage)} / {formatNumber(totalPages)}
           </Typography>
           <IconButton
             size="small"
             aria-label="Próxima página"
             disabled={!canNext}
-            onClick={() => onPageChange(page + 1)}
+            onClick={() => onPageChange(safePage + 1)}
           >
             <ChevronRightOutlinedIcon />
           </IconButton>

@@ -30,4 +30,22 @@ describe("GenderDistributionChart", () => {
       screen.getByRole("img", { name: /pizza da distribuição por gênero/i }),
     ).toBeInTheDocument();
   });
+
+  it("dados vazios: mostra estado vazio, não uma rosca quebrada", () => {
+    render(<GenderDistributionChart data={[]} />);
+    expect(screen.getByText(/sem dados de gênero/i)).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /pizza/i })).not.toBeInTheDocument();
+  });
+
+  it("total zero (todas as categorias em 0): estado vazio em vez de arcos NaN", () => {
+    render(
+      <GenderDistributionChart
+        data={[
+          { gender: "Feminino", label: "Feminino", count: 0 },
+          { gender: "Masculino", label: "Masculino", count: 0 },
+        ]}
+      />,
+    );
+    expect(screen.getByText(/sem dados de gênero/i)).toBeInTheDocument();
+  });
 });
