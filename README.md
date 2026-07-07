@@ -169,6 +169,8 @@ Os comandos `npm` rodam em `eloo-metrics-mfe/`; o `docker compose` roda na **rai
 
 Para ver o metrics montado dentro do host (fluxo principal), suba os serviços **nesta ordem** — cada etapa depende da anterior. Os repositórios irmãos são pastas vizinhas a este (`../0x_t1`, `../0x_t2`, `../eloo-auth-mfe`, `../0x-fork-eloo-shell`).
 
+> ⚠️ **Use a branch `main` de todos os repos irmãos.** É a versão integrada/estável; branches antigas de feature/hotfix podem não ter correções de contrato (ex.: o T2 só expõe `event_name`/datas dos eventos a partir de `main` — em versões atrás disso a UI mostra o ID `evt_000x` no lugar do nome). Antes de subir: `git -C ../0x_t1 switch main && git -C ../0x_t1 pull` (idem para os demais).
+
 | # | Serviço | Onde | Comando | Porta |
 | - | ------- | ---- | ------- | ----- |
 | 1 | **Auth (T1)** — Ministack + backend | `../0x_t1` | `docker compose up -d --build` | Ministack `:4566`, auth-backend `:8080` |
