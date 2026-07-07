@@ -1,0 +1,14 @@
+# Não copiar para o contexto de build (a imagem roda `npm ci` + `npm run build`).
+node_modules
+dist
+coverage
+playwright-report
+test-results
+.git
+.vscode
+*.log
+.env
+.env.*
+!.env.example
+# Helper de login dev-only (nunca vai para imagem — credenciais hardcoded).
+public/dev-login.html

@@ -1,0 +1,29 @@
+# docker-compose do T3 (raiz do 0x_t3). Ver ADR-0012.
+#
+# Sobe SÓ o remote de métricas (eloo-metrics-mfe) como serve:remote na :5176,
+# sem npm na máquina de quem recebe — basta `docker compose up`. Os backends
+# T1 (:8080) e T2 (:8000), o shell e o remote de auth rodam à parte; o proxy do
+# Vite os alcança pelo host via host.docker.internal (sobrescreva por env se os
+# backends estiverem em outro lugar).
+#
+# `name` fixa o projeto do compose como "metrics-mfe" (senão herdaria o nome da
+# pasta raiz, 0x_t3).
+name: metrics-mfe
+
+services:
+  metrics-mfe:
+    build:
+      context: ./eloo-metrics-mfe
+      dockerfile: Dockerfile
+    image: eloo-metrics-mfe:local
+    container_name: eloo-metrics-mfe
+    ports:
+      - "5176:5176"
+    environment:
+      METRICS_SERVICE_URL: ${METRICS_SERVICE_URL:-http://host.docker.internal:8000}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL:-http://host.docker.internal:8080}
+    # Permite ao container alcançar os backends rodando no HOST (Linux + Docker
+    # Desktop). No Docker Desktop já existe; a linha garante a resolução no Linux.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
