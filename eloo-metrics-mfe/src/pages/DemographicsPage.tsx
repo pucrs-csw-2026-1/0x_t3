@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { DemographicsToolbar } from "../components/DemographicsToolbar";
 import { DistributionPanel } from "../components/DistributionPanel";
+import { EmptyState } from "../components/EmptyState";
 import { AgeDistributionChart } from "../components/charts/AgeDistributionChart";
 import { GenderDistributionChart } from "../components/charts/GenderDistributionChart";
 import { CityDistributionChart } from "../components/charts/CityDistributionChart";
@@ -56,6 +57,9 @@ export default function DemographicsPage({
   const [period, setPeriod] = useState<Period>(() => resolvePeriod(DEFAULT_PERIOD_KEY));
   const [eventId, setEventId] = useState<string | undefined>(initialEventId);
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
+  // Vira true quando a busca de opções de evento resolve (sucesso OU falha) — usado
+  // para distinguir "ainda carregando" de "carregou e veio vazio" (manager sem escopo).
+  const [eventsLoaded, setEventsLoaded] = useState(false);
 
   // Manager analisa POR evento (US-06): sem a opção "Todos os eventos" — o
   // primeiro evento do escopo é selecionado automaticamente quando as opções
@@ -87,6 +91,7 @@ export default function DemographicsPage({
   useEffect(() => {
     if (validationError) return;
     let active = true;
+    setEventsLoaded(false);
     listEventMetrics({
       startDate: period.startDate,
       endDate: period.endDate,
@@ -104,14 +109,23 @@ export default function DemographicsPage({
         if (isManager && options.length > 0) {
           setEventId((current) => current ?? options[0].id);
         }
+        setEventsLoaded(true);
       })
       .catch(() => {
-        /* seletor de evento é opcional; falha não bloqueia as distribuições */
+        // seletor de evento é opcional; falha não bloqueia as distribuições —
+        // mas marca como "carregado" para não travar o manager em skeleton.
+        if (active) setEventsLoaded(true);
       });
     return () => {
       active = false;
     };
   }, [period.startDate, period.endDate, validationError, isManager]);
+
+  // Manager cujo escopo não tem nenhum evento no período: as opções carregaram e
+  // vieram vazias, então nenhum fetch agregado dispara (params fica null). Sem este
+  // caso, os 6 painéis ficariam em skeleton para sempre (idle conta como loading).
+  const managerNoEvents =
+    isManager && eventsLoaded && eventOptions.length === 0 && !validationError;
 
   const handlePeriodChange = (key: PeriodKey, next: Period) => {
     setPeriodKey(key);
@@ -167,85 +181,95 @@ export default function DemographicsPage({
             />
           </Box>
 
-          {/* Grid de painéis: cada um independente (loading/erro/vazio próprios) */}
-          <Box
-            sx={{
-              display: "grid",
-              gap: 2,
-              gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
-            }}
-          >
-            <DistributionPanel
-              title="Faixa Etária"
-              loading={isLoading(age.status)}
-              error={age.status === "error" ? age.error : null}
-              empty={age.status === "empty"}
-              onRetry={age.reload}
+          {/* Manager sem eventos no escopo (opções carregaram vazias): vazio
+              explícito em vez de deixar os 6 painéis em skeleton para sempre. */}
+          {managerNoEvents ? (
+            <EmptyState
+              title="Nenhum evento sob sua gestão"
+              description="Não há eventos no seu escopo para o período selecionado. Ajuste o período e tente novamente."
+            />
+          ) : (
+            <Box
+              sx={{
+                display: "grid",
+                gap: 2,
+                gridTemplateColumns: { xs: "1fr", lg: "repeat(2, 1fr)" },
+              }}
             >
-              <AgeDistributionChart data={age.data} />
-            </DistributionPanel>
-
-            {/* Coluna da direita: gênero + horas de participação empilhados
-                (US-06 — pedido do usuário: horas logo abaixo do gênero). */}
-            <Box sx={{ display: "grid", gap: 2, gridTemplateRows: "1fr auto" }}>
               <DistributionPanel
-                title="Gênero"
-                loading={isLoading(gender.status)}
-                error={gender.status === "error" ? gender.error : null}
-                empty={gender.status === "empty"}
-                onRetry={gender.reload}
+                title="Faixa Etária"
+                loading={isLoading(age.status)}
+                error={age.status === "error" ? age.error : null}
+                empty={age.status === "empty"}
+                onRetry={age.reload}
               >
-                <GenderDistributionChart data={gender.data} />
+                <AgeDistributionChart data={age.data} />
+              </DistributionPanel>
+
+              {/* Coluna da direita: gênero + horas de participação empilhados
+                (US-06 — pedido do usuário: horas logo abaixo do gênero). */}
+              <Box sx={{ display: "grid", gap: 2, gridTemplateRows: "1fr auto" }}>
+                <DistributionPanel
+                  title="Gênero"
+                  loading={isLoading(gender.status)}
+                  error={gender.status === "error" ? gender.error : null}
+                  empty={gender.status === "empty"}
+                  onRetry={gender.reload}
+                >
+                  <GenderDistributionChart data={gender.data} />
+                </DistributionPanel>
+
+                <DistributionPanel
+                  title="Horas de Participação"
+                  description="Participantes por faixa de horas de engajamento no período."
+                  loading={isLoading(hours.status)}
+                  error={hours.status === "error" ? hours.error : null}
+                  empty={hours.status === "empty"}
+                  onRetry={hours.reload}
+                >
+                  <HoursDistributionChart data={hours.data} />
+                </DistributionPanel>
+              </Box>
+
+              <DistributionPanel
+                title="Cidades (Top 10)"
+                loading={isLoading(city.status)}
+                error={city.status === "error" ? city.error : null}
+                empty={city.status === "empty"}
+                onRetry={city.reload}
+                fullWidth
+              >
+                <CityDistributionChart data={city.data} />
               </DistributionPanel>
 
               <DistributionPanel
-                title="Horas de Participação"
-                description="Participantes por faixa de horas de engajamento no período."
-                loading={isLoading(hours.status)}
-                error={hours.status === "error" ? hours.error : null}
-                empty={hours.status === "empty"}
-                onRetry={hours.reload}
+                title="Perfil do Participante"
+                loading={isLoading(profile.status)}
+                error={profile.status === "error" ? profile.error : null}
+                empty={profile.status === "empty"}
+                onRetry={profile.reload}
               >
-                <HoursDistributionChart data={hours.data} />
+                <ProfileDistributionChart data={profile.data} />
+              </DistributionPanel>
+
+              <DistributionPanel
+                title="Tipo de Evento"
+                // O by-type real do T2 não filtra por evento (US-06): quando há um
+                // evento selecionado, deixamos explícito que esta dimensão é global.
+                description={
+                  eventId
+                    ? "Visão global do período — o filtro de evento não se aplica."
+                    : undefined
+                }
+                loading={isLoading(type.status)}
+                error={type.status === "error" ? type.error : null}
+                empty={type.status === "empty"}
+                onRetry={type.reload}
+              >
+                <TypeDistributionChart data={type.data} />
               </DistributionPanel>
             </Box>
-
-            <DistributionPanel
-              title="Cidades (Top 10)"
-              loading={isLoading(city.status)}
-              error={city.status === "error" ? city.error : null}
-              empty={city.status === "empty"}
-              onRetry={city.reload}
-              fullWidth
-            >
-              <CityDistributionChart data={city.data} />
-            </DistributionPanel>
-
-            <DistributionPanel
-              title="Perfil do Participante"
-              loading={isLoading(profile.status)}
-              error={profile.status === "error" ? profile.error : null}
-              empty={profile.status === "empty"}
-              onRetry={profile.reload}
-            >
-              <ProfileDistributionChart data={profile.data} />
-            </DistributionPanel>
-
-            <DistributionPanel
-              title="Tipo de Evento"
-              // O by-type real do T2 não filtra por evento (US-06): quando há um
-              // evento selecionado, deixamos explícito que esta dimensão é global.
-              description={
-                eventId ? "Visão global do período — o filtro de evento não se aplica." : undefined
-              }
-              loading={isLoading(type.status)}
-              error={type.status === "error" ? type.error : null}
-              empty={type.status === "empty"}
-              onRetry={type.reload}
-            >
-              <TypeDistributionChart data={type.data} />
-            </DistributionPanel>
-          </Box>
+          )}
         </Box>
       </Box>
     </ThemeProvider>

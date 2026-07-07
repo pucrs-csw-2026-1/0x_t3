@@ -70,7 +70,7 @@ export function DistributionPanel({
         </Box>
 
         {error ? (
-          <ErrorAlert message={error} onRetry={onRetry ?? (() => {})} />
+          <ErrorAlert message={error} onRetry={onRetry} />
         ) : empty ? (
           <EmptyState title="Nenhum dado encontrado" description={EMPTY_DESCRIPTION} />
         ) : (

@@ -191,8 +191,10 @@ export default function EventCatalogPage({ theme, onSelectEvent }: EventCatalogP
             />
           )}
 
-          {/* Paginação: só quando há dados do servidor */}
-          {status === "ready" && data && (
+          {/* Paginação: só quando há dados do servidor E não há busca ativa. A
+              busca é LOCAL (filtra só a página atual), então mostrar "X–Y de Z"
+              do servidor junto com a lista filtrada seria inconsistente. */}
+          {status === "ready" && data && !search.trim() && (
             <PaginationControls
               page={data.page}
               pageSize={pageSize}

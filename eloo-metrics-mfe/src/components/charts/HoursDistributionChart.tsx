@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { PieChart } from "@mui/x-charts/PieChart";
 import type { HoursBandDistribution } from "../../services/metricsApi";
 import { DistributionLegend } from "./DistributionLegend";
+import { EmptyState } from "../EmptyState";
 
 export interface HoursDistributionChartProps {
   // Faixas de horas já normalizadas pela camada de serviço (4 faixas canônicas
@@ -19,8 +20,20 @@ const SLICE_COLORS = ["#215470", "#7b4d88", "#981652", "#3d6c8a", "#8a7177"];
 // pt-BR (acessibilidade).
 export function HoursDistributionChart({ data, size = 200 }: HoursDistributionChartProps) {
   const total = data.reduce((acc, item) => acc + item.count, 0);
+
+  // Guarda de vazio (defesa própria, além do `empty` do DistributionPanel): sem
+  // dados ou com total zero a rosca renderiza arcos NaN.
+  if (data.length === 0 || total === 0) {
+    return (
+      <EmptyState
+        title="Sem dados de participação"
+        description="Não há distribuição de horas de participação para o período selecionado."
+      />
+    );
+  }
+
   const slices = data.map((item, index) => ({
-    id: item.band,
+    id: `${item.band}-${index}`,
     value: item.count,
     label: item.label,
     color: SLICE_COLORS[index % SLICE_COLORS.length],

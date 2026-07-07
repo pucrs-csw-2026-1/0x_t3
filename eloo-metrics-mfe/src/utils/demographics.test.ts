@@ -45,6 +45,14 @@ describe("validatePeriod (bloqueia fetch inválido — evita 422)", () => {
       /formato AAAA-MM/i,
     );
   });
+
+  it("rejeita período acima de 24 meses (evita centenas de fetches)", () => {
+    expect(validatePeriod({ startDate: "2020-01-01", endDate: "2023-12-31" })).toMatch(/24 meses/);
+  });
+
+  it("aceita exatamente 24 meses (valor-limite)", () => {
+    expect(validatePeriod({ startDate: "2024-01-01", endDate: "2025-12-15" })).toBeNull();
+  });
 });
 
 describe("toAgeRange (faixas canônicas)", () => {

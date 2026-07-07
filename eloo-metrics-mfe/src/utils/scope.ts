@@ -20,8 +20,11 @@ export function resolveScope(profile: UserProfile | null): ScopeIndicator {
 
   if (profile?.accessLevel === "MANAGER") {
     const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim();
+    // Fallback final: sem nome e sem username o título não pode terminar em
+    // "Escopo de " (com espaço solto).
+    const label = name || profile.username?.trim() || "sua gestão";
     return {
-      title: `Dashboard — Escopo de ${name || profile.username}`,
+      title: `Dashboard — Escopo de ${label}`,
       subtitle: "Acompanhe as métricas dos eventos sob sua gestão.",
     };
   }

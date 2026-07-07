@@ -159,18 +159,20 @@ describe("listEventMetrics", () => {
     await expect(listEventMetrics(PERIOD)).rejects.toThrow(/filtro inválido/i);
   });
 
-  it("500 → mensagem genérica", async () => {
+  it("500 → mensagem pt-BR de servidor instável", async () => {
     server.use(http.get(EVENTS, () => new HttpResponse(null, { status: 500 })));
-    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/não foi possível/i);
+    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/inst[áa]vel/i);
   });
 
-  it("usa a mensagem `detail` do backend quando presente (500)", async () => {
+  it("NÃO vaza o texto cru do backend no 500 (ADR-0009)", async () => {
     server.use(
       http.get(EVENTS, () =>
-        HttpResponse.json({ detail: "Falha interna do serviço" }, { status: 500 }),
+        HttpResponse.json({ detail: "Internal error: connection refused" }, { status: 500 }),
       ),
     );
-    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/falha interna do serviço/i);
+    // O usuário vê a mensagem pt-BR, nunca o detail técnico do backend.
+    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/inst[áa]vel/i);
+    await expect(listEventMetrics(PERIOD)).rejects.not.toThrow(/connection refused/i);
   });
 
   it("aplica defaults para campos ausentes no item", async () => {
@@ -523,6 +525,107 @@ describe("distribuições (contrato real)", () => {
 
     expect(result).toHaveLength(5);
     expect(result[4]).toEqual({ band: "24h+", label: "24h+", count: 3 });
+  });
+});
+
+// Auditoria de cobertura de erros (nenhum erro pode passar sem tratamento).
+describe("robustez de erros e edge cases", () => {
+  it("falha de rede vira MetricsApiError pt-BR (status 0), não TypeError cru", async () => {
+    server.use(http.get(EVENTS, () => HttpResponse.error()));
+    await expect(listEventMetrics(PERIOD)).rejects.toBeInstanceOf(MetricsApiError);
+    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/sem conex/i);
+  });
+
+  it("2xx com corpo não-JSON vira 'Resposta inválida', não SyntaxError", async () => {
+    server.use(
+      http.get(
+        EVENTS,
+        () =>
+          new HttpResponse("<html>erro</html>", {
+            status: 200,
+            headers: { "Content-Type": "text/html" },
+          }),
+      ),
+    );
+    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/resposta inválida/i);
+  });
+
+  it("campos numéricos não-numéricos viram 0 (nunca NaN)", async () => {
+    server.use(
+      http.get(EVENTS, () =>
+        HttpResponse.json({
+          items: [{ event_id: "e", registered: "N/A", checked_in: null, certified: {} }],
+        }),
+      ),
+    );
+    const page = await listEventMetrics(PERIOD);
+    expect(page.items[0].registered).toBe(0);
+    expect(page.items[0].checkedIn).toBe(0);
+    expect(page.items[0].certified).toBe(0);
+  });
+
+  it("taxa inconsistente do backend (>1) é clampada em 1", async () => {
+    server.use(
+      http.get("*/api/metrics/events/:id/checkin-rate", () =>
+        HttpResponse.json({ rate: 1.5, registered: 100 }),
+      ),
+    );
+    const r = await getCheckinRate("evt_1");
+    expect(r.rate).toBe(1);
+  });
+
+  it("bucket de mês inválido (2026-13) não faz rollover — data inválida", async () => {
+    server.use(
+      http.get("*/api/metrics/timeseries", () =>
+        HttpResponse.json({ points: [{ bucket: "2026-13", registered: 5, checked_in: 2 }] }),
+      ),
+    );
+    const points = await getTimeSeries({
+      granularity: "month",
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+    });
+    expect(points[0].bucket).toBe("2026-13");
+    expect(Number.isNaN(points[0].date.getTime())).toBe(true);
+  });
+
+  it("getByType agrega os buckets que chegaram mesmo com um bucket falhando", async () => {
+    let call = 0;
+    server.use(
+      http.get("*/api/metrics/by-type", () => {
+        call += 1;
+        if (call === 1) return new HttpResponse(null, { status: 500 });
+        return HttpResponse.json({ entries: [{ event_type: "palestra", registered: 10 }] });
+      }),
+    );
+    const result = await getByType({ from: "2026-01", to: "2026-02" });
+    expect(result.some((t) => t.label === "Palestra" && t.count === 10)).toBe(true);
+  });
+
+  it("getByType só falha quando TODOS os buckets falham", async () => {
+    server.use(http.get("*/api/metrics/by-type", () => new HttpResponse(null, { status: 500 })));
+    await expect(getByType({ from: "2026-01", to: "2026-02" })).rejects.toBeInstanceOf(
+      MetricsApiError,
+    );
+  });
+
+  it("401 sem token não dispara sessionExpired (no-op/dedupe)", async () => {
+    localStorage.removeItem("mfeAuth.accessToken");
+    const spy = vi.fn();
+    window.addEventListener(SESSION_EXPIRED_EVENT, spy);
+    server.use(http.get(EVENTS, () => new HttpResponse(null, { status: 401 })));
+    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/sessão expirou/i);
+    expect(spy).not.toHaveBeenCalled();
+    window.removeEventListener(SESSION_EXPIRED_EVENT, spy);
+  });
+
+  it("401 com token dispara sessionExpired exatamente uma vez", async () => {
+    const spy = vi.fn();
+    window.addEventListener(SESSION_EXPIRED_EVENT, spy);
+    server.use(http.get(EVENTS, () => new HttpResponse(null, { status: 401 })));
+    await expect(listEventMetrics(PERIOD)).rejects.toThrow(/sessão expirou/i);
+    expect(spy).toHaveBeenCalledTimes(1);
+    window.removeEventListener(SESSION_EXPIRED_EVENT, spy);
   });
 });
 

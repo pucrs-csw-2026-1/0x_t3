@@ -29,12 +29,18 @@ export function EventSelector({
   disabled = false,
   allowAll = true,
 }: EventSelectorProps) {
+  // Um `value` que não existe em `options` (evento removido, troca de escopo,
+  // opções ainda não carregadas) cairia num Select vazio + warning "out-of-range"
+  // do MUI. Nesses casos voltamos para ALL (placeholder).
+  const hasValue = value !== undefined && options.some((option) => option.id === value);
+  const selectValue = hasValue ? value : ALL;
+
   return (
     <TextField
       select
       size="small"
       label="Evento"
-      value={value ?? ALL}
+      value={selectValue}
       disabled={disabled}
       onChange={(event) => {
         const next = event.target.value;
@@ -43,7 +49,7 @@ export function EventSelector({
       sx={{ minWidth: 200 }}
     >
       {allowAll && <MenuItem value={ALL}>Todos os eventos</MenuItem>}
-      {!allowAll && value === undefined && (
+      {!allowAll && !hasValue && (
         <MenuItem value={ALL} disabled>
           Selecione um evento…
         </MenuItem>

@@ -36,4 +36,12 @@ describe("resolveScope", () => {
     const scope = resolveScope(null);
     expect(scope.title).toBe("Dashboard");
   });
+
+  it("manager sem nome e sem username: fallback sem espaço solto", () => {
+    const scope = resolveScope(
+      profile({ accessLevel: "MANAGER", firstName: "", lastName: "", username: "" }),
+    );
+    expect(scope.title).toMatch(/sua gestão/i);
+    expect(scope.title.endsWith("de ")).toBe(false);
+  });
 });

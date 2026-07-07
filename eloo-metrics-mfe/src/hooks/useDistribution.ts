@@ -55,11 +55,23 @@ export function useDistribution<T extends { count: number }>(
 
   useEffect(() => {
     if (!params) {
-      // Período inválido: cancela qualquer resposta pendente e não busca.
+      // Período inválido: invalida qualquer resposta pendente E zera o painel —
+      // não pode continuar exibindo os buckets de um período que já não é válido.
       requestId.current++;
+      setStatus("idle");
+      setData([]);
+      setError(null);
       return;
     }
     void run(params);
+    // Cleanup: ao trocar de filtro ou desmontar, invalida a resposta em voo (o
+    // guard `id !== requestId.current` no run descarta o setState tardio, evitando
+    // dado obsoleto na tela e setState em componente desmontado). Incrementar o
+    // valor VIVO do ref no cleanup é intencional (não queremos um valor capturado).
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      requestId.current++;
+    };
     // Dependemos dos valores primitivos, não da identidade do objeto `params`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, params?.from, params?.to, params?.eventId]);

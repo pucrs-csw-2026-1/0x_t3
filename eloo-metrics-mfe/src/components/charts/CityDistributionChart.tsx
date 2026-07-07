@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import { BarChart } from "@mui/x-charts/BarChart";
 import type { CityDistribution } from "../../services/metricsApi";
 import { DistributionLegend } from "./DistributionLegend";
+import { EmptyState } from "../EmptyState";
 
 export interface CityDistributionChartProps {
   // Top 10 cidades, já ordenadas por volume decrescente (camada de serviço).
@@ -15,6 +16,15 @@ const BAR_COLOR = "#215470"; // tertiary
 // Distribuição por cidade (US-03): barras verticais das top 10 cidades. Em telas
 // estreitas rola na horizontal, mantendo largura mínima legível por barra.
 export function CityDistributionChart({ data, height = 300 }: CityDistributionChartProps) {
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        title="Sem dados de cidade"
+        description="Não há distribuição por cidade para o período selecionado."
+      />
+    );
+  }
+
   const labels = data.map((item) => item.city);
   const counts = data.map((item) => item.count);
 

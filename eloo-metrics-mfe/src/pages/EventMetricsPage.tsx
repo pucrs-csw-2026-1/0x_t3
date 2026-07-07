@@ -111,18 +111,34 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
   // granularidade é trocada em sequência rápida (a resposta antiga não pode
   // sobrescrever a nova). Mesmo cuidado do useDistribution da US-03.
   const timeseriesReqId = useRef(0);
+  // Mesma guarda para o evento e as taxas: o host pode trocar a prop `eventId`
+  // sem desmontar o remote (ADR-0005), então a resposta lenta de um evento
+  // anterior não pode sobrescrever o atual.
+  const eventReqId = useRef(0);
+  const checkinReqId = useRef(0);
+  const certReqId = useRef(0);
 
   // Fetch principal. 403/404 viram estados dedicados (não erro genérico) lendo o
   // status do MetricsApiError tipado. Um 401 já é sinalizado pela camada
   // (mfeAuth:sessionExpired) e tratado pelo host (ADR-0005).
   const loadEvent = useCallback(async () => {
+    const reqId = ++eventReqId.current;
+    // eventId vazio/em branco não é um evento válido: curto-circuita para NotFound
+    // sem chamar o endpoint (encodeURIComponent("") cairia na rota de LISTA e
+    // exibiria um "evento" fantasma com counters zerados).
+    if (!eventId.trim()) {
+      setEventStatus("notfound");
+      return;
+    }
     setEventStatus("loading");
     setEventError(null);
     try {
       const result = await getEventById(eventId);
+      if (reqId !== eventReqId.current) return;
       setDetail(result);
       setEventStatus("ready");
     } catch (err) {
+      if (reqId !== eventReqId.current) return;
       if (err instanceof MetricsApiError && err.status === 403) {
         setEventStatus("forbidden");
       } else if (err instanceof MetricsApiError && err.status === 404) {
@@ -135,21 +151,27 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
   }, [eventId]);
 
   const loadCheckin = useCallback(async () => {
+    const reqId = ++checkinReqId.current;
     setCheckin(INITIAL_RATE);
     try {
       const result = await getCheckinRate(eventId);
+      if (reqId !== checkinReqId.current) return;
       setCheckin({ status: "ready", rate: result.rate, error: null });
     } catch (err) {
+      if (reqId !== checkinReqId.current) return;
       setCheckin({ status: "error", rate: null, error: errorMessage(err) });
     }
   }, [eventId]);
 
   const loadCertification = useCallback(async () => {
+    const reqId = ++certReqId.current;
     setCertification(INITIAL_RATE);
     try {
       const result = await getCertificationRate(eventId);
+      if (reqId !== certReqId.current) return;
       setCertification({ status: "ready", rate: result.rate, error: null });
     } catch (err) {
+      if (reqId !== certReqId.current) return;
       setCertification({ status: "error", rate: null, error: errorMessage(err) });
     }
   }, [eventId]);

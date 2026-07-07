@@ -67,7 +67,7 @@ describe("EventCatalogPage (integração MSW)", () => {
 
     render(<EventCatalogPage onSelectEvent={vi.fn()} />);
 
-    expect(await screen.findByText(/não foi possível carregar/i)).toBeInTheDocument();
+    expect(await screen.findByText(/inst[áa]vel/i)).toBeInTheDocument();
 
     // Retry volta a funcionar: religa o handler de sucesso e reclica.
     server.use(
@@ -223,6 +223,8 @@ describe("EventCatalogPage (integração MSW)", () => {
 
     await screen.findByRole("heading", { name: "Cloud Bootcamp" });
     const requestsAfterLoad = requestCount;
+    // Sem busca, o rodapé de paginação (total do servidor) aparece.
+    expect(screen.getByText(/Mostrando 1–2 de 2 eventos/)).toBeInTheDocument();
 
     await userEvent.type(screen.getByRole("searchbox", { name: /buscar eventos/i }), "cloud");
 
@@ -230,5 +232,8 @@ describe("EventCatalogPage (integração MSW)", () => {
     expect(screen.queryByRole("heading", { name: "UX Masterclass" })).not.toBeInTheDocument();
     // Busca é local: nenhum fetch adicional foi disparado.
     expect(requestCount).toBe(requestsAfterLoad);
+    // A paginação (total do servidor) some durante a busca local — mostrá-la ao
+    // lado da lista filtrada seria inconsistente ("1–2 de 2" com 1 resultado).
+    expect(screen.queryByText(/Mostrando/i)).not.toBeInTheDocument();
   });
 });

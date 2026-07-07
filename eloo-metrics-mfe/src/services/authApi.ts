@@ -42,6 +42,11 @@ export function clearStoredAuth(): void {
 }
 
 export function notifySessionExpired(): void {
+  // Só sinaliza expiração se HAVIA uma sessão para expirar. Evita: (a) disparar
+  // "sessão expirou" numa chamada que nunca teve token; e (b) duplicar o evento
+  // quando vários 401 paralelos chegam — o primeiro limpa o token e os demais
+  // viram no-op (o host só precisa redirecionar uma vez).
+  const hadToken = localStorage.getItem(ACCESS_TOKEN_KEY) != null;
   clearStoredAuth();
-  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  if (hadToken) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
 }
