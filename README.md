@@ -18,7 +18,7 @@ Microfrontend web (**remote** de [Module Federation](https://github.com/originjs
 2. [Funcionalidades](#funcionalidades)
 3. [Tech Stack](#tech-stack)
 4. [Arquitetura](#arquitetura)
-5. [Começando](#começando)
+5. [Como rodar o projeto](#como-rodar-o-projeto)
 6. [Variáveis de Ambiente](#variáveis-de-ambiente)
 7. [Scripts](#scripts)
 8. [Fluxos de Uso](#fluxos-de-uso)
@@ -161,9 +161,35 @@ docker-compose.yml      sobe o remote (:5176) — ver ADR-0012
 
 ---
 
-## Começando
+## Como rodar o projeto
 
 Os comandos `npm` rodam em `eloo-metrics-mfe/`; o `docker compose` roda na **raiz** do repo.
+
+### Stack completa no shell — ordem de subida
+
+Para ver o metrics montado dentro do host (fluxo principal), suba os serviços **nesta ordem** — cada etapa depende da anterior. Os repositórios irmãos são pastas vizinhas a este (`../0x_t1`, `../0x_t2`, `../eloo-auth-mfe`, `../0x-fork-eloo-shell`).
+
+| # | Serviço | Onde | Comando | Porta |
+| - | ------- | ---- | ------- | ----- |
+| 1 | **Auth (T1)** — Ministack + backend | `../0x_t1` | `docker compose up -d --build` | Ministack `:4566`, auth-backend `:8080` |
+| 2 | **Metrics (T2)** — provisiona/seed + backend | `../0x_t2` | `docker compose up -d --build` | backend `:8000` |
+| 3 | **Metrics remote (T3)** — este repo | `.` (raiz) | `docker compose up -d --build` | remote `:5176` |
+| 4 | **Auth remote** (`login`) | `../eloo-auth-mfe` | `npm install && npm run serve:remote` | remote `:5174` |
+| 5 | **Shell (host)** | `../0x-fork-eloo-shell` | `npm install && npm run dev` | host **`:5173`** |
+
+> **Por que essa ordem?** A **Ministack** do Auth (`:4566`) é compartilhada — o T2 a alcança via `host.docker.internal:4566`, então o T1 sobe primeiro. Os remotes precisam servir `remoteEntry.js` (`serve:remote`/Docker, **não** `npm run dev`) antes de o shell montá-los; o shell (`:5173`) registra `login@:5174` e `metrics@:5176` em `src/shell/remotes.ts`. Abra **http://localhost:5173** e faça login pelo card do shell.
+
+Verificação rápida (tudo no ar):
+
+```bash
+curl -s http://localhost:8080/health                    # Auth (T1)  → 200
+curl -s http://localhost:8000/health                    # Metrics (T2) → {"status":"ok",...}
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:5176/assets/remoteEntry.js  # metrics remote
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:5174/assets/remoteEntry.js  # auth remote
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:5173/                        # shell host
+```
+
+Para derrubar tudo: `docker compose down` em cada raiz (`0x_t1`, `0x_t2`, `0x_t3`; use `-v` para zerar dados/cache) e encerre os processos `npm` dos remotes/shell.
 
 ### Standalone (dev, com mock)
 
