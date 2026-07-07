@@ -11,7 +11,7 @@ export interface NavRoute {
 }
 
 export const NAV_ROUTES: NavRoute[] = [
-  { label: "Dashboard", path: "/" },
+  { label: "Dashboard", path: "/dashboard" },
   { label: "Catálogo de Eventos", path: "/catalogo" },
   { label: "Distribuições Demográficas", path: "/demografia" },
 ];

@@ -38,20 +38,23 @@ interface StatusMeta {
   color: ChipProps["color"];
 }
 
-// Situação → rótulo pt-BR + cor do chip (referência visual: Ativo/Encerrado/
-// Rascunho). "unknown" cai num rótulo neutro em vez de sumir.
+// Situação → rótulo pt-BR + cor do chip. As chaves espelham o enum real do T2
+// (US-06: planejado|ativo|concluido|cancelado); "unknown" cai num rótulo neutro
+// em vez de sumir.
 const STATUS_META: Record<EventStatus, StatusMeta> = {
-  active: { label: "Ativo", color: "success" },
-  ended: { label: "Encerrado", color: "default" },
-  draft: { label: "Rascunho", color: "warning" },
+  ativo: { label: "Ativo", color: "success" },
+  concluido: { label: "Concluído", color: "default" },
+  planejado: { label: "Planejado", color: "warning" },
+  cancelado: { label: "Cancelado", color: "error" },
   unknown: { label: "Indefinido", color: "default" },
 };
 
 // Barra lateral colorida do card por situação (espelha o mockup).
 const STATUS_BAR: Record<EventStatus, string> = {
-  active: "#22c55e",
-  ended: "#9ca3af",
-  draft: "#eab308",
+  ativo: "#22c55e",
+  concluido: "#9ca3af",
+  planejado: "#eab308",
+  cancelado: "#ef4444",
   unknown: "#9ca3af",
 };
 

@@ -8,6 +8,22 @@ import DashboardPage from "./pages/DashboardPage";
 import EventCatalogPage from "./pages/EventCatalogPage";
 import DemographicsPage from "./pages/DemographicsPage";
 import EventMetricsPage from "./pages/EventMetricsPage";
+import { getStoredProfile } from "./services/authApi";
+
+// Roteamento por papel (US-06): manager cuida de eventos individuais — entra
+// pelo catálogo e NÃO tem acesso ao dashboard (nem pela rota direta); os demais
+// papéis vão ao dashboard. A mesma regra deve ser reproduzida pelo host nas
+// rotas do shell (US-07).
+function HomeRoute() {
+  const isManager = getStoredProfile()?.accessLevel === "MANAGER";
+  return <Navigate to={isManager ? "/catalogo" : "/dashboard"} replace />;
+}
+
+function DashboardRoute() {
+  const isManager = getStoredProfile()?.accessLevel === "MANAGER";
+  if (isManager) return <Navigate to="/catalogo" replace />;
+  return <DashboardPage />;
+}
 
 // Standalone: aqui o App faz o papel do host (shell). É o host quem navega
 // (ADR-0005) — o EventCatalogPage só reporta a seleção via onSelectEvent; a
@@ -57,7 +73,8 @@ export default function App() {
       >
         <TopNavBar onMenuClick={() => setMobileNavOpen(true)} />
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/dashboard" element={<DashboardRoute />} />
           <Route path="/catalogo" element={<CatalogRoute />} />
           <Route path="/eventos/:eventId" element={<EventDetailRoute />} />
           <Route path="/demografia" element={<DemographicsPage />} />

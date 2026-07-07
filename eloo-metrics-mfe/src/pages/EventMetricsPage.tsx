@@ -156,13 +156,15 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
 
   // Série histórica: timeseries é a fonte primária; se voltar vazia, /series
   // entra como fallback (ADR-0009). Erro do primário vira estado de erro no
-  // painel — não derruba os cards.
+  // painel — não derruba os cards. O T2 não tem série POR EVENTO (US-06):
+  // aproximamos filtrando pelo TIPO do evento; sem tipo, a série é global.
+  const eventType = detail?.eventType ?? null;
   const loadTimeseries = useCallback(async () => {
     const reqId = ++timeseriesReqId.current;
     const isStale = () => reqId !== timeseriesReqId.current;
     setTimeseries(INITIAL_TS);
     const params: TimeSeriesParams = {
-      eventId,
+      eventType,
       granularity,
       startDate: period.startDate,
       endDate: period.endDate,
@@ -185,7 +187,7 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
       if (isStale()) return;
       setTimeseries({ status: "error", data: [], error: errorMessage(err) });
     }
-  }, [eventId, granularity, period]);
+  }, [eventType, granularity, period]);
 
   useEffect(() => {
     void loadEvent();
@@ -210,7 +212,12 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
     <ThemeProvider theme={theme ?? defaultTheme}>
       <Box
         component="section"
-        sx={{ bgcolor: "background.default", minHeight: "100%", p: { xs: 2, lg: 4 } }}
+        sx={{
+          bgcolor: "background.default",
+          minHeight: "100%",
+          p: { xs: 2, lg: 4 },
+          pb: { xs: 6, lg: 8 },
+        }}
       >
         <Box sx={{ maxWidth: 1200, mx: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
           {eventStatus === "forbidden" && <ForbiddenState onBack={onBack} />}
@@ -246,7 +253,7 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
                 }}
               >
                 <EventHeader
-                  name={detail.eventName}
+                  name={detail.eventName ?? detail.eventId}
                   period={formatEventWindow(detail)}
                   status={detail.status}
                   onBack={onBack}
@@ -299,6 +306,11 @@ export default function EventMetricsPage({ theme, eventId, onBack }: EventMetric
                 <TimeSeriesChart
                   data={timeseries.data}
                   granularity={granularity}
+                  subtitle={
+                    eventType
+                      ? `Agregado dos eventos do tipo "${eventType}" no seu escopo — o serviço de métricas ainda não fornece série por evento.`
+                      : "Agregado de todos os eventos do seu escopo — o serviço de métricas ainda não fornece série por evento."
+                  }
                   loading={timeseries.status === "loading"}
                   error={timeseries.status === "error" ? timeseries.error : null}
                   empty={timeseries.status === "empty"}

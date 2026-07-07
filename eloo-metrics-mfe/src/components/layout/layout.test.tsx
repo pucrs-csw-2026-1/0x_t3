@@ -24,7 +24,7 @@ describe("chrome do shell standalone", () => {
 
     const dashboard = screen.getByRole("link", { name: /dashboard/i });
     const catalogo = screen.getByRole("link", { name: /catálogo de eventos/i });
-    expect(dashboard).toHaveAttribute("href", "/");
+    expect(dashboard).toHaveAttribute("href", "/dashboard");
     expect(catalogo).toHaveAttribute("href", "/catalogo");
     expect(screen.getByRole("button", { name: /novo evento/i })).toBeInTheDocument();
     // Logo da Eloo no topo da sidebar.
@@ -65,5 +65,31 @@ describe("chrome do shell standalone", () => {
     await userEvent.click(screen.getByRole("button", { name: /abrir menu/i }));
 
     expect(onMenuClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("avatar do topo mostra as iniciais do usuário logado (não o AG estático)", () => {
+    localStorage.setItem(
+      "mfeAuth.profile",
+      JSON.stringify({
+        id: "u1",
+        firstName: "Maria",
+        lastName: "Silva",
+        username: "maria",
+        email: "maria@local.dev",
+        accessLevel: "ADMIN",
+      }),
+    );
+
+    renderWithRouter(<TopNavBar />);
+
+    expect(screen.getByLabelText(/usuário logado/i)).toHaveTextContent("MS");
+    localStorage.clear();
+  });
+
+  it("avatar sem sessão cai num placeholder neutro", () => {
+    localStorage.clear();
+    renderWithRouter(<TopNavBar />);
+
+    expect(screen.getByLabelText(/usuário logado/i)).toHaveTextContent("?");
   });
 });

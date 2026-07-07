@@ -27,6 +27,9 @@ export function CityDistributionChart({ data, height = 300 }: CityDistributionCh
           sx={{ minWidth: Math.max(labels.length * 72, 320) }}
         >
           <BarChart
+            // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+            // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+            skipAnimation
             height={height}
             xAxis={[
               {

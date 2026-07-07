@@ -36,7 +36,7 @@ describe("EventCatalogPage (integração MSW)", () => {
     // Estado de loading antes dos dados (skeletons têm região aria-busy).
     expect(document.querySelector('[aria-busy="true"]')).toBeInTheDocument();
 
-    // Dados do handler base (Evento A / Evento B).
+    // Dados do handler base (nomes reais expostos pelo T2 desde a US-06).
     expect(await screen.findByRole("heading", { name: "Evento A" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Evento B" })).toBeInTheDocument();
     // Total refletido na paginação.
@@ -77,7 +77,7 @@ describe("EventCatalogPage (integração MSW)", () => {
             {
               event_id: "evt_ok",
               event_name: "Evento Recuperado",
-              status: "active",
+              status: "ativo",
               registered: 5,
               checked_in: 3,
               certified: 1,
@@ -132,7 +132,7 @@ describe("EventCatalogPage (integração MSW)", () => {
             {
               event_id: `evt_p${page}`,
               event_name: `Evento pág ${page}`,
-              status: "active",
+              status: "ativo",
               registered: 10,
               checked_in: 5,
               certified: 1,
@@ -198,7 +198,7 @@ describe("EventCatalogPage (integração MSW)", () => {
             {
               event_id: "evt_a",
               event_name: "Cloud Bootcamp",
-              status: "active",
+              status: "ativo",
               registered: 10,
               checked_in: 5,
               certified: 1,
@@ -206,7 +206,7 @@ describe("EventCatalogPage (integração MSW)", () => {
             {
               event_id: "evt_b",
               event_name: "UX Masterclass",
-              status: "active",
+              status: "ativo",
               registered: 20,
               checked_in: 8,
               certified: 2,

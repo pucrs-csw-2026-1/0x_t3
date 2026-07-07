@@ -41,6 +41,25 @@ export function validatePeriod(period: Period): string | null {
   return null;
 }
 
+// Enumera os buckets mensais (YYYY-MM) do intervalo fechado [from, to] — usado
+// pelo by-type real, que só aceita um bucket por chamada (US-06). Intervalo
+// inválido/invertido devolve lista vazia (quem valida antes é validatePeriod).
+export function monthBucketsInRange(from: string, to: string): string[] {
+  if (!MONTH_BUCKET.test(from) || !MONTH_BUCKET.test(to) || from > to) return [];
+  const buckets: string[] = [];
+  let [year, month] = from.split("-").map(Number);
+  const [endYear, endMonth] = to.split("-").map(Number);
+  while (year < endYear || (year === endYear && month <= endMonth)) {
+    buckets.push(`${year}-${String(month).padStart(2, "0")}`);
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+  }
+  return buckets;
+}
+
 // Faixas etárias canônicas do backend (ADR-0009 / critério de aceite da US-03),
 // na ordem de exibição. A UI sempre mostra as 8 faixas, mesmo zeradas.
 export const AGE_RANGES = [
@@ -72,6 +91,8 @@ export function toAgeRange(raw: unknown): AgeRange {
   return "Desconhecido";
 }
 
+// Chaves reais do T2 (US-06): F | M | OUTRO | NAO_INFORMADO (normalizadas para
+// minúsculas antes do lookup); sinônimos EN mantidos por tolerância.
 const GENDER_LABELS: Record<string, string> = {
   female: "Feminino",
   f: "Feminino",
@@ -83,6 +104,8 @@ const GENDER_LABELS: Record<string, string> = {
   "non-binary": "Outro",
   nonbinary: "Outro",
   outro: "Outro",
+  nao_informado: "Desconhecido",
+  não_informado: "Desconhecido",
 };
 
 const PROFILE_LABELS: Record<string, string> = {

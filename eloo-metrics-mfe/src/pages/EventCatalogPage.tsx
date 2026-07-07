@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ThemeProvider, type Theme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -47,19 +47,28 @@ export default function EventCatalogPage({ theme, onSelectEvent }: EventCatalogP
   const [data, setData] = useState<EventMetricsPage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Geração da última busca: trocas rápidas de período/página disparam fetches
+  // concorrentes e uma resposta antiga não pode sobrescrever a mais nova (mesmo
+  // cuidado do useDistribution da US-03 — corrigido na validação real da US-06).
+  const loadReqId = useRef(0);
+
   // O período é SEMPRE enviado (ADR-0009) e a paginação é server-side: cada
   // troca de página/tamanho/período dispara um novo fetch — nunca carregamos
   // tudo de uma vez. Um 401 é sinalizado pela camada de serviço
   // (mfeAuth:sessionExpired) e tratado pelo host; a página não redireciona
   // sozinha (ADR-0005).
   const load = useCallback(async (window: Period, targetPage: number, size: number) => {
+    const reqId = ++loadReqId.current;
+    const isStale = () => reqId !== loadReqId.current;
     setStatus("loading");
     setError(null);
     try {
       const result = await listEventMetrics({ ...window, page: targetPage, pageSize: size });
+      if (isStale()) return;
       setData(result);
       setStatus(result.items.length === 0 ? "empty" : "ready");
     } catch (err) {
+      if (isStale()) return;
       setError(err instanceof Error ? err.message : "Falha ao carregar os eventos.");
       setStatus("error");
     }
@@ -81,12 +90,18 @@ export default function EventCatalogPage({ theme, onSelectEvent }: EventCatalogP
     setPage(DEFAULT_PAGE); // troca de tamanho reseta para a página 1 (US-04)
   };
 
-  // Busca local: filtra por nome apenas o resultado da página atual (US-04).
+  // Busca local: filtra a página atual por nome, id ou tipo (US-04/US-06). O
+  // contrato real ainda não envia o nome (virá com a US-08), então o id é o
+  // rótulo efetivo — a busca precisa cobri-lo.
   const visibleEvents = useMemo(() => {
     const items = data?.items ?? [];
     const term = search.trim().toLowerCase();
     if (!term) return items;
-    return items.filter((event) => (event.eventName ?? "").toLowerCase().includes(term));
+    return items.filter((event) =>
+      [event.eventName, event.eventId, event.eventType].some((field) =>
+        (field ?? "").toLowerCase().includes(term),
+      ),
+    );
   }, [data, search]);
 
   const retry = () => void load(period, page, pageSize);
@@ -118,7 +133,12 @@ export default function EventCatalogPage({ theme, onSelectEvent }: EventCatalogP
     <ThemeProvider theme={theme ?? defaultTheme}>
       <Box
         component="section"
-        sx={{ bgcolor: "background.default", minHeight: "100%", p: { xs: 2, lg: 4 } }}
+        sx={{
+          bgcolor: "background.default",
+          minHeight: "100%",
+          p: { xs: 2, lg: 4 },
+          pb: { xs: 6, lg: 8 },
+        }}
       >
         <Box sx={{ maxWidth: 1200, mx: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
           {/* Cabeçalho + controles */}

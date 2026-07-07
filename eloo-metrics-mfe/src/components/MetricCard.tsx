@@ -87,6 +87,9 @@ export function MetricCard({
               aria-label={`Minigráfico de tendência de ${label.toLowerCase()} por evento`}
             >
               <SparkLineChart
+                // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+                // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+                skipAnimation
                 data={sparklineData}
                 height={40}
                 curve="natural"

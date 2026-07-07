@@ -49,7 +49,7 @@ export function EventList({
         <EventCard
           key={event.eventId}
           eventId={event.eventId}
-          name={event.eventName}
+          name={event.eventName ?? event.eventId}
           period={{ startDate: event.startDate, endDate: event.endDate }}
           status={event.status}
           counters={{

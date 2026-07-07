@@ -14,12 +14,13 @@ import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import { NAV_ROUTES } from "./navTabs";
+import { getStoredProfile } from "../../services/authApi";
 import logoUrl from "../../assets/logo.png";
 
 // Ícone por rota (o data-model em navTabs.ts fica sem JSX para não quebrar o
 // fast-refresh). Rotas sem ícone dedicado caem num chevron neutro.
 const ROUTE_ICONS: Record<string, ReactNode> = {
-  "/": <DashboardOutlinedIcon />,
+  "/dashboard": <DashboardOutlinedIcon />,
   "/catalogo": <EventOutlinedIcon />,
   "/demografia": <GroupsOutlinedIcon />,
 };
@@ -46,6 +47,11 @@ export interface SideNavBarProps {
 // e Catálogo), destacando a página ativa. Suporte/Sair seguem decorativos.
 export function SideNavBar({ onNavigate }: SideNavBarProps) {
   const { pathname } = useLocation();
+
+  // Manager não tem dashboard (US-06): ele trabalha com eventos individuais
+  // (catálogo → detalhe) e distribuições — o item Dashboard sai do menu.
+  const isManager = getStoredProfile()?.accessLevel === "MANAGER";
+  const routes = isManager ? NAV_ROUTES.filter((route) => route.path !== "/dashboard") : NAV_ROUTES;
 
   return (
     <Box
@@ -75,7 +81,7 @@ export function SideNavBar({ onNavigate }: SideNavBarProps) {
       </Box>
 
       <List component="nav" aria-label="Navegação principal" sx={{ flex: 1 }}>
-        {NAV_ROUTES.map((route) => {
+        {routes.map((route) => {
           // "/" só casa exato; as demais casam o prefixo (para futuras subrotas).
           const selected = route.path === "/" ? pathname === "/" : pathname.startsWith(route.path);
           return (

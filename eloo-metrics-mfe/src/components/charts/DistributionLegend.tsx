@@ -1,5 +1,9 @@
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import { formatNumber, formatPercent } from "../../utils/format";
 
 export interface LegendItem {
@@ -14,42 +18,56 @@ export interface DistributionLegendProps {
   total?: number;
 }
 
-// Legenda/tabela acessível compartilhada pelos gráficos da US-03. Complementa o
-// gráfico MUI X (visual) com o valor absoluto e o percentual (locale pt-BR) de
-// cada categoria — garante rótulos legíveis e leitura por leitor de tela sem
-// depender de tick labels renderizados em SVG. Recebe tudo por props (ADR-0004).
+// Tabela acessível compartilhada pelos gráficos da US-03 (US-06: promovida de
+// lista para <table> semântica a pedido do usuário). Complementa o gráfico MUI X
+// (visual) com o valor absoluto e o percentual (locale pt-BR) de cada categoria
+// — garante leitura por leitor de tela e os dados exatos mesmo se o SVG não
+// renderizar. Recebe tudo por props (ADR-0004).
 export function DistributionLegend({ items, total }: DistributionLegendProps) {
   const sum = total ?? items.reduce((acc, item) => acc + item.count, 0);
   return (
-    <Box component="dl" sx={{ m: 0, display: "flex", flexDirection: "column", gap: 0.75 }}>
-      {items.map((item) => (
-        <Box
-          key={item.label}
-          sx={{ display: "flex", alignItems: "center", gap: 1, fontSize: "0.875rem" }}
-        >
-          {item.color && (
-            <Box
-              aria-hidden="true"
-              sx={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                bgcolor: item.color,
-                flexShrink: 0,
-              }}
-            />
-          )}
-          <Typography component="dt" variant="body2" color="text.primary" sx={{ flex: 1 }}>
-            {item.label}
-          </Typography>
-          <Typography component="dd" variant="body2" color="text.secondary" sx={{ m: 0 }}>
-            {formatNumber(item.count)}
-            <Box component="span" sx={{ ml: 1, fontWeight: 600, color: "text.primary" }}>
+    <Table size="small" aria-label="Tabela de valores da distribuição">
+      <TableHead>
+        <TableRow>
+          <TableCell sx={{ color: "text.secondary" }}>Categoria</TableCell>
+          <TableCell align="right" sx={{ color: "text.secondary" }}>
+            Participantes
+          </TableCell>
+          <TableCell align="right" sx={{ color: "text.secondary" }}>
+            %
+          </TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {items.map((item) => (
+          <TableRow key={item.label} sx={{ "&:last-child td": { border: 0 } }}>
+            <TableCell>
+              {item.color && (
+                <Box
+                  component="span"
+                  aria-hidden="true"
+                  sx={{
+                    display: "inline-block",
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    bgcolor: item.color,
+                    mr: 1,
+                    verticalAlign: "middle",
+                  }}
+                />
+              )}
+              {item.label}
+            </TableCell>
+            <TableCell align="right" sx={{ color: "text.secondary" }}>
+              {formatNumber(item.count)}
+            </TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>
               {formatPercent(sum > 0 ? item.count / sum : 0, 1)}
-            </Box>
-          </Typography>
-        </Box>
-      ))}
-    </Box>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

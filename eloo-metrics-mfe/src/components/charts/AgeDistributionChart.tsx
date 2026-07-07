@@ -26,12 +26,16 @@ export function AgeDistributionChart({ data, height = 260 }: AgeDistributionChar
         aria-label={`Gráfico de barras da distribuição por faixa etária (${labels.length} faixas).`}
       >
         <BarChart
+          // Sem animação de entrada: barras/arcos nascem no tamanho final (a animação
+          // deixava o gráfico em branco em ambientes com efeitos de movimento reduzidos).
+          skipAnimation
           layout="horizontal"
           height={height}
           yAxis={[{ scaleType: "band", data: labels, tickLabelStyle: { fontSize: 11 } }]}
           xAxis={[{ label: "Participantes" }]}
           series={[{ data: counts, label: "Participantes", color: BAR_COLOR }]}
-          margin={{ left: 72 }}
+          // Largura do maior rótulo ("Desconhecido") — margem menor corta o texto.
+          margin={{ left: 96 }}
           slotProps={{ legend: { hidden: true } }}
         />
       </Box>
