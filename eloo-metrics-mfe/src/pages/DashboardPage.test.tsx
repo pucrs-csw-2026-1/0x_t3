@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import DashboardPage from "./DashboardPage";
@@ -162,6 +162,48 @@ describe("DashboardPage", () => {
 
     await waitFor(() => expect(mockedList).toHaveBeenCalledTimes(2));
     expect(mockedList.mock.calls[1][0].startDate).not.toBe(mockedList.mock.calls[0][0].startDate);
+  });
+
+  it("ao vivo: polling refaz um fetch silencioso e sobe os counters sem skeleton", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      mockedList.mockResolvedValueOnce(page(SAMPLE)).mockResolvedValue(
+        page([
+          evt({
+            eventId: "evt_1",
+            eventName: "Evento A",
+            registered: 500,
+            checkedIn: 300,
+            certified: 100,
+          }),
+        ]),
+      );
+
+      render(<DashboardPage />);
+      expect(await screen.findByText("210")).toBeInTheDocument();
+
+      // Avança 5s → o polling "ao vivo" dispara um refresh silencioso.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5100);
+      });
+
+      // Counters atualizados, sem voltar ao skeleton de loading.
+      expect(await screen.findByText("500")).toBeInTheDocument();
+      expect(screen.queryByText(/carregando métricas/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("ao vivo desligado: não faz polling adicional", async () => {
+    mockedList.mockResolvedValue(page(SAMPLE));
+
+    render(<DashboardPage />);
+    expect(await screen.findByText("210")).toBeInTheDocument();
+
+    // Desliga o "Ao vivo".
+    await userEvent.click(screen.getByRole("checkbox", { name: /atualização ao vivo/i }));
+    expect(mockedList).toHaveBeenCalledTimes(1);
   });
 
   it("renderiza o ranking de eventos por adesão (melhores e piores)", async () => {

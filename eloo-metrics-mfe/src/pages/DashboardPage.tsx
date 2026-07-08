@@ -5,6 +5,8 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Skeleton from "@mui/material/Skeleton";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import { PeriodSelector } from "../components/PeriodSelector";
 import { MetricCard, type MetricTrend } from "../components/MetricCard";
@@ -25,6 +27,7 @@ import { resolveScope } from "../utils/scope";
 import { rankEventsByAdhesion } from "../utils/ranking";
 import { formatPercent } from "../utils/format";
 import { DEFAULT_PERIOD_KEY, resolvePeriod, type Period, type PeriodKey } from "../utils/periods";
+import { useLiveRefresh } from "../hooks/useLiveRefresh";
 import { theme as defaultTheme } from "../theme";
 
 export interface DashboardPageProps {
@@ -90,11 +93,17 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
   // counters é fatal (estado de erro com retry). Um 401 é sinalizado pela camada
   // de serviço (mfeAuth:sessionExpired) e tratado pelo host — a página não
   // redireciona sozinha (ADR-0005).
-  const load = useCallback(async (window: Period) => {
+  // `silent` (US-08): refresh em segundo plano do polling "ao vivo" — não troca
+  // para o estado de loading (sem piscar skeleton) e engole falhas transitórias,
+  // mantendo o último snapshot na tela até o próximo tick.
+  const load = useCallback(async (window: Period, opts?: { silent?: boolean }) => {
     const reqId = ++loadReqId.current;
-    setStatus("loading");
-    setError(null);
-    setEngagementError(null);
+    const silent = opts?.silent ?? false;
+    if (!silent) {
+      setStatus("loading");
+      setError(null);
+      setEngagementError(null);
+    }
 
     const [eventsResult, engagementResult] = await Promise.allSettled([
       listEventMetrics({ ...window, page: 1, pageSize: PAGE_SIZE }),
@@ -103,6 +112,7 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
     if (reqId !== loadReqId.current) return;
 
     if (eventsResult.status === "rejected") {
+      if (silent) return; // mantém o snapshot atual; tenta de novo no próximo tick
       const reason = eventsResult.reason;
       setError(reason instanceof Error ? reason.message : "Falha ao carregar as métricas.");
       setStatus("error");
@@ -114,7 +124,8 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
 
     if (engagementResult.status === "fulfilled") {
       setEngagement(engagementResult.value);
-    } else {
+      if (silent) setEngagementError(null);
+    } else if (!silent) {
       setEngagement(null);
       setEngagementError(
         "Não foi possível carregar o engajamento em tempo real. Algumas métricas podem estar desatualizadas.",
@@ -127,6 +138,11 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
   useEffect(() => {
     void load(period);
   }, [load, period]);
+
+  // Demo em tempo real (US-08): enquanto "Ao vivo" está ligado, refaz um fetch
+  // silencioso a cada 5s — os counters/gráficos sobem conforme o pipeline
+  // SNS→SQS→Metrics ingere, sem recarregar a página.
+  const { live, setLive } = useLiveRefresh(() => void load(period, { silent: true }));
 
   const handlePeriodChange = (key: PeriodKey, next: Period) => {
     setPeriodKey(key);
@@ -170,11 +186,32 @@ export default function DashboardPage({ theme }: DashboardPageProps) {
                 {scope.subtitle}
               </Typography>
             </Box>
-            <PeriodSelector
-              value={periodKey}
-              customPeriod={customPeriod}
-              onChange={handlePeriodChange}
-            />
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1, md: 2 },
+                flexWrap: "wrap",
+              }}
+            >
+              <FormControlLabel
+                sx={{ mr: 0 }}
+                control={
+                  <Switch
+                    size="small"
+                    checked={live}
+                    onChange={(e) => setLive(e.target.checked)}
+                    inputProps={{ "aria-label": "Atualização ao vivo" }}
+                  />
+                }
+                label="Ao vivo"
+              />
+              <PeriodSelector
+                value={periodKey}
+                customPeriod={customPeriod}
+                onChange={handlePeriodChange}
+              />
+            </Box>
           </Box>
 
           {/* Banner não-fatal: engajamento indisponível, counters ainda válidos */}
