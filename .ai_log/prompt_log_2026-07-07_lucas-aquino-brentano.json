@@ -658,5 +658,16 @@
     },
     "role": "assistant",
     "content": "Executando os commits. Primeiro o **T3** — código/docs (sem o `dev-login.html`, que é dev-only):"
+  },
+  {
+    "timestamp": "2026-07-07T23:59:16.212Z",
+    "source": "claude",
+    "git_branch": "main",
+    "git_user_name": "Lucas Aquino Brentano",
+    "call_context": {
+      "cwd": "c:\\Users\\Usuario\\Documents\\PUCRS\\2026_1\\construcao\\0x_t3"
+    },
+    "role": "assistant",
+    "content": "Concluído — a promoção `dev → main` fechou e o **deploy rodou**. ✅\n\n## Resultado da release\n\n| Etapa | PR | Estado |\n|---|---|---|\n| US-09 (docs) → `dev` | [#30](https://github.com/pucrs-csw-2026-1/0x_t3/pull/30) | Mergeado · CI verde |\n| `dev` → `main` (release) | [#31](https://github.com/pucrs-csw-2026-1/0x_t3/pull/31) | Mergeado · CI verde |\n\n- O push na `main` **disparou o `cd.yml`** (US-10) — rodou com **sucesso** (gates → `docker compose build` → release).\n- **Release publicado:** `Metrics MFE (T3) v0.1.0-beta (MVP)` (pre-release).\n\nFoi para a `main`, num único release: o **fix de tratamento de erros/edge cases**, a **US-10** (Docker + compose + pipeline CD) e a **US-09** (README completo com os diagramas de arquitetura e de fluxo).\n\n## Observações\n- Vejo que já há **hotfixes de README** na `main` depois disso (`hotfix/readme-...`, PRs #33/#35) — o CD rodou verde em cada um. Se foram seus ajustes, ótimo; se quiser que eu incorpore algo, é só dizer (eu puxaria a `main` antes).\n- O container **`eloo-metrics-mfe`** ainda está no ar (`:5176`) da verificação da US-10 — quer que eu rode `docker compose down`?\n\nQuer seguir para mais alguma coisa (ex.: mover as issues no board para Done, encerrar o container), ou fechamos por aqui?"
   }
 ]
