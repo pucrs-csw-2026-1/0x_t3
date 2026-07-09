@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ThemeProvider, type Theme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import { CatalogToolbar } from "../components/CatalogToolbar";
 import { EventList } from "../components/EventList";
 import { PaginationControls } from "../components/PaginationControls";
@@ -11,6 +13,7 @@ import { listEventMetrics, type EventMetricsPage } from "../services/metricsApi"
 import { getStoredProfile } from "../services/authApi";
 import { DEFAULT_PERIOD_KEY, resolvePeriod, type Period, type PeriodKey } from "../utils/periods";
 import { theme as defaultTheme } from "../theme";
+import { useLiveRefresh } from "../hooks/useLiveRefresh";
 
 export interface EventCatalogPageProps {
   // Tema passado pelo shell (ADR-0005); cai no tema próprio quando standalone.
@@ -57,26 +60,42 @@ export default function EventCatalogPage({ theme, onSelectEvent }: EventCatalogP
   // tudo de uma vez. Um 401 é sinalizado pela camada de serviço
   // (mfeAuth:sessionExpired) e tratado pelo host; a página não redireciona
   // sozinha (ADR-0005).
-  const load = useCallback(async (window: Period, targetPage: number, size: number) => {
-    const reqId = ++loadReqId.current;
-    const isStale = () => reqId !== loadReqId.current;
-    setStatus("loading");
-    setError(null);
-    try {
-      const result = await listEventMetrics({ ...window, page: targetPage, pageSize: size });
-      if (isStale()) return;
-      setData(result);
-      setStatus(result.items.length === 0 ? "empty" : "ready");
-    } catch (err) {
-      if (isStale()) return;
-      setError(err instanceof Error ? err.message : "Falha ao carregar os eventos.");
-      setStatus("error");
-    }
-  }, []);
+  // `silent` (US-08): refresh em segundo plano do polling "ao vivo" — não troca
+  // para o estado de loading (sem piscar os skeletons) e, em falha, mantém o
+  // snapshot atual em vez de mostrar erro; tenta de novo no próximo tick.
+  const load = useCallback(
+    async (window: Period, targetPage: number, size: number, opts?: { silent?: boolean }) => {
+      const reqId = ++loadReqId.current;
+      const isStale = () => reqId !== loadReqId.current;
+      const silent = opts?.silent ?? false;
+      if (!silent) {
+        setStatus("loading");
+        setError(null);
+      }
+      try {
+        const result = await listEventMetrics({ ...window, page: targetPage, pageSize: size });
+        if (isStale()) return;
+        setData(result);
+        setStatus(result.items.length === 0 ? "empty" : "ready");
+      } catch (err) {
+        if (isStale() || silent) return; // silent: mantém o snapshot atual
+        setError(err instanceof Error ? err.message : "Falha ao carregar os eventos.");
+        setStatus("error");
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     void load(period, page, pageSize);
   }, [load, period, page, pageSize]);
+
+  // Demo em tempo real (US-08): enquanto "Ao vivo" está ligado, refaz um fetch
+  // silencioso a cada tick (mesma página/período), os números do catálogo sobem
+  // sem piscar a tela nem redefinir a paginação/busca.
+  const { live, setLive } = useLiveRefresh(
+    () => void load(period, page, pageSize, { silent: true }),
+  );
 
   const handlePeriodChange = (key: PeriodKey, next: Period) => {
     setPeriodKey(key);
@@ -165,13 +184,34 @@ export default function EventCatalogPage({ theme, onSelectEvent }: EventCatalogP
                 Selecione um evento para ver suas métricas detalhadas.
               </Typography>
             </Box>
-            <CatalogToolbar
-              periodKey={periodKey}
-              customPeriod={customPeriod}
-              onPeriodChange={handlePeriodChange}
-              search={search}
-              onSearchChange={setSearch}
-            />
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: { xs: "stretch", md: "center" },
+                gap: { xs: 1, md: 2 },
+                flexWrap: "wrap",
+              }}
+            >
+              <FormControlLabel
+                sx={{ mr: 0 }}
+                control={
+                  <Switch
+                    size="small"
+                    checked={live}
+                    onChange={(e) => setLive(e.target.checked)}
+                    inputProps={{ "aria-label": "Atualização ao vivo" }}
+                  />
+                }
+                label="Ao vivo"
+              />
+              <CatalogToolbar
+                periodKey={periodKey}
+                customPeriod={customPeriod}
+                onPeriodChange={handlePeriodChange}
+                search={search}
+                onSearchChange={setSearch}
+              />
+            </Box>
           </Box>
 
           {/* Erro (fatal) com retry */}

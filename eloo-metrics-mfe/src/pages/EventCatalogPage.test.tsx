@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
@@ -235,5 +235,78 @@ describe("EventCatalogPage (integração MSW)", () => {
     // A paginação (total do servidor) some durante a busca local — mostrá-la ao
     // lado da lista filtrada seria inconsistente ("1–2 de 2" com 1 resultado).
     expect(screen.queryByText(/Mostrando/i)).not.toBeInTheDocument();
+  });
+
+  it("ao vivo: polling refaz um fetch silencioso e sobe os números sem skeleton", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      let calls = 0;
+      server.use(
+        http.get(EVENTS, () => {
+          calls += 1;
+          return HttpResponse.json({
+            items: [
+              {
+                event_id: "evt_live",
+                event_name: "Evento Live",
+                status: "ativo",
+                registered: calls === 1 ? 123 : 456,
+                checked_in: 0,
+                certified: 0,
+              },
+            ],
+            page: 1,
+            page_size: 10,
+            total: 1,
+          });
+        }),
+      );
+
+      render(<EventCatalogPage onSelectEvent={vi.fn()} />);
+      expect(await screen.findByText("123")).toBeInTheDocument();
+
+      // Avança 5s → o polling "ao vivo" (ligado por padrão) faz um refresh silencioso.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5100);
+      });
+
+      // Número atualizado, sem voltar ao skeleton de loading.
+      expect(await screen.findByText("456")).toBeInTheDocument();
+      expect(document.querySelector('[aria-busy="true"]')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("ao vivo desligado: não dispara fetch adicional ao alternar", async () => {
+    let requestCount = 0;
+    server.use(
+      http.get(EVENTS, () => {
+        requestCount += 1;
+        return HttpResponse.json({
+          items: [
+            {
+              event_id: "evt_1",
+              event_name: "Evento A",
+              status: "ativo",
+              registered: 10,
+              checked_in: 5,
+              certified: 1,
+            },
+          ],
+          page: 1,
+          page_size: 10,
+          total: 1,
+        });
+      }),
+    );
+
+    render(<EventCatalogPage onSelectEvent={vi.fn()} />);
+    await screen.findByRole("heading", { name: "Evento A" });
+    const afterLoad = requestCount;
+
+    // Desligar o "Ao vivo" não dispara um fetch por si só.
+    await userEvent.click(screen.getByRole("checkbox", { name: /atualização ao vivo/i }));
+    expect(requestCount).toBe(afterLoad);
   });
 });
